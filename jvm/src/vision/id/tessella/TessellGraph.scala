@@ -499,8 +499,6 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   // ----------------- other stuff -------------------
 
-  def pgonsSides: Int = graph.edges.size + perimeter.edges.size
-
   def pgonsMap: Map[Int, Int] = toPolygons(toTessellMap).groupBy(_.cs.size).map({ case (k, ps) ⇒ (k, ps.size) })
 
 }
