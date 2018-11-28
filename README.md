@@ -7,7 +7,7 @@ This Scala library helps working with finite unit-regular-polygon tessellations 
 ## Tessellation as graph
 Each tessellation is internally described as an [undirected graph](https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Undirected_graph), where:
 
-* each **node** of the graph is a _**vertex**_ of a polygon and it is represented by an unique `Int`
+* each **node** of the graph is a _**vertex**_ of a polygon and it is represented by a unique `Int`
 * each **edge** of the graph is a _**side**_ of a polygon
 
 The graph describing the tessellation can be created through algorithms.
@@ -29,7 +29,7 @@ Each node of the tessellation can be `Map`ped to a cartesian point with the `Tes
 
 The lowest node is always at coordinates `(0.0, 0.0)` and the second lowest at `(1.0, 0.0)`.
 
-On top of the edges layer, the following are the possible optional additions:
+On top of the edge layer, the following optional additions are possible:
 * node labels
 > ![(⬟².10)_label](docs/(⬟².10)_label.svg)
 * perimeter polygon
