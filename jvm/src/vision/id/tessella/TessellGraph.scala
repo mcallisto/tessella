@@ -452,7 +452,17 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
       else {
         val t = new TessellGraph(g)
 
-        def isOnPeri(n: t.graph.NodeT): Boolean = t.perimeter.get(n.toOuter).isDefined
+        def isWorkable(n: t.graph.NodeT, degree: Int): Boolean = {
+
+          def isOnPerimeter: Boolean = degree == 2 || t.orderedNodes.contains(n.toOuter)
+
+          def safeRemoval: Boolean = {
+            val newg = removeOrphans(t.graph - n)
+            newg.isEmpty || Try(new TessellGraph(newg)).isSuccess
+          }
+
+          n.degree == degree && isOnPerimeter && safeRemoval
+        }
 
         def getPeriNeighbors(no: Int): List[Int] = {
           val all = t.orderedNodes.map(_.toOuter).tail
@@ -462,10 +472,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
           else List(all(i - 1), all((i + 1) % s))
         }
 
-        t.graph.nodes.find(n ⇒ {
-          val newg = removeOrphans(t.graph - n)
-          n.degree == 2 && isOnPeri(n) && (newg.isEmpty || Try(new TessellGraph(newg)).isSuccess)
-        }) match {
+        t.graph.nodes.find(isWorkable(_, 2)) match {
           case Some(n) ⇒
             val no = n.toOuter
             //logger.debug("found node " + no.toString)
@@ -475,7 +482,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
             loop(removeOrphans(t.graph - no), ps :+ p)
           case None ⇒
             //logger.debug("found no workable 2-degree nodes")
-            t.graph.nodes.find(n ⇒ n.degree == 3 && isOnPeri(n)) match {
+            t.graph.nodes.find(isWorkable(_, 3)) match {
               case None ⇒ throw new NoSuchElementException("found no 3-degree nodes")
               case Some(n) ⇒
                 val no = n.toOuter
