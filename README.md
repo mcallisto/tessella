@@ -61,7 +61,7 @@ In a finite tessellation:
 * all other vertices are full
 
 ### 14 p-gons
-There are only 21 possible combinations for the full vertex, using 14 different p-gons:
+There are only 21 possible combinations of regular p-gons for the full vertex and they use only 14 different p-gons:
 
 1. **Triangle**, **3** sides, alt symbol `▲`
 2. **Square**, **4** sides, alt symbol `■`
