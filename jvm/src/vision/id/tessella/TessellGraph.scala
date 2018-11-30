@@ -330,15 +330,6 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   }
 
-  private def completeWithOther(nO: Int, lastO: Int): Try[(T, Int)] =
-    Try(
-      this,
-      perimeter find nO match {
-        case None       ⇒ 0 // not found anymore because the node has been fully filled
-        case Some(orig) ⇒ orig.otherNeighbor(perimeter get lastO).toOuter
-      }
-    )
-
   implicit final class PeriEdge(pedge: perimeter.EdgeT) {
 
     /**
