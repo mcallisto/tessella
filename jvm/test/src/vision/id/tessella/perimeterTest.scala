@@ -36,10 +36,6 @@ class perimeterTest extends FlatSpec with SVG {
       ))
   }
 
-  val d: Tessell           = new Tessell(TessellGraph.squareNet(3, 3).graph - (5 ~ 9, 6 ~ 10))
-  val e: d.perimeter.EdgeT = d.perimeter get (5 ~ 6)
-  //saveFilePretty(draw(d, labelStyle = 2, markStyle = 2), imagePath + "test/uncomplete")
-
   val periRx: Tessell = new Tessell(Graph(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
 
   "A perimeter ordered to right" can "have its nodes ordered" in {
@@ -50,42 +46,6 @@ class perimeterTest extends FlatSpec with SVG {
     assert(periRx.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
   }
 
-  val r2: periRx.perimeter.NodeT = periRx.perimeter get 2
-  val r5: periRx.perimeter.NodeT = periRx.perimeter get 5
-  val r7: periRx.perimeter.NodeT = periRx.perimeter get 7
-
-  it can "have its ordered nodes starting from a given node" in {
-    val ns = {
-      import periRx.PeriNode
-      r5.startNodes()
-    }
-    assert(ns.map(_.toOuter) === List(5, 7, 1, 2))
-  }
-
-  it can "be queried for the ordered neighbors of a given node" in {
-    val ns = {
-      import periRx.PeriNode
-      r5.nodeNeighbors
-    }
-    assert(ns === (r2, r7))
-  }
-
-  it can "be queried for the other ordered neighbor of a given node" in {
-    val n = {
-      import periRx.PeriNode
-      r5.otherNeighbor(r7)
-    }
-    assert(n === r2)
-  }
-
-  it can "be queried for the minor ordered neighbor of a given node" in {
-    val n = {
-      import periRx.PeriNode
-      r5.minNeighbor
-    }
-    assert(n === r2)
-  }
-
   val periLx: Tessell = new Tessell(Graph(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1))
 
   "A perimeter ordered to left" can "have its nodes ordered" in {
@@ -94,51 +54,6 @@ class perimeterTest extends FlatSpec with SVG {
 
   it can "have its edges ordered" in {
     assert(periLx.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 3, 3 ~ 1))
-  }
-
-  val l1: periLx.perimeter.NodeT = periLx.perimeter get 1
-  val l2: periLx.perimeter.NodeT = periLx.perimeter get 2
-  val l3: periLx.perimeter.NodeT = periLx.perimeter get 3
-  val l5: periLx.perimeter.NodeT = periLx.perimeter get 5
-
-  it can "be queried for the ordered endpoint nodes of a given edge" in {
-    val ns = {
-      import periLx.PeriEdge
-      (periLx.perimeter get (5 ~ 2)).orderedEndPoints
-    }
-    assert(ns === (l2, l5))
-  }
-
-  it can "have its ordered nodes starting from a given node" in {
-    val ns = {
-      import periLx.PeriNode
-      l3.startNodes()
-    }
-    assert(ns.map(_.toOuter) === List(3, 1, 2, 5))
-  }
-
-  it can "be queried for the ordered neighbors of a given node" in {
-    val ns = {
-      import periLx.PeriNode
-      l3.nodeNeighbors
-    }
-    assert(ns === (l5, l1))
-  }
-
-  it can "be queried for the other ordered neighbor of a given node" in {
-    val n = {
-      import periLx.PeriNode
-      l3.otherNeighbor(l5)
-    }
-    assert(n === l1)
-  }
-
-  it can "be queried for the minor ordered neighbor of a given node" in {
-    val n = {
-      import periLx.PeriNode
-      l3.minNeighbor
-    }
-    assert(n === l1)
   }
 
 }

@@ -44,10 +44,11 @@ class tessellTest extends FlatSpec {
   val minCaseStudy: Tessell = new Tessell(TessellGraph.poly(4).graph + (3 ~ 5, 5 ~ 4))
 
   "Two triangles around a vertex" can "be a tessellation and have a perimeter" in {
-    assert(minCaseStudy.perimeter === Graph(1 ~ 2, 2 ~ 3, 3 ~ 5, 4 ~ 1, 5 ~ 4))
+    assert(minCaseStudy.orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 5, 5 ~ 4, 4 ~ 1))
   }
 
   they can "have the perimeter nodes ordered" in {
+    //assert(minCaseStudy.orderedNodes.init === List(1, 2, 3, 5, 4))
     assert(minCaseStudy.orderedNodes.init === List(1, 2, 3, 5, 4))
   }
 
@@ -55,9 +56,9 @@ class tessellTest extends FlatSpec {
     assert(
       TessellGraph
         .hexagonNet(2, 1)
-        .perimeter === Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 10, 10 ~ 9, 9 ~ 8, 8 ~ 7, 7 ~ 6, 6 ~ 1))
-    assert(TessellGraph.squareNet(3, 1).perimeter === Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 8, 8 ~ 7, 7 ~ 6, 6 ~ 5, 5 ~ 1))
-    assert(TessellGraph.triangleNet(4, 1).perimeter === Graph(1 ~ 2, 2 ~ 3, 3 ~ 6, 6 ~ 5, 5 ~ 4, 4 ~ 1))
+        .orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 10, 10 ~ 9, 9 ~ 8, 8 ~ 7, 7 ~ 6, 6 ~ 1))
+    assert(TessellGraph.squareNet(3, 1).orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 8, 8 ~ 7, 7 ~ 6, 6 ~ 5, 5 ~ 1))
+    assert(TessellGraph.triangleNet(4, 1).orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 6, 6 ~ 5, 5 ~ 4, 4 ~ 1))
   }
 
   "Several difficult perimeter cases" can "be identified" in {
@@ -65,15 +66,15 @@ class tessellTest extends FlatSpec {
       TessellGraph.poly(4).graph + (
         2 ~ 5, 5 ~ 6, 6 ~ 3, 5 ~ 7, 7 ~ 8, 8 ~ 6, 7 ~ 9, 9 ~ 10, 10 ~ 8
       ))
-    assert(case1.perimeter === Graph(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 9, 9 ~ 10, 10 ~ 8, 8 ~ 6, 6 ~ 3, 3 ~ 4, 4 ~ 1))
+    assert(case1.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 9, 9 ~ 10, 10 ~ 8, 8 ~ 6, 6 ~ 3, 3 ~ 4, 4 ~ 1))
     val case2: Tessell = new Tessell(TessellGraph.poly(3).graph + (2 ~ 4, 3 ~ 4, 5 ~ 4, 5 ~ 2, 4 ~ 6, 5 ~ 6))
-    assert(case2.perimeter === Graph(1 ~ 2, 2 ~ 5, 5 ~ 6, 6 ~ 4, 4 ~ 3, 3 ~ 1))
+    assert(case2.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 6, 6 ~ 4, 4 ~ 3, 3 ~ 1))
     val case3: Tessell = new Tessell(
       case1.graph + (
         2 ~ 11, 11 ~ 12, 12 ~ 5, 13 ~ 11, 13 ~ 14, 14 ~ 12, 3 ~ 15, 15 ~ 16, 16 ~ 6, 15 ~ 17, 17 ~ 18, 18 ~ 16
       ))
     assert(
-      case3.perimeter === Graph(
+      case3.orderedEdges === List(
         1 ~ 2,
         2 ~ 11,
         11 ~ 13,
@@ -94,9 +95,9 @@ class tessellTest extends FlatSpec {
         4 ~ 1
       ))
     val case4 = new Tessell(Graph(1 ~ 2, 2 ~ 3, 3 ~ 1, 3 ~ 4, 4 ~ 1, 4 ~ 5, 5 ~ 1, 5 ~ 6, 6 ~ 1, 6 ~ 7, 7 ~ 1))
-    assert(case4.perimeter === Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 6, 6 ~ 7, 7 ~ 1, 1 ~ 2))
+    assert(case4.orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 6, 6 ~ 7, 7 ~ 1))
     val case5 = TessellGraph.triangleNet(6, 2)
-    assert(case5.perimeter === Graph(2 ~ 3, 2 ~ 1, 3 ~ 4, 4 ~ 8, 5 ~ 1, 5 ~ 9, 8 ~ 12, 9 ~ 10, 10 ~ 11, 11 ~ 12))
+    assert(case5.orderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 8, 8 ~ 12, 12 ~ 11, 11 ~ 10, 10 ~ 9, 9 ~ 5, 5 ~ 1))
   }
 
   "A tessellation" can "have its pgon counted by type" in {
