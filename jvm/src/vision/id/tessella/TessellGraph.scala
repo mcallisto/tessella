@@ -448,7 +448,6 @@ object TessellGraph extends Net {
     * @param n p-gon number of sides
     * @return
     */
-  def poly(n: Int): Tessell =
-    new Tessell((1 to n).foldLeft(Graph(): Graph[Int, UnDiEdge])((es, i) ⇒ es + (i ~ (i % n + 1))))
+  def poly(sides: Int): Tessell = new Tessell(Graph.from(Nil, for (i ← 1 to sides) yield i ~ (i % sides + 1)))
 
 }
