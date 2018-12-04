@@ -12,7 +12,8 @@ import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
 import vision.id.tessella.Tau.τ
 
 final class TessellGraph(val graph: Graph[Int, UnDiEdge])
-    extends Symmetry
+    extends Perimeter
+    with Symmetry
     with MathUtils
     with DistinctUtils[Polygon]
     with ListUtils {
@@ -29,8 +30,8 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   implicit final class ExtNode(node: graph.NodeT) {
 
-    def shortestWithBlocksTo(n: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
-      node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo n
+    def shortestWithBlocksTo(other: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
+      node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo other
 
     /**
       * a node (vertex) can be shared by max 6 reg p-gons (triangles)
@@ -43,28 +44,11 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
       d >= 2 && d <= 6
     }
 
-    def isMinimal: Boolean = node.degree == 2
-
-    /**
-      * node part of the perimeter
-      * (this condition is NOT necessarily true for all the nodes in the perimeter)
-      *
-      * @return
-      */
-    def isPerimeterLoose: Boolean = isMinimal || node.neighbors.exists(_.isMinimal)
-
     /**
       * @note a node not full is on the perimeter
       * @return
       */
     def isPerimeter: Boolean = orderedNodes.contains(node)
-
-    def isPerimeterJunction: Boolean = isPerimeter && node.degree > 2
-
-    def isOneNodeFromPeri: Boolean = node.neighbors.exists(_.isPerimeter)
-
-    def isTwoOrLessNodesFromPeri: Boolean =
-      (node.neighbors.foldLeft(Set(): Set[graph.NodeT])(_ ++ _.neighbors) - node).exists(_.isPerimeter)
 
     // ----------------- node neighbors -------------------
 
@@ -189,89 +173,16 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   implicit final class ExtEdge(edge: graph.EdgeT) {
 
-    /**
-      * edge part of the perimeter, with at least one end directing to only 2 other nodes
-      * (this condition is NOT necessarily true for all the edges in the perimeter)
-      *
-      * @return
-      */
-    def isPerimeterLoose: Boolean = edge._1.isMinimal || edge._2.isMinimal
-
-    def isPerimeterLooseProg(out: Int, same: Boolean = true): Boolean = {
-      val (d1, d2) = (edge._1.degree, edge._2.degree)
-      if (same) d1 == out && d2 == out
-      else (d1 == out && d2 == out + 1) || (d1 == out + 1 && d2 == out)
-    }
-
     def isPerimeter: Boolean = orderedEdges.contains(edge)
 
   }
 
   // ----------------- perimeter -------------------
 
-  val perimeter: graph.Path = {
-
-    /**
-      * if no perimeter loose edges with outdegree 2 found, this method recursively scan for others
-      *
-      * @param out  outdegree of one endpoint
-      * @param same if true other endpoint same outdegree, false +1
-      * @return
-      */
-    def progLooseEdges(out: Int, same: Boolean): List[graph.EdgeT] =
-      graph.edges.filter(_.isPerimeterLooseProg(out, same)).toList match {
-        case Nil if same ⇒ progLooseEdges(out, same = false) // increase
-        case Nil         ⇒ progLooseEdges(out + 1, same = true) // increase
-        case es          ⇒ es
-      }
-
-    val periGraph: Graph[Int, UnDiEdge] = {
-
-      // adding edges to perimeter until is completed
-      def loop(p: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] = {
-        if (p.isConnected && p.isCyclic) p
-        else {
-          // find an edge with endpoint
-          val e: p.EdgeT = p.edges.find((e: p.EdgeT) ⇒ e._1.degree == 1 || e._2.degree == 1).get
-          // n1 node of the endpoint
-          val (n1, n2): (graph.NodeT, graph.NodeT) =
-            if (e._1.degree == 1) (graph get e._1, graph get e._2) else (graph get e._2, graph get e._1)
-          // nodes potentially on the perimeter
-          val candidates: List[graph.NodeT] = n1.diSuccessors.toList.filterNot(_ == n2)
-          // next is the farthest from n2 not passing through n1
-          val next: graph.NodeT = candidates.maxBy(_.shortestWithBlocksTo(n2, Set(n1)).get.size)
-          loop(p ++ List(n1.toOuter ~ next.toOuter))
-        }
-      }
-
-      // start with loose (easy to find) edges
-      val es: List[UnDiEdge[Int]] = (graph.edges.filter(_.isPerimeterLoose).toList match {
-        case Nil  ⇒ progLooseEdges(3, same = true) // if nothing progressively explore higher degrees
-        case some ⇒ some
-      }).map(_.toOuter)
-
-      loop(Graph() ++ es)
-    }
-
-    require(periGraph.isCyclic, "perimeter not cyclic")
-
-    require(periGraph.nodes.forall(_.degree == 2), "perimeter not simple: " + periGraph)
-
-    val nodeOrdering = periGraph.NodeOrdering(Ordering.Int.compare(_, _))
-
-    /**
-      * ordered from lowest node in the direction where the lower neighbor is found
-      */
-    val orderedCycle: periGraph.Cycle = periGraph.nodes.minBy(_.toOuter).withOrdering(nodeOrdering).findCycle.get
-
-    val ns = orderedCycle.nodes.toList
-    ns.tail.foldLeft(graph.newPathBuilder(graph get ns.head.toOuter))((pb, n) ⇒ pb += (graph get n.toOuter)).result()
+  val (orderedNodes, orderedEdges): (List[graph.NodeT], List[graph.EdgeT]) = {
+    val (ns, es) = graph.perimeterNodesEdges
+    (ns.map(graph get _), es.map(graph get _))
   }
-
-  val orderedNodes: List[graph.NodeT] = perimeter.nodes.toList :+ perimeter.nodes.head
-
-  val orderedEdges: List[graph.EdgeT] = perimeter.edges.toList :+ graph.get(
-    perimeter.nodes.last.toOuter ~ perimeter.nodes.head.toOuter)
 
   val (neighsNodes, neighsPaths): (List[List[graph.NodeT]], List[List[List[graph.NodeT]]]) =
     orderedNodes.init.map(_.nodeNeighbors.unzip).unzip
