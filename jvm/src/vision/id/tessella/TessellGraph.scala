@@ -29,8 +29,8 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   implicit final class ExtNode(node: graph.NodeT) {
 
-    def shortestWithBlocksTo(n: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
-      node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo n
+    def shortestWithBlocksTo(other: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
+      node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo other
 
     /**
       * a node (vertex) can be shared by max 6 reg p-gons (triangles)
