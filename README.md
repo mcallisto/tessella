@@ -43,7 +43,7 @@ Use the `mill jvm.run output docs` command.
 
 ### Draw several examples of algorithmic tessellations
 
-Use the `mill jvm.run output algos` and view them ordered in the temporary `out/jvm/myAlgos` folder.
+Use the `mill jvm.run output algos` command and view them ordered in the temporary `out/jvm/myAlgos` folder.
 
 ## Vertex
 For the library methods a given vertex is described by the ordered adjacent regular p-gons joined at the vertex.
