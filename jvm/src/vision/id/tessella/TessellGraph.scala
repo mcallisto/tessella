@@ -48,7 +48,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
       * @note a node not full is on the perimeter
       * @return
       */
-    def isPerimeter: Boolean = orderedNodes.contains(node)
+    def isPerimeter: Boolean = periNodes.contains(node.toOuter)
 
     // ----------------- node neighbors -------------------
 
@@ -171,21 +171,12 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
     }
   }
 
-  implicit final class ExtEdge(edge: graph.EdgeT) {
-
-    def isPerimeter: Boolean = orderedEdges.contains(edge)
-
-  }
-
   // ----------------- perimeter -------------------
 
-  val (orderedNodes, orderedEdges): (List[graph.NodeT], List[graph.EdgeT]) = {
-    val (ns, es) = graph.perimeterNodesEdges
-    (ns.map(graph get _), es.map(graph get _))
-  }
+  val (periNodes, periEdges): (List[Int], List[UnDiEdge[Int]]) = graph.perimeterNodesEdges
 
   val (neighsNodes, neighsPaths): (List[List[graph.NodeT]], List[List[List[graph.NodeT]]]) =
-    orderedNodes.init.map(_.nodeNeighbors.unzip).unzip
+    periNodes.init.map(n ⇒ (graph get n).nodeNeighbors.unzip).unzip
 
   val vertexes: List[Vertex] = neighsPaths.map(paths ⇒ Vertex.p(paths.init.map(_.size + 2)))
 
@@ -235,7 +226,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
           case None ⇒
             findAddable(mapped) match {
               case Some(node) ⇒ tm.addFromNeighbors(node, (graph get node).outerNodeNeighbors)
-              case None       ⇒ tm.addFromPerimeter(orderedNodes.init.map(_.toOuter), polygon.lαs)
+              case None       ⇒ tm.addFromPerimeter(periNodes.init, polygon.lαs)
             }
         }
         loop(nexttm.get)
@@ -254,15 +245,15 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
     e ⇒ Segment2D.fromPoint2Ds(tm.m(e._1.toOuter), tm.m(e._2.toOuter))
   )
 
-  def perimeterCoords(tm: TessellMap): List[Point2D] = orderedNodes.init.map(n ⇒ tm.m(n.toOuter))
+  def perimeterCoords(tm: TessellMap): List[Point2D] = periNodes.init.map(tm.m(_))
 
   def toPerimeterPolygon(tm: TessellMap): Polygon = new Polygon(perimeterCoords(tm).map(_.c))
 
   def toPerimeterLabels2D(tm: TessellMap): List[Label2D] =
-    orderedNodes.init
+    periNodes.init
       .zip(perimeterCoords(tm))
       .map({
-        case (node, point) ⇒ labelize(node.toOuter, point)
+        case (node, point) ⇒ labelize(node, point)
       })
 
   def toPolygons(tm: TessellMap): List[Polygon] = {
@@ -292,7 +283,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
         def isWorkable(n: t.graph.NodeT, degree: Int): Boolean = {
 
-          def isOnPerimeter: Boolean = degree == 2 || t.orderedNodes.contains(n)
+          def isOnPerimeter: Boolean = degree == 2 || t.periNodes.contains(n.toOuter)
 
           def safeRemoval: Boolean = {
             val newg = removeOrphans(t.graph - n)
@@ -303,7 +294,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
         }
 
         def getPeriNeighbors(no: Int): List[Int] = {
-          val all = t.orderedNodes.tail.map(_.toOuter)
+          val all = t.periNodes.tail
           val i   = all.indexOf(no)
           val s   = all.size
           if (i == 0) List(all(1), all(s - 1))

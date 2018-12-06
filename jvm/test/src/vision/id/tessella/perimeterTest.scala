@@ -39,21 +39,21 @@ class perimeterTest extends FlatSpec with SVG {
   val periRx: Tessell = new Tessell(Graph(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
 
   "A perimeter ordered to right" can "have its nodes ordered" in {
-    assert(periRx.orderedNodes.map(_.toOuter) === List(1, 2, 5, 7, 1))
+    assert(periRx.periNodes === List(1, 2, 5, 7, 1))
   }
 
   it can "have its edges ordered" in {
-    assert(periRx.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
+    assert(periRx.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
   }
 
   val periLx: Tessell = new Tessell(Graph(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1))
 
   "A perimeter ordered to left" can "have its nodes ordered" in {
-    assert(periLx.orderedNodes.map(_.toOuter) === List(1, 2, 5, 3, 1))
+    assert(periLx.periNodes === List(1, 2, 5, 3, 1))
   }
 
   it can "have its edges ordered" in {
-    assert(periLx.orderedEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 3, 3 ~ 1))
+    assert(periLx.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 3, 3 ~ 1))
   }
 
 }

@@ -14,7 +14,7 @@ class tessellCheckTest extends FlatSpec with Checkers {
   } yield TessellGraph.poly(sides)
 
   "A tessellation made of a single reg p-gon" must "have graph equal to perimeter graph" in {
-    check(forAll(PolyTessGen)(t ⇒ t.graph === new TessellGraph(Graph.from(Nil, t.orderedEdges.map(_.toOuter))).graph))
+    check(forAll(PolyTessGen)(t ⇒ t.graph === new TessellGraph(Graph.from(Nil, t.periEdges)).graph))
   }
 
   "A tessellation" can "be duplicated" in {
