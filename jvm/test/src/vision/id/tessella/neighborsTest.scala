@@ -16,7 +16,15 @@ class neighborsTest extends FlatSpec with Symmetry {
     val vertexOtherCase = new Tessell(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1))
     import vertexOtherCase.ExtNode
     assert(
-      (vertexOtherCase.graph get 1).perimeterNodeNeighbors === List(
+      (vertexOtherCase.graph get 1).getNeighsPaths === List(
+        (6, List(5)),
+        (5, List(4)),
+        (4, List(3, 2)),
+        (2, List(7)),
+        (7, List())
+      ))
+    assert(
+      (vertexOtherCase.graph get 1).getNeighsPaths === List(
         (6, List(5)),
         (5, List(4)),
         (4, List(3, 2)),
@@ -26,7 +34,7 @@ class neighborsTest extends FlatSpec with Symmetry {
 
     val neighsPeri = {
       import vertexFortyTwo.ExtNode
-      (vertexFortyTwo.graph get 10).perimeterNodeNeighbors
+      (vertexFortyTwo.graph get 10).getNeighsPaths
     }
     assert(
       neighsPeri === List(
@@ -44,7 +52,7 @@ class neighborsTest extends FlatSpec with Symmetry {
       new Tessell(TessellGraph.poly(6).graph + (1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6))
     import vertexCaseStudy.ExtNode
     assert(
-      (vertexCaseStudy.graph get 1).fullNodeNeighbors === List(
+      (vertexCaseStudy.graph get 1).getNeighsPaths === List(
         (2, List(3, 4, 5, 6)),
         (6, List(10, 9)),
         (9, List(7)),
@@ -53,7 +61,7 @@ class neighborsTest extends FlatSpec with Symmetry {
 
     val neighsFull1 = {
       import vertexFortyTwo.ExtNode
-      (vertexFortyTwo.graph get 2).fullNodeNeighbors
+      (vertexFortyTwo.graph get 2).getNeighsPaths
     }
     assert(
       neighsFull1 === List(
@@ -67,7 +75,7 @@ class neighborsTest extends FlatSpec with Symmetry {
     val hex = TessellGraph.hexagonNet(2, 3)
     val neighsFull2 = {
       import hex.ExtNode
-      (hex.graph get 15).fullNodeNeighbors
+      (hex.graph get 15).getNeighsPaths
     }
     assert(
       neighsFull2 === List(
@@ -118,7 +126,7 @@ class neighborsTest extends FlatSpec with Symmetry {
       ))
     val neighsFull = {
       import edgeCase.ExtNode
-      (edgeCase.graph get 3).fullNodeNeighbors
+      (edgeCase.graph get 3).getNeighsPaths
     }
     assert(
       neighsFull === List(

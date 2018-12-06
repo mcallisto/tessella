@@ -13,10 +13,8 @@ import vision.id.tessella.Tau.τ
 
 final class TessellGraph(val graph: Graph[Int, UnDiEdge])
     extends Perimeter
-    with Symmetry
-    with MathUtils
-    with DistinctUtils[Polygon]
-    with ListUtils {
+    with Neighbors
+    with DistinctUtils[Polygon] {
 
   protected type T = TessellGraph
 
@@ -30,9 +28,6 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
 
   implicit final class ExtNode(node: graph.NodeT) {
 
-    def shortestWithBlocksTo(other: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
-      node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo other
-
     /**
       * a node (vertex) can be shared by max 6 reg p-gons (triangles)
       * and it is shared by at least 2 sides of a reg p-gon
@@ -44,141 +39,19 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
       d >= 2 && d <= 6
     }
 
-    /**
-      * @note a node not full is on the perimeter
-      * @return
-      */
-    def isPerimeter: Boolean = periNodes.contains(node.toOuter)
+    // used for now in tests only
+    def getNeighsPaths: List[(Int, List[Int])] = graph.outerNodeNeighbors(graph get node, periNodes)
 
-    // ----------------- node neighbors -------------------
-
-    type nodesL = List[graph.NodeT]
-
-    type nPaths = List[(graph.NodeT, nodesL)]
-
-    /**
-      *
-      * @param ns  nodes yet to be added to path
-      * @param acc accumulator of nodes and paths found
-      * @param b   nodes blocking shortest path
-      * @return
-      */
-    private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[graph.NodeT]): nPaths = ns match {
-      case Nil ⇒ acc
-      case _ ⇒
-        val (acc_nodes, _)         = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
-        val lastNode: graph.NodeT  = acc_nodes.head
-        val mapPaths: nPaths       = ns.map(n ⇒ (n, n.shortestWithBlocksTo(lastNode, b).get.nodes.toList))
-        val (foundNode, pathNodes) = mapPaths.minBy({ case (_, path) ⇒ path.size })
-        findPathPeri(
-          ns.filterNot(_ == foundNode),
-          (foundNode, pathNodes) +: acc,
-          b ++ Set(lastNode)
-        )
-    }
-
-    private def findPathFull(ns: nodesL, acc: nPaths, b: Set[graph.NodeT]): nPaths = ns match {
-      case Nil ⇒ acc
-      case _ ⇒
-        val (acc_nodes, _)         = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
-        val firstNode: graph.NodeT = acc_nodes.head
-        val lastNode: graph.NodeT  = acc_nodes.last
-        val blocks: Set[graph.NodeT] = b ++ (acc_nodes.tail match {
-          case Nil  ⇒ Nil
-          case some ⇒ some.init
-        })
-        val mapPaths: List[(graph.NodeT, nodesL, Boolean)] = ns.flatMap(
-          n ⇒
-            List((n, n.shortestWithBlocksTo(firstNode, blocks).get.nodes.toList, true),
-                 (n, n.shortestWithBlocksTo(lastNode, blocks).get.nodes.toList, false)))
-        val (foundNode, pathNodes, isFirst) = mapPaths.minBy({ case (_, path, _) ⇒ path.size })
-        val acc_new: (graph.NodeT, nodesL)  = (foundNode, pathNodes)
-        findPathFull(
-          ns.filterNot(_ == foundNode),
-          if (isFirst) acc_new +: acc else acc :+ acc_new,
-          b
-        )
-    }
-
-    def perimeterNodeNeighbors: nPaths = {
-      val neighb: nodesL = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
-      // find start without relying on having found all perimeter ordered nodes
-      val start: graph.NodeT = (neighb.filter(_.isPerimeter) match {
-        case two @ _ :: _ :: Nil ⇒ two
-        case more ⇒
-          more
-            .combinations(2)
-            .maxBy({
-              case f :: s :: _ ⇒ f.shortestWithBlocksTo(s, Set(node)).get.nodes.size
-              case _           ⇒ throw new Error
-            })
-      }) minBy (_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + start)
-      val (nodes, paths): (nodesL, List[nodesL]) = findPathPeri(
-        neighb.filterNot(_ == start),
-        List((start, List())),
-        Set(node)
-      ).reverse.unzip
-      nodes.zip(
-        paths
-          .rotate(-1)
-          .map({
-            case Nil ⇒ Nil
-            case p   ⇒ p.reverse.tail
-          }))
-    }
-
-    private def reorderFull(ps: nPaths): nPaths = {
-      val first: (graph.NodeT, nodesL)    = ps.minBy({ case (n, _) ⇒ n.toOuter })
-      val indexFirst: Int                 = ps.indexOf(first)
-      val rotated: nPaths                 = ps.rotate(-indexFirst)
-      val next: (graph.NodeT, nodesL)     = rotated(1)
-      val previous: (graph.NodeT, nodesL) = rotated(ps.size - 1)
-      if (next._1.toOuter < previous._1.toOuter)
-        rotated
-      else {
-        val (nodes, paths) = rotated.contraRotate().unzip
-        nodes.zip(paths.rotate(-1).map(_.reverse))
-      }
-    }
-
-    def fullNodeNeighbors: nPaths = {
-      val neighb: nodesL     = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
-      val start: graph.NodeT = neighb.minBy(_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + first)
-      val (nodes, paths): (nodesL, List[nodesL]) = findPathFull(
-        neighb.filterNot(_ == start),
-        List((start, List())),
-        Set(node)
-      ).unzip //; logger.debug("\nnodes: " + nodes); logger.debug("\npaths: " + paths)
-      val first                = nodes.head
-      val last                 = nodes.last
-      val block                = paths.flatten.toSet ++ nodes.init.tail.flatMap(_.neighbors) - first - last
-      val lastPath: nodesL     = first.shortestWithBlocksTo(last, block).get.nodes.toList
-      val paths2: List[nodesL] = paths.filterNot(_.isEmpty) :+ lastPath //; logger.debug("\npaths2: " + paths2)
-      reorderFull(nodes.zip(paths2.headLastConcat)).map({ case (n, path) ⇒ (n, path.tail) })
-    }
-
-    /**
-      * if node is full, neighbors ordered from min with direction to lower adjacent
-      * if node is not full, ordered from min endpoint to other endpoint
-      *
-      * @return list of ordered neighbors nodes and ordered path nodes of the underlying p-gon to reach the next one
-      */
-    def nodeNeighbors: nPaths = if (node.isPerimeter) node.perimeterNodeNeighbors else node.fullNodeNeighbors
-
-    def outerNodeNeighbors: List[(Int, List[Int])] = {
-      val (nodes, paths) = node.nodeNeighbors.unzip
-      nodes.map(_.toOuter).zip(paths.map(_.map(_.toOuter)))
-    }
   }
 
   // ----------------- perimeter -------------------
 
   val (periNodes, periEdges): (List[Int], List[UnDiEdge[Int]]) = graph.perimeterNodesEdges
 
-  val (neighsNodes, neighsPaths): (List[List[graph.NodeT]], List[List[List[graph.NodeT]]]) =
-    periNodes.init.map(n ⇒ (graph get n).nodeNeighbors.unzip).unzip
+  val (periNeighs, periPaths): (List[List[Int]], List[List[List[Int]]]) =
+    periNodes.init.map(graph.outerNodeNeighbors(_, periNodes).unzip).unzip
 
-  val vertexes: List[Vertex] = neighsPaths.map(paths ⇒ Vertex.p(paths.init.map(_.size + 2)))
+  val vertexes: List[Vertex] = periPaths.map(paths ⇒ Vertex.p(paths.init.map(_.size + 2)))
 
   // implies satisfying requirements of UnitSimplePgon
   val polygon: UnitSimplePgon = new UnitSimplePgon(vertexes.map(v ⇒ new PointPolar(1.0, τ / 2 - v.α)))
@@ -222,10 +95,10 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
       else {
         val mapped: List[Int] = tm.m.keys.toList
         val nexttm: Try[TessellMap] = findCompletable(mapped) match {
-          case Some(node) ⇒ tm.completeNode(node, (graph get node).outerNodeNeighbors)
+          case Some(node) ⇒ tm.completeNode(node, graph.outerNodeNeighbors(node, periNodes))
           case None ⇒
             findAddable(mapped) match {
-              case Some(node) ⇒ tm.addFromNeighbors(node, (graph get node).outerNodeNeighbors)
+              case Some(node) ⇒ tm.addFromNeighbors(node, graph.outerNodeNeighbors(node, periNodes))
               case None       ⇒ tm.addFromPerimeter(periNodes.init, polygon.lαs)
             }
         }
@@ -234,7 +107,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
     }
 
     val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
-    loop(TessellMap.firstThree(firstNode.toOuter, firstNode.outerNodeNeighbors))
+    loop(TessellMap.firstThree(firstNode.toOuter, graph.outerNodeNeighbors(firstNode, periNodes)))
   }
 
   def labelize: (Int, Point2D) ⇒ Label2D = { case (node, point) ⇒ new Label2D(point.c, node.toString) }

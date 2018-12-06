@@ -102,7 +102,7 @@ class tessellMapTest extends FlatSpec {
     TessellGraph.poly(6).graph + (1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6))
   val neigh2: List[(Int, List[Int])] = {
     import vertexCaseStudy.ExtNode
-    (vertexCaseStudy.graph get 1).outerNodeNeighbors
+    (vertexCaseStudy.graph get 1).getNeighsPaths
   }
 
   "A mapped node" can "be completed if it has 2 or more mapped neighbors(2)" in {
