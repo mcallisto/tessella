@@ -16,8 +16,6 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
     with Neighbors
     with DistinctUtils[Polygon] {
 
-  protected type T = TessellGraph
-
   val logger = Logger("TESSELL")
 
   require(graph.isConnected, "tessell not connected")
@@ -56,7 +54,7 @@ final class TessellGraph(val graph: Graph[Int, UnDiEdge])
   // implies satisfying requirements of UnitSimplePgon
   val polygon: UnitSimplePgon = new UnitSimplePgon(vertexes.map(v ⇒ new PointPolar(1.0, τ / 2 - v.α)))
 
-  def isPolygonSymmetricTo(that: T): Boolean = this.polygon.lαs.isRotationOrReflectionOf(that.polygon.lαs)
+  def isPolygonSymmetricTo(that: TessellGraph): Boolean = this.polygon.lαs.isRotationOrReflectionOf(that.polygon.lαs)
 
   // ----------------- to cartesian coords -------------------
 
