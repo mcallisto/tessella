@@ -25,10 +25,10 @@ A valid tessellation:
 * cannot have adjacent polygons at the same vertex making more than a full circle
 
 > ![more than full circle at the same vertex](constraints/moreThanFull.svg)
-> _Three squares and a pentagon at the same vertex (node 3) make more than a full circle_
+> _Three squares and a regular pentagon at the same vertex (node 3) make more than a full circle_
 
 > ![area overlapping1](constraints/areaOverlap1.svg)
-> _Three squares and a pentagon at the same vertex (node 3) overlap_
+> _Three squares and a regular pentagon at the same vertex (node 3) overlap_
 
 * cannot have areas overlapping
 
