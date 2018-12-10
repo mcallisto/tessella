@@ -36,7 +36,7 @@ A valid tessellation:
 > _Area overlapping_
 
 > ![area overlapping3](constraints/areaOverlap3.svg)
-> _Area and sides overlapping, edges 2~5 with 21\~19 and 3~6 with 22\~17_
+> _Area and sides overlapping, edges 2\~5 with 21\~19 and 3\~6 with 22\~17_
 
 * cannot have sides overlapping
 
