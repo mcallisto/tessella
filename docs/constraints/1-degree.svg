@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g style="stroke:black">
+        <line x1="2.0" y1="2.0" x2="27.0" y2="2.0"/>
+        <line x1="27.0" y1="2.0" x2="14.5" y2="23.65063509"/>
+        <line x1="14.5" y1="23.65063509" x2="2.0" y2="2.0"/>
+        <line x1="14.5" y1="23.65063509" x2="39.5" y2="23.65063509"/>
+    </g>
+    <g>
+        <g style="fill:yellow">
+            <polygon style="stroke:none" points="14.5,23.65063509 2.0,2.0 27.0,2.0"/>
+        </g>
+    </g>
+    <polygon
+            style="fill:none;stroke:blue;stroke-width:2"
+            points="2.0,2.0 27.0,2.0 14.5,23.65063509 39.5,23.65063509 14.5,23.65063509">
+    </polygon>
+    <g style="fill:red">
+        <text x="-1.0" y="4.5">1</text>
+        <text x="24.0" y="4.5">2</text>
+        <text x="11.5" y="26.15063509">3</text>
+        <text x="36.5" y="26.15063509">4</text>
+    </g>
+</svg>

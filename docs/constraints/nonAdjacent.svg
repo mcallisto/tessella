@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g style="stroke:black">
+        <line x1="27.0" y1="23.65063509" x2="52.0" y2="23.65063509"/>
+        <line x1="27.0" y1="23.65063509" x2="39.5" y2="45.30127019"/>
+        <line x1="27.0" y1="23.65063509" x2="2.0" y2="23.65063509"/>
+        <line x1="27.0" y1="23.65063509" x2="14.5" y2="2.0"/>
+        <line x1="2.0" y1="23.65063509" x2="14.5" y2="2.0"/>
+        <line x1="52.0" y1="23.65063509" x2="39.5" y2="45.30127019"/>
+    </g>
+    <g>
+        <g style="fill:yellow">
+            <polygon
+                    style="stroke:none" points="27.0,23.65063509 2.0,23.65063509 14.5,2.0">
+            </polygon>
+            <polygon
+                    style="stroke:none" points="39.5,45.30127019 27.0,23.65063509 52.0,23.65063509">
+            </polygon>
+        </g>
+    </g>
+    <polygon
+            style="fill:none;stroke:blue;stroke-width:2"
+            points="52.0,23.65063509 39.5,45.30127019 27.0,23.65063509 2.0,23.65063509 14.5,2.0 27.0,23.65063509">
+    </polygon>
+    <g style="fill:red">
+        <text x="-1.0" y="26.15063509">5</text>
+        <text x="24.0" y="26.15063509">2</text>
+        <text x="11.5" y="4.5">4</text>
+        <text x="49.0" y="26.15063509">1</text>
+        <text x="36.5" y="47.80127019">3</text>
+    </g>
+</svg>

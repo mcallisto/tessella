@@ -13,6 +13,8 @@ Each tessellation is internally described as an [undirected graph](https://en.wi
 The graph describing the tessellation can be created through algorithms.
 Many of them, exploiting linear symmetries, are already available from the `Reticulate` and `Net` traits.
 
+Not all undirected graphs are legitimate tessellations, see [Graph validation](docs/graph-validation.md).
+
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
 
 ## How to
