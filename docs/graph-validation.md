@@ -46,9 +46,9 @@ A valid tessellation:
 * cannot have vertices overlapping
 
 > ![vertex overlapping](constraints/vertexOverlap.svg)
-> _Vertex overlapping, node 6 and nod 15 at the same position_
+> _Vertex overlapping, node 6 and node 15 at the same position_
 
-* cannot have inside gaps, they would be considered non regular unit polygons
+* cannot have inside gaps, they would be considered non-regular unit polygons
 
 > ![gap](constraints/gap.svg)
 > _Gap_
