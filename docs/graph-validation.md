@@ -4,7 +4,7 @@ A valid tessellation:
 
 * cannot have nodes connected to less than other 2 nodes (with degree < 2), they would represent an external point (if degree = 0) or an open polygon (if degree = 1).
 
-> ![1-degree node](docs/constraints/1-degree.svg)
+> ![1-degree node](constraints/1-degree.svg)
 > _Node 4 is 1-degree_
 
 * cannot have nodes connected to more than other 6 nodes (with degree > 6), they would represent a vertex with more than 6 adjacent polygons, and this is impossible since the polygon with the smaller exterior angle, the regular triangle, fills the full angle with 6 units.
