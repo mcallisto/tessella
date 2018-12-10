@@ -94,7 +94,7 @@ trait SVG {
     val marks: Any = markStyle match {
       case _ ⇒ null
     }
-    new NodeBuffer() &+ grid &+ perimeter &+ polygons &+ labels &+ marks
+    new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ labels &+ marks
   }
 
   def getGrid(g: List[Segment2D], diff: Point2D): Elem =
