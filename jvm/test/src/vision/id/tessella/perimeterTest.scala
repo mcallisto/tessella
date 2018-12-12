@@ -2,6 +2,7 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 
+import scalax.collection.Graph
 import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
@@ -35,7 +36,7 @@ class perimeterTest extends FlatSpec with Methods with SVG {
       ))
   }
 
-  val periRx: Tiling = Tiling.emptyG ++ List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1)
+  val periRx: Tiling = Tiling.fromG(Graph.from(edges = List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1)))
 
   "A perimeter ordered to right" can "have its nodes ordered" in {
     assert(periRx.periNodes === List(1, 2, 5, 7, 1))
@@ -45,7 +46,7 @@ class perimeterTest extends FlatSpec with Methods with SVG {
     assert(periRx.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
   }
 
-  val periLx: Tiling = Tiling.emptyG ++ List(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1)
+  val periLx: Tiling = Tiling.fromG(Graph.from(edges = List(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1)))
 
   "A perimeter ordered to left" can "have its nodes ordered" in {
     assert(periLx.periNodes === List(1, 2, 5, 3, 1))

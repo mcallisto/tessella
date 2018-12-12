@@ -13,9 +13,7 @@ object Alias {
 
   object Tiling extends CompanionAlias[UnDiEdge](Shaped withStringPrefix "Tiling") with Net {
 
-    def emptyG: Tiling = Tiling.empty
-
-    def poly(sides: Int): Tiling = Tiling.from(Nil, for (i <- 1 to sides) yield i ~ (i % sides + 1))
+    def poly(sides: Int): Tiling = Tiling.from(Nil, for (i ← 1 to sides) yield i ~ (i % sides + 1))
 
     def fromG(graph: scalax.collection.Graph[Int, UnDiEdge]): Tiling = Tiling.from(graph.nodes, graph.edges)
 

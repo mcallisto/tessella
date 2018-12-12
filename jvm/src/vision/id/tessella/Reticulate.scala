@@ -30,7 +30,7 @@ trait Reticulate extends GraphUtils with Methods {
       i ← 1 to (x + 1)
       j ← 0 until y
     } yield (i + (x + 1) * j, i + (x + 1) * (j + 1))
-    Tiling.emptyG ++ (for (p <- horiz ++ vert) yield p._1 ~ p._2)
+    Tiling.fromG(Graph.from(edges = for (p ← horiz ++ vert) yield p._1 ~ p._2))
   }
 
   /**
