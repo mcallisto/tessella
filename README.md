@@ -10,10 +10,10 @@ Each tessellation is internally described as an [undirected graph](https://en.wi
 * each **node** of the graph is a _**vertex**_ of a polygon and it is represented by a unique `Int`
 * each **edge** of the graph is a _**side**_ of a polygon
 
-The graph describing the tessellation can be created through algorithms.
+The graph describing the tessellation is a called a `Tiling` and can be created through algorithms.
 Many of them, exploiting linear symmetries, are already available from the `Reticulate` and `Net` traits.
 
-Not all undirected graphs are legitimate tessellations, see [graph validation](docs/graph-validation.md).
+Not all undirected graphs are valid `Tiling`s, see [graph validation](docs/graph-validation.md).
 
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
 

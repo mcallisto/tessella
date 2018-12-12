@@ -1,6 +1,6 @@
 # Graph validation
 
-A valid tessellation:
+A `Tiling` instance, representing a valid tessellation, is a graph that:
 
 * cannot have nodes connected to less than other 2 nodes (with degree < 2), they would represent an external point (if degree = 0) or an open polygon (if degree = 1)
 
