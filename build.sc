@@ -2,6 +2,7 @@ import mill._
 import mill.define.Sources
 import scalalib._
 import ammonite.ops._
+import coursier.maven.MavenRepository
 
 trait Versioned extends ScalaModule {
 
@@ -23,9 +24,15 @@ trait Common extends Versioned {
 
 trait Testable extends ScalaModule {
 
+  override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
+    MavenRepository("http://bits.netbeans.org/nexus/content/groups/netbeans/"),
+    MavenRepository("https://raw.github.com/gephi/gephi/mvn-thirdparty-repo/")
+  )
+
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scalatest::scalatest:3.0.5",
-    ivy"org.scalacheck::scalacheck:1.14.0"
+    ivy"org.scalacheck::scalacheck:1.14.0",
+    ivy"org.gephi:gephi-toolkit:0.9.2"
   )
 
 }
