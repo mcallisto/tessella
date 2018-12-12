@@ -39,6 +39,7 @@ object jvm extends Common { outer ⇒
 
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scala-graph::graph-core:1.12.5",
+    ivy"org.scala-graph::graph-constrained:1.12.5",
     ivy"org.scala-lang.modules::scala-xml:1.1.1",
     ivy"com.lihaoyi::os-lib:0.2.2",
     ivy"com.storm-enroute::scalameter:0.8.2",

@@ -4,12 +4,12 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.TessellGraph.Tessell
+import vision.id.tessella.Alias.Tiling
 
 /**
   * fast methods to create reticulate tessellations of arbitrary size
   */
-trait Reticulate extends GraphUtils {
+trait Reticulate extends GraphUtils with Methods {
 
   /**
     * compose a rectangular reticulate of x by y squares
@@ -18,7 +18,7 @@ trait Reticulate extends GraphUtils {
     * @param y side units
     * @return
     */
-  def squareNet(x: Int, y: Int): Tessell = {
+  def squareNet(x: Int, y: Int): Tiling = {
     require(x > 0 && y > 0)
 
     val horiz = for {
@@ -30,7 +30,7 @@ trait Reticulate extends GraphUtils {
       i ← 1 to (x + 1)
       j ← 0 until y
     } yield (i + (x + 1) * j, i + (x + 1) * (j + 1))
-    new Tessell((horiz ++ vert).foldLeft(Graph(): Graph[Int, UnDiEdge])((es, p) ⇒ es + p._1 ~ p._2))
+    Tiling.emptyG ++ (for (p <- horiz ++ vert) yield p._1 ~ p._2)
   }
 
   /**
@@ -40,7 +40,7 @@ trait Reticulate extends GraphUtils {
     * @param y side units
     * @return
     */
-  def triangleNet(x: Int, y: Int): Tessell = {
+  def triangleNet(x: Int, y: Int): Tiling = {
     require(x > 0 && y > 0)
     require(x % 2 == 0)
 
@@ -49,7 +49,7 @@ trait Reticulate extends GraphUtils {
       i ← 1 to h
       j ← 0 until y
     } yield (i + (h + 1) * j, i + 1 + (h + 1) * (j + 1))
-    new Tessell(diag.foldLeft(squareNet(h, y).graph)((es, p) ⇒ es + p._1 ~ p._2))
+    squareNet(h, y) ++ diag.map(p ⇒ p._1 ~ p._2)
   }
 
   /**
@@ -59,7 +59,7 @@ trait Reticulate extends GraphUtils {
     * @param y side units
     * @return
     */
-  def hexagonNet(x: Int, y: Int): Tessell = {
+  def hexagonNet(x: Int, y: Int): Tiling = {
     require(x > 0 && y > 0)
 
     val horiz = for {
@@ -72,9 +72,7 @@ trait Reticulate extends GraphUtils {
       j ← 0 until y
       v = (x + 1) * 2; w = i * 2 - 1
     } yield (w + v * j, w - 1 + v * (j + 1))
-    new Tessell(
-      (horiz.tail.init ++ vert)
-        .foldLeft(Graph(): Graph[Int, UnDiEdge])((es, p) ⇒ es + p._1 ~ p._2))
+    Tiling.fromG(Graph.from(edges = for (p ← horiz.tail.init ++ vert) yield p._1 ~ p._2))
   }
 
   /**
@@ -85,14 +83,14 @@ trait Reticulate extends GraphUtils {
     * @param f function telling if given ij node must be deleted or not
     * @return
     */
-  private def triangleNetVariant(x: Int, y: Int, f: (Int, Int) ⇒ Boolean): Tessell = {
+  private def triangleNetVariant(x: Int, y: Int, f: (Int, Int) ⇒ Boolean): Tiling = {
     val h = x / 2
     val emptyNodes = for {
       i ← 1 to h + 1
       j ← 0 to y
       if f(i, j)
     } yield i + (h + 1) * j
-    val newg    = emptyNodes.foldLeft(triangleNet(x, y).graph)(_ - _)
+    val newg    = emptyNodes.foldLeft(triangleNet(x, y))(_ - _)
     val orphans = newg.nodes filter (_.degree == 1)
 
     def cutCorners(g: Graph[Int, UnDiEdge], bridges: List[Int], corners: List[Int]): Graph[Int, UnDiEdge] = {
@@ -108,43 +106,43 @@ trait Reticulate extends GraphUtils {
     val topright   = List(3 * (h + 1), h - 1)
     val tr_corners = List(2 * (h + 1), h, h + 1)
 
-    new Tessell(cutCorners(cutCorners(newg -- orphans, bottomleft, bl_corners), topright, tr_corners).renumber())
+    Tiling.fromG(cutCorners(cutCorners(newg -- orphans, bottomleft, bl_corners), topright, tr_corners).renumber())
   }
 
   /**
-    * uniform tessellation (▲.⬣.▲.⬣) (t=2, e=1)
+    * uniform Tessellation (▲.⬣.▲.⬣) (t=2, e=1)
     */
-  def uniform(x: Int, y: Int): Tessell =
+  def uniform(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, _ % 2 == 1 && _ % 2 == 1)
 
   /**
-    * uniform tessellation (▲⁴.⬣) (t=3, e=3)
+    * uniform Tessellation (▲⁴.⬣) (t=3, e=3)
     */
-  def uniform2(x: Int, y: Int): Tessell =
+  def uniform2(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 7 == 0)
 
   /**
-    * 2-uniform tessellation (▲⁶; ▲⁴.⬣) (t=5, e=7)
+    * 2-uniform Tessellation (▲⁶; ▲⁴.⬣) (t=5, e=7)
     */
-  def twoUniform3(x: Int, y: Int): Tessell =
+  def twoUniform3(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 3 * j) % 13 == 0)
 
   /**
-    * 2-uniform tessellation (▲⁴.⬣; ▲².⬣²) (t=2, e=4)
+    * 2-uniform Tessellation (▲⁴.⬣; ▲².⬣²) (t=2, e=4)
     */
-  def twoUniform4(x: Int, y: Int): Tessell =
+  def twoUniform4(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 3 * j) % 5 == 0)
 
   /**
-    * 2-uniform tessellation (▲.⬣.▲.⬣; ▲².⬣²) (t=2, e=3)
+    * 2-uniform Tessellation (▲.⬣.▲.⬣; ▲².⬣²) (t=2, e=3)
     */
-  def twoUniform5(x: Int, y: Int): Tessell =
+  def twoUniform5(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 4 == 0)
 
   /**
-    * 3-uniform tessellation (▲².⬣²; ▲.⬣.▲.⬣; ⬣³) (t=4, e=5)
+    * 3-uniform Tessellation (▲².⬣²; ▲.⬣.▲.⬣; ⬣³) (t=4, e=5)
     */
-  def threeUniformOneOneOne4(x: Int, y: Int): Tessell = {
+  def threeUniformOneOneOne4(x: Int, y: Int): Tiling = {
     val f: (Int, Int) ⇒ Boolean = (i, j) ⇒
       j % 5 match {
         case e if e == 2 || e == 4 ⇒ i           % 5 == (e / 2 + 1) || i % 5 == (e / 2 - 1)
@@ -154,21 +152,21 @@ trait Reticulate extends GraphUtils {
   }
 
   /**
-    * 3-uniform tessellation (▲².⬣²; ▲.⬣.▲.⬣; ⬣³) (t=2, e=4)
+    * 3-uniform Tessellation (▲².⬣²; ▲.⬣.▲.⬣; ⬣³) (t=2, e=4)
     */
-  def threeUniformOneOneOne5(x: Int, y: Int): Tessell =
+  def threeUniformOneOneOne5(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 3 * j) % 7 == 0 || (i + 3 * j) % 7 == 2)
 
   /**
-    * 3-uniform tessellation (▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣) (t=5, e=6)
+    * 3-uniform Tessellation (▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣) (t=5, e=6)
     */
-  def threeUniformOneOneOne6(x: Int, y: Int): Tessell =
+  def threeUniformOneOneOne6(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 4 * j) % 8 == 0)
 
   /**
-    * 4-uniform tessellation ([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)
+    * 4-uniform Tessellation ([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)
     */
-  def fourUniformTwoOneOne8(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne8(x: Int, y: Int): Tiling =
     triangleNetVariant(x, y, (i, j) ⇒ (i + 1 * j) % 8 == 0)
 
   /**
@@ -193,18 +191,18 @@ trait Reticulate extends GraphUtils {
     * @param f function telling if given ij hex must be filled or not
     * @return
     */
-  private def hexagonNetVariant(x: Int, y: Int, f: (Int, Int) ⇒ Boolean): Tessell = {
+  private def hexagonNetVariant(x: Int, y: Int, f: (Int, Int) ⇒ Boolean): Tiling = {
     val totNodes = (y + 1) * 2 * (x + 1) - 2
     val hexNodes = for {
       i ← 0 until x
       j ← 0 until y
       if f(i, j)
     } yield hexagonNetCellNodes(x, i, j)
-    val (newg, _) = hexNodes.foldLeft((hexagonNet(x, y).graph, totNodes + 1))({
+    val (newg, _) = hexNodes.foldLeft((hexagonNet(x, y).toG, totNodes + 1))({
       case ((g, centre), hex) ⇒
         (hex.foldLeft(g)((h, hexNode) ⇒ h + centre ~ hexNode), centre + 1)
     })
-    new Tessell(newg)
+    Tiling.fromG(newg)
   }
 
   /**
@@ -212,7 +210,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#2-uniform_tilings
     */
-  def twoUniform(x: Int, y: Int): Tessell =
+  def twoUniform(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 3 == _ % 3)
 
   /**
@@ -220,7 +218,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#2-uniform_tilings
     */
-  def twoUniform2(x: Int, y: Int): Tessell =
+  def twoUniform2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 3 != _ % 3)
   //triangleNetVariant(x, y, _ % 3 == 0 && _ % 3 == 0)
 
@@ -229,7 +227,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#3-uniform_tilings,_3_vertex_types
     */
-  def threeUniformOneOneOne(x: Int, y: Int): Tessell =
+  def threeUniformOneOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 2 == 0 && _ % 2 == 0)
 
   /**
@@ -237,7 +235,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#3-uniform_tilings,_3_vertex_types
     */
-  def threeUniformOneOneOne2(x: Int, y: Int): Tessell =
+  def threeUniformOneOneOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 4 < 2)
 
   /**
@@ -245,7 +243,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#3-uniform_tilings,_3_vertex_types
     */
-  def threeUniformOneOneOne3(x: Int, y: Int): Tessell =
+  def threeUniformOneOneOne3(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (_, j) ⇒ j % 2 == 0)
 
   /**
@@ -253,7 +251,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#3-uniform_tilings,_2_vertex_types_(2:1)
     */
-  def threeUniformTwoOne(x: Int, y: Int): Tessell =
+  def threeUniformTwoOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 2 == 0 || _ % 2 == 0)
 
   /**
@@ -261,7 +259,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_4_vertex_types
     */
-  def fourUniformOneOneOneOne(x: Int, y: Int): Tessell =
+  def fourUniformOneOneOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 6 < 2)
 
   /**
@@ -269,7 +267,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_4_vertex_types
     */
-  def fourUniformOneOneOneOne1(x: Int, y: Int): Tessell =
+  def fourUniformOneOneOneOne1(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 5 < 2)
 
   /**
@@ -277,7 +275,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_4_vertex_types
     */
-  def fourUniformOneOneOneOne2(x: Int, y: Int): Tessell =
+  def fourUniformOneOneOneOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (_, j) ⇒ j % 3 == 0)
 
   /**
@@ -285,7 +283,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ i % 7 == (j * 4) % 7)
 
   /**
@@ -294,7 +292,7 @@ trait Reticulate extends GraphUtils {
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     * @see http://probabilitysports.com/tilings.html?u=0&n=4&t=1
     */
-  def fourUniformTwoOneOne2(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ j % 2 == 0 && i % 6 == (j * 4) % 6)
 
   /**
@@ -302,7 +300,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne3(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne3(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ ((i + 2 * j) % 6 == 0 || (i + 2 * j) % 6 == 2) && j % 2 == 0)
 
   /**
@@ -310,7 +308,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne4(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne4(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 3 == 0 && j % 3 < 2)
 
   /**
@@ -318,7 +316,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne5(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne5(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       // alternate rows between 3 and 6
       val step = (j % 2 + 1) * 3
@@ -330,7 +328,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne6(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne6(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 3 == 0 && _ % 3 == 0)
 
   /**
@@ -338,7 +336,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#4-uniform_tilings,_3_vertex_types_(2:1:1)
     */
-  def fourUniformTwoOneOne7(x: Int, y: Int): Tessell =
+  def fourUniformTwoOneOne7(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       if (j % 2 == 0)
@@ -352,7 +350,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       if (j % 2 == 0)
@@ -366,7 +364,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne2(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 8 < 2)
 
   /**
@@ -374,7 +372,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne3(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne3(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       pos % 7 == 0 || pos % 7 == 2
@@ -385,7 +383,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne4(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne4(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 7 < 2)
 
   /**
@@ -393,7 +391,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne5(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne5(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + j) % 4 == 0)
 
   /**
@@ -401,7 +399,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_4_vertex_types_(2:1:1:1)
     */
-  def fiveUniformTwoOneOneOne6(x: Int, y: Int): Tessell =
+  def fiveUniformTwoOneOneOne6(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       pos % 6 == 0 || pos % 6 == 2
@@ -412,7 +410,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformThreeOneOne(x: Int, y: Int): Tessell =
+  def fiveUniformThreeOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       pos % 8 == 0 || pos % 8 == 3
@@ -423,7 +421,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformThreeOneOne2(x: Int, y: Int): Tessell =
+  def fiveUniformThreeOneOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       pos % 7 == 0 || pos % 7 == 3
@@ -434,7 +432,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformThreeOneOne3(x: Int, y: Int): Tessell =
+  def fiveUniformThreeOneOne3(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 6 > 1)
 
   /**
@@ -442,7 +440,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformThreeOneOne4(x: Int, y: Int): Tessell =
+  def fiveUniformThreeOneOne4(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       if (j % 2 == 0)
@@ -457,7 +455,7 @@ trait Reticulate extends GraphUtils {
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     * @see http://probabilitysports.com/tilings.html?u=0&n=5&t=2
     */
-  def fiveUniformTwoTwoOne(x: Int, y: Int): Tessell =
+  def fiveUniformTwoTwoOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ i % 7 == (j * 3) % 7)
 
   /**
@@ -465,7 +463,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformTwoTwoOne2(x: Int, y: Int): Tessell =
+  def fiveUniformTwoTwoOne2(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ i % 3 == j % 3 || (i % 3 == 0 && j % 3 == 1))
 
   /**
@@ -473,7 +471,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformTwoTwoOne3(x: Int, y: Int): Tessell =
+  def fiveUniformTwoTwoOne3(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ (i + 2 * j) % 6 == 0)
 
   /**
@@ -481,7 +479,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_3_vertex_types_(3:1:1)_and_(2:2:1)
     */
-  def fiveUniformTwoTwoOne4(x: Int, y: Int): Tessell =
+  def fiveUniformTwoTwoOne4(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ {
       val pos = i + 2 * j
       pos % 5 == 1 || pos % 5 > 2
@@ -492,7 +490,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#5-uniform_tilings,_2_vertex_types_(4:1)_and_(3:2)
     */
-  def fiveUniformFourOne(x: Int, y: Int): Tessell =
+  def fiveUniformFourOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, _ % 3 != 0 || _ % 3 != 0)
 
   /**
@@ -500,7 +498,7 @@ trait Reticulate extends GraphUtils {
     *
     * @see http://probabilitysports.com/tilings.html?u=0&n=6&t=2
     */
-  def sixUniformFourOneOne(x: Int, y: Int): Tessell =
+  def sixUniformFourOneOne(x: Int, y: Int): Tiling =
     hexagonNetVariant(x, y, (i, j) ⇒ i % 10 == (j * 8) % 10)
 
 }
