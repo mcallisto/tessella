@@ -15,8 +15,8 @@ trait NodeChecks[N, E[X] <: EdgeLikeIn[X]] {
 
     def hasPositiveValues: Boolean =
       graph.nodes.forall(_.toOuter match {
-        case i: Int => i > 0
-        case _      => false
+        case i: Int ⇒ i > 0
+        case _      ⇒ false
       })
 
     def hasRegularNodes: Boolean = graph.nodes.forall(_.isRegular)

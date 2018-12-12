@@ -23,8 +23,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(disconnected) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(1, 5, 2, 6, 3, 4)" + ", " +
-      "edges = GraphPredef(1~2, 5~6, 2~3, 6~4, 3~1, 4~5)"
+      "graph not connected"
 
   val nodesWith1Edge: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 3 ~ 4))
 
@@ -35,8 +34,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(nodesWith1Edge) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(1, 2, 3, 4)" + ", " +
-      "edges = GraphPredef(1~2, 2~3, 3~1, 3~4)"
+      "nodes with wrong number of edges = Set(4)"
 
   val nodesWith7Edges: Graph[Int, UnDiEdge] = Graph.from(edges = List(2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 6, 6 ~ 7, 7 ~ 8, 8 ~ 2, 1 ~ 2, 1 ~ 3, 1 ~ 4, 1 ~ 5, 1 ~ 6, 1 ~ 7, 1 ~ 8))
 
@@ -47,8 +45,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(nodesWith7Edges) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(1, 5, 2, 6, 3, 7, 4, 8)" + ", " +
-      "edges = GraphPredef(1~2, 1~3, 1~4, 1~5, 1~6, 1~7, 1~8, 5~6, 2~3, 6~7, 3~4, 7~8, 4~5, 8~2)"
+      "nodes with wrong number of edges = Set(1)"
 
   val negativeTriangle: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ -2, -2 ~ 3, 3 ~ 1))
 
@@ -58,8 +55,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(negativeTriangle) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(1, -2, 3)" + ", " +
-      "edges = GraphPredef(1~-2, -2~3, 3~1)"
+      "non positive nodes = Set(-2)"
 
   val papillon: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 2 ~ 4, 4 ~ 5, 5 ~ 2))
 
@@ -69,8 +65,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(papillon) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(1, 5, 2, 3, 4)" + ", " +
-      "edges = GraphPredef(1~2, 5~2, 2~3, 2~4, 3~1, 4~5)"
+      "perimeter is not a simple polygon"
 
   val threeAdjacentSquares: Graph[Int, UnDiEdge] =
     Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 2 ~ 5, 5 ~ 6, 6 ~ 3, 4 ~ 7, 7 ~ 8, 8 ~ 3))
@@ -81,7 +76,8 @@ class constrainedTest extends FlatSpec {
   }
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(moreThanFullVertex) should have message
-    "Addition refused: nodes = GraphPredef(9, 1, 5, 2, 6, 3, 10, 7, 4, 8), edges = GraphPredef(9~10, 1~2, 5~6, 2~3, 2~5, 6~3, 3~4, 10~6, 7~8, 4~1, 4~7, 8~9, 8~3)"
+    "Addition refused: " +
+      "perimeter is not a simple polygon"
 
   val areaOverlap1: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(8 ~ 9, 9 ~ 10, 10 ~ 11, 11 ~ 3)
   "A graph with three squares and a regular pentagon overlapped at a vertex" can "NOT be a tessellation" in {
@@ -90,8 +86,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(areaOverlap1) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(9, 1, 5, 2, 6, 3, 10, 7, 4, 11, 8)" + ", " +
-      "edges = GraphPredef(9~10, 1~2, 5~6, 2~3, 2~5, 6~3, 3~4, 10~11, 7~8, 4~1, 4~7, 11~3, 8~9, 8~3)"
+      "perimeter is not a simple polygon"
 
   val sixSquares: Graph[Int, UnDiEdge] =
     threeAdjacentSquares ++ List(7 ~ 9, 9 ~ 10, 10 ~ 8, 10 ~ 11, 11 ~ 12, 12 ~ 8, 11 ~ 13, 13 ~ 14, 14 ~ 12)
@@ -103,8 +98,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(vertexOverlapping) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(15, 9, 1, 16, 2, 3, 10, 4, 11, 12, 13, 5, 6, 7, 14, 8)" + ", " +
-      "edges = GraphPredef(15~16, 9~10, 1~2, 16~14, 2~3, 2~5, 3~4, 10~11, 10~8, 4~1, 4~7, 11~13, 11~12, 12~15, 12~8, 13~14, 5~6, 6~3, 7~9, 7~8, 14~12, 8~3)"
+      "perimeter is not a simple polygon"
 
   val areaOverlap2: Graph[Int, UnDiEdge] =
     sixSquares ++ List(12 ~ 15, 15 ~ 16, 16 ~ 17, 17 ~ 18, 18 ~ 19, 19 ~ 20, 20 ~ 14)
@@ -114,8 +108,7 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(areaOverlap2) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(15, 9, 1, 16, 2, 17, 3, 18, 10, 4, 11, 12, 19, 13, 5, 20, 6, 7, 14, 8)" + ", " +
-      "edges = GraphPredef(15~16, 9~10, 1~2, 16~17, 2~3, 2~5, 17~18, 3~4, 18~19, 10~11, 10~8, 4~1, 4~7, 11~13, 11~12, 12~15, 12~8, 19~20, 13~14, 5~6, 20~14, 6~3, 7~9, 7~8, 14~12, 8~3)"
+      "perimeter is not a simple polygon"
 
 //  val gap: Graph[Int, UnDiEdge] = sixSquares ++ List(6 ~ 15,
 //                                                     15 ~ 14,
@@ -162,17 +155,15 @@ class constrainedTest extends FlatSpec {
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(edgeOverlap) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(15, 9, 1, 16, 2, 17, 24, 3, 18, 10, 4, 11, 12, 19, 13, 5, 20, 6, 21, 7, 22, 14, 8, 23)" + ", " +
-      "edges = GraphPredef(15~16, 9~10, 1~2, 16~13, 16~18, 2~3, 2~5, 17~13, 24~19, 3~4, 18~20, 18~17, 10~11, 10~8, 4~1, 4~7, 11~12, 12~13, 12~15, 19~17, 13~14, 5~6, 20~22, 20~19, 6~3, 21~19, 21~23, 7~9, 7~8, 22~21, 14~8, 8~3, 23~24)"
+      "perimeter is not a simple polygon"
 
-  val areaOverlap3: Graph[Int, UnDiEdge] = preOverlap ++ List(19 ~ 21, 22 ~ 21, 21 ~ 17)
+  val areaOverlap3: Graph[Int, UnDiEdge] = preOverlap ++ List(19 ~ 21, 21 ~ 22, 22 ~ 17)
   "A graph with another overlapping area" can "NOT be a tessellation" in {
     assertThrows[IllegalArgumentException](Tiling.fromG(areaOverlap3))
   }
 
   the[IllegalArgumentException] thrownBy Tiling.fromG(areaOverlap3) should have message
     "Addition refused: " +
-      "nodes = GraphPredef(15, 9, 1, 16, 2, 17, 3, 18, 10, 4, 11, 12, 19, 13, 5, 20, 6, 21, 7, 22, 14, 8)" + ", " +
-      "edges = GraphPredef(15~16, 9~10, 1~2, 16~13, 16~18, 2~3, 2~5, 17~13, 3~4, 18~20, 18~17, 10~11, 10~8, 4~1, 4~7, 11~12, 12~13, 12~15, 19~21, 19~17, 13~14, 5~6, 20~19, 6~3, 21~17, 7~9, 7~8, 22~21, 14~8, 8~3)"
+      "perimeter is not a simple polygon"
 
 }

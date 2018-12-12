@@ -11,8 +11,7 @@ import scala.collection.Set
 import scala.language.{higherKinds, postfixOps}
 import scala.util.Try
 
-/** Ensures that the underlying `Graph` is connected if it is undirected
-  * or weakly connected if it is directed.
+/** Ensures that the underlying `Graph` is a valid tessellation.
   */
 class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     extends Constraint[N, E](self)
@@ -24,7 +23,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   override def preCreate(nodes: Traversable[N], edges: Traversable[E[N]]) =
     PreCheckResult(PostCheck)
 
-  /** Adding one node can never result into a valid tessellation.  */
+  /** Adding one node can never result into a valid tessellation. */
   override def preAdd(node: N): PreCheckResult =
     PreCheckResult(Abort)
 
@@ -36,7 +35,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   override def preAdd(elems: InParam[N, E]*): PreCheckResult =
     PreCheckResult(PostCheck)
 
-  private def getSimplePolygon(g: Graph[Int, UnDiEdge]): Try[UnitSimplePgon] = Try {
+  private def perimeterSimplePolygon(g: Graph[Int, UnDiEdge]): Try[UnitSimplePgon] = Try {
     val (periNodes, _): (List[Int], List[UnDiEdge[Int]]) = g.perimeterNodesEdges
 
     val (_, periPaths): (List[List[Int]], List[List[List[Int]]]) =
@@ -49,18 +48,32 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
   }
 
+  private def refusal(msg: String): Nothing =
+    throw new IllegalArgumentException("Addition refused: " + msg)
+
   /** Check the whole `newGraph`. */
   override def postAdd(newGraph: Graph[N, E],
                        passedNodes: Traversable[N],
                        passedEdges: Traversable[E[N]],
                        preCheck: PreCheckResult): Boolean = {
-    newGraph.hasPositiveValues &&
-    newGraph.hasRegularNodes &&
-    newGraph.isConnected &&
-    getSimplePolygon(newGraph.asInstanceOf[Graph[Int, UnDiEdge]]).isSuccess
+    if (!newGraph.hasPositiveValues)
+      refusal("non positive nodes = " + newGraph.nodes.filter(_.toOuter match {
+        case i: Int ⇒ i <= 0
+        case _      ⇒ false
+      }))
+    if (!newGraph.hasRegularNodes)
+      refusal(
+        "nodes with wrong number of edges = " +
+          newGraph.nodes.filter(node ⇒ node.degree < 2 || node.degree > 6))
+    if (!newGraph.isConnected)
+      refusal("graph not connected")
+    if (perimeterSimplePolygon(newGraph.asInstanceOf[Graph[Int, UnDiEdge]]).isFailure)
+      refusal("perimeter is not a simple polygon")
+    true
   }
 
-  /** Only in very rare cases (to be analyzed) subtracting one node (and related edges) can result into a valid tessellation. */
+  /** Only in very rare cases (to be analyzed) subtracting one node (and related edges)
+    * can result into a valid tessellation. */
   override def preSubtract(node: self.NodeT, forced: Boolean): PreCheckResult =
     PreCheckResult(Abort)
 
@@ -69,16 +82,13 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     PreCheckResult(Abort)
 
   /** To be analyzed, for the time being skip */
-  override def preSubtract(nodes: => Set[self.NodeT], edges: => Set[self.EdgeT], simple: Boolean): PreCheckResult =
+  override def preSubtract(nodes: ⇒ Set[self.NodeT], edges: ⇒ Set[self.EdgeT], simple: Boolean): PreCheckResult =
     PreCheckResult(PostCheck)
 
   override def onAdditionRefused(refusedNodes: Traversable[N],
                                  refusedEdges: Traversable[E[N]],
                                  graph: Graph[N, E]): Boolean =
-    throw new IllegalArgumentException(
-      "Addition refused: " +
-        "nodes = " + refusedNodes + ", " +
-        "edges = " + refusedEdges)
+    refusal("nodes = " + refusedNodes + ", " + "edges = " + refusedEdges)
 
 }
 
