@@ -13,7 +13,7 @@ Each tessellation is internally described as an [undirected graph](https://en.wi
 The graph describing the tessellation is a called a `Tiling` and can be created through algorithms.
 Many of them, exploiting linear symmetries, are already available from the `Reticulate` and `Net` traits.
 
-Not all undirected graphs are valid `Tiling`s, see [graph validation](docs/graph-validation.md).
+An undirected graph is not necessarily a valid `Tiling`, see [graph validation](docs/graph-validation.md).
 
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
 
