@@ -62,6 +62,10 @@ object jvm extends Common { outer ⇒
 
     def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
 
+    def one(args: String*) = T.command {
+      val z = args.map("vision.id.tessella." + _)
+      super.runMain("org.scalatest.run", z: _*)
+    }
   }
 
 }
