@@ -1,12 +1,28 @@
 import mill._
 import mill.define.Sources
 import scalalib._
+import scalalib.publish._
 import ammonite.ops._
 import coursier.maven.MavenRepository
 
-trait Versioned extends ScalaModule {
+trait Versioned extends ScalaModule with PublishModule {
 
   def scalaVersion: T[String] = "2.12.7"
+
+  def publishVersion: T[String] = "0.0.1"
+
+  override def artifactName: T[String] = "tessella"
+
+  def pomSettings: T[PomSettings] = PomSettings(
+    description = "Tilings by regular polygons, helps working with finite unit-regular-polygon tessellations of a flat surface",
+    organization = "vision.id",
+    url = "https://github.com/mcallisto/tessella",
+    licenses = Seq(License.`Apache-2.0`),
+    versionControl = VersionControl.github("mcallisto", "tessella"),
+    developers = Seq(
+      Developer("mcallisto", "Mario Càllisto","https://github.com/mcallisto")
+    )
+  )
 
 }
 
