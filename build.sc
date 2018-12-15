@@ -1,7 +1,6 @@
 import mill._
-import mill.define.Sources
 import scalalib._
-import scalalib.publish._
+import publish._
 import ammonite.ops._
 import coursier.maven.MavenRepository
 
@@ -15,7 +14,7 @@ trait Packageable {
 
 trait Versioned extends ScalaModule with PublishModule with Packageable {
 
-  val gitName: String = "tessella"
+  val gitName: String = artName
 
   def scalaVersion: T[String] = "2.12.7"
 
@@ -36,18 +35,6 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
 }
 
-trait Common extends Versioned {
-
-  override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
-    )
-
-  override def sources: Sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / up / "shared" / "src"
-  )
-
-}
-
 trait Testable extends ScalaModule {
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
@@ -63,7 +50,7 @@ trait Testable extends ScalaModule {
 
 }
 
-object jvm extends Common { outer ⇒
+object jvm extends Versioned { outer ⇒
 
   override def unmanagedClasspath: T[Agg[PathRef]] = mill T {
     if (!ammonite.ops.exists(millSourcePath / "lib")) Agg()
@@ -89,7 +76,7 @@ object jvm extends Common { outer ⇒
     def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
 
     def one(args: String*) = T.command {
-      super.runMain("org.scalatest.run", args.map(organization + "." + artName + "." + _): _*)
+      super.runMain("org.scalatest.run", args.map(List(organization, artName, _).mkString(".")): _*)
     }
   }
 
