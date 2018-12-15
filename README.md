@@ -25,7 +25,7 @@ The library is built with [Mill](http://www.lihaoyi.com/mill).
 1. [Install](http://www.lihaoyi.com/mill/#installation) Mill
 2. Open a terminal and `cd` to the repo directory
 3. Use the `mill jvm.test` command to run all tests
-4. Or use the `mill jvm.test.one [testClassName]` command to run a single test
+4. Or use the `mill jvm.test.one [testClassName]` command to run a single test class
 
 ### Draw a tessellation
 Each node of the tessellation can be `Map`ped to a cartesian point with the `Tiling.toTessellMap` method. The tessellation can then be rendered as a layered SVG image with the `Draw(…)` method of the `SVG` trait.
