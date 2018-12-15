@@ -23,13 +23,14 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
   override def artifactName: T[String] = artName
 
   def pomSettings: T[PomSettings] = PomSettings(
-    description = "Tilings by regular polygons, helps working with finite unit-regular-polygon tessellations of a flat surface",
+    description =
+      "Tilings by regular polygons, helps working with finite unit-regular-polygon tessellations of a flat surface",
     organization = organization,
     url = "https://github.com/mcallisto/" + gitName,
     licenses = Seq(License.`Apache-2.0`),
     versionControl = VersionControl.github("mcallisto", gitName),
     developers = Seq(
-      Developer("mcallisto", "Mario Càllisto","https://github.com/mcallisto")
+      Developer("mcallisto", "Mario Càllisto", "https://github.com/mcallisto")
     )
   )
 
