@@ -6,6 +6,7 @@ import org.scalatest.exceptions.TestFailedException
 
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.Graph
+import vision.id.graphgephi.Drawable
 
 /** Scalatest support for graph visualization in case of failures.
   */

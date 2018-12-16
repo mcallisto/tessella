@@ -46,7 +46,7 @@ trait Testable extends ScalaModule {
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scalatest::scalatest:3.0.5",
     ivy"org.scalacheck::scalacheck:1.14.0",
-    ivy"org.gephi:gephi-toolkit:0.9.2"
+    ivy"vision.id::graphgephi:0.1.0"
   )
 
 }
