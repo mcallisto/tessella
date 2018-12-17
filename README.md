@@ -10,10 +10,10 @@ Each tessellation is internally described as an [undirected graph](https://en.wi
 * each **node** of the graph is a _**vertex**_ of a polygon and it is represented by a unique `Int`
 * each **edge** of the graph is a _**side**_ of a polygon
 
-The graph describing the tessellation can be created through algorithms.
+The graph describing the tessellation is a `Tiling` object and can be created through algorithms.
 Many of them, exploiting linear symmetries, are already available from the `Reticulate` and `Net` traits.
 
-Not all undirected graphs are legitimate tessellations, see [graph validation](docs/graph-validation.md).
+An undirected graph is not necessarily a valid `Tiling`, see [graph validation](docs/graph-validation.md).
 
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
 
@@ -25,9 +25,10 @@ The library is built with [Mill](http://www.lihaoyi.com/mill).
 1. [Install](http://www.lihaoyi.com/mill/#installation) Mill
 2. Open a terminal and `cd` to the repo directory
 3. Use the `mill jvm.test` command to run all tests
+4. Or use the `mill jvm.test.one [testClassName]` command to run a single test class
 
 ### Draw a tessellation
-Each node of the tessellation can be `Map`ped to a cartesian point with the `TessellGraph.toTessellMap` method. The tessellation can then be rendered as a layered SVG image with the `Draw(…)` method of the `SVG` trait.
+Each node of the tessellation can be `Map`ped to a cartesian point with the `Tiling.toTessellMap` method. The tessellation can then be rendered as a layered SVG image with the `Draw(…)` method of the `SVG` trait.
 
 The lowest node is always at coordinates `(0.0, 0.0)` and the second lowest at `(1.0, 0.0)`.
 

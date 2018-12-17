@@ -1,8 +1,11 @@
 package vision.id.tessella
 
+import com.typesafe.scalalogging.Logger
+
 import scalax.collection.Graph
 import scalax.collection.GraphPredef._
-import com.typesafe.scalalogging.Logger
+
+import vision.id.tessella.Alias.Tiling
 
 object Console extends SVG {
 
@@ -32,56 +35,56 @@ object Console extends SVG {
 
     def algos(): Unit = {
       val m = Map(
-        "regular/(▲⁶)"                               → TessellGraph.triangleNet(24, 16),
-        "regular/(■⁴)"                               → TessellGraph.squareNet(8, 8),
-        "regular/(⬣³)"                               → TessellGraph.hexagonNet(8, 8),
-        "uniform/(▲⁴.⬣)"                             → TessellGraph.uniform2(24, 16),
-        "uniform/(▲³.■²)"                            → TessellGraph.elongatedTriangular(12, 12),
-        "uniform/(▲.⬣.▲.⬣)"                          → TessellGraph.uniform(24, 16),
-        "2-uniform/(▲⁶; ▲⁴.⬣)"                       → TessellGraph.twoUniform2(8, 8),
-        "2-uniform/(▲⁶; ▲⁴.⬣)_alt"                   → TessellGraph.twoUniform3(24, 16),
-        "2-uniform/(▲⁶; ▲².⬣²)"                      → TessellGraph.twoUniform(8, 8),
-        "2-uniform/(▲⁴.⬣; ▲².⬣²)"                    → TessellGraph.twoUniform4(24, 16),
-        "2-uniform/(▲.⬣.▲.⬣; ▲².⬣²)"                 → TessellGraph.twoUniform5(24, 16),
-        "3-uniform/(▲⁶; ⬣³; ▲².⬣²)"                  → TessellGraph.threeUniformOneOneOne(8, 8),
-        "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)"                → TessellGraph.threeUniformOneOneOne2(8, 8),
-        "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)_alt"            → TessellGraph.threeUniformOneOneOne3(8, 8),
-        "3-uniform/(▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣)"              → TessellGraph.threeUniformOneOneOne6(24, 16),
-        "3-uniform/(▲⁴.⬣; ▲³.■²; ▲.■².⬣)"            → TessellGraph.threeUniformOneOneOne7(12, 12),
-        "3-uniform/(▲³.■²; ▲².⬣²; ▲.■².⬣)"           → TessellGraph.threeUniformOneOneOne8(12, 12),
-        "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)"             → TessellGraph.threeUniformOneOneOne4(24, 16),
-        "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)_alt"         → TessellGraph.threeUniformOneOneOne5(24, 16),
-        "3-uniform/([2x ▲⁶]; ▲⁴.⬣)"                  → TessellGraph.threeUniformTwoOne(8, 8),
-        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)"            → TessellGraph.fourUniformOneOneOneOne(8, 8),
-        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt"        → TessellGraph.fourUniformOneOneOneOne1(8, 8),
-        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt2"       → TessellGraph.fourUniformOneOneOneOne2(8, 8),
-        "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)"             → TessellGraph.fourUniformTwoOneOne(8, 8),
-        "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)_alt"         → TessellGraph.fourUniformTwoOneOne2(8, 8),
-        "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt2"        → TessellGraph.fourUniformTwoOneOne3(8, 8),
-        "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)"             → TessellGraph.fourUniformTwoOneOne4(8, 8),
-        "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)_alt"         → TessellGraph.fourUniformTwoOneOne5(8, 8),
-        "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt3"        → TessellGraph.fourUniformTwoOneOne6(8, 8),
-        "4-uniform/(▲⁶; [2x ▲⁴.⬣]; ▲².⬣²)"           → TessellGraph.fourUniformTwoOneOne7(8, 8),
-        "4-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → TessellGraph.fourUniformTwoOneOne8(24, 16),
-        "5-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²; ⬣³)"       → TessellGraph.fiveUniformTwoOneOneOne(8, 8),
-        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])"       → TessellGraph.fiveUniformTwoOneOneOne2(8, 8),
-        "5-uniform/(▲⁶; ▲⁴.⬣; [2x ▲².⬣²]; ⬣³)"       → TessellGraph.fiveUniformTwoOneOneOne3(8, 8),
-        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt"   → TessellGraph.fiveUniformTwoOneOneOne4(8, 8),
-        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt2"  → TessellGraph.fiveUniformTwoOneOneOne5(8, 8),
-        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt3"  → TessellGraph.fiveUniformTwoOneOneOne6(8, 8),
-        "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)"             → TessellGraph.fiveUniformThreeOneOne(8, 8),
-        "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)_alt2"        → TessellGraph.fiveUniformThreeOneOne2(8, 8),
-        "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → TessellGraph.fiveUniformThreeOneOne3(8, 8),
-        "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)_alt"       → TessellGraph.fiveUniformThreeOneOne4(8, 8),
-        "5-uniform/(▲⁶; [3x ⬣³]; ▲².⬣²)"             → TessellGraph.fiveUniformTwoTwoOne(8, 8),
-        "5-uniform/([2x ▲⁶]; ▲⁴.⬣; [2x ▲².⬣²])"      → TessellGraph.fiveUniformTwoTwoOne2(8, 8),
-        "5-uniform/(▲⁶; [2x ▲².⬣²]; [2x ⬣³])"        → TessellGraph.fiveUniformTwoTwoOne3(8, 8),
-        "5-uniform/([2x ▲⁶]; [2x ▲⁴.⬣]; ▲².⬣²)"      → TessellGraph.fiveUniformTwoTwoOne4(8, 8),
-        "5-uniform/(▲³.■²; [2x ▲².⬣²]; [2x ▲.■².⬣])" → TessellGraph.fiveUniformTwoTwoOne5(12, 12),
-        "5-uniform/([4x ▲⁶]; ▲⁴.⬣)"                  → TessellGraph.fiveUniformFourOne(8, 8),
-        "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)"           → TessellGraph.fiveUniformFourOne2(12, 12),
-        "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)_alt"       → TessellGraph.fiveUniformFourOne3(12, 12),
-        "6-uniform/(▲⁶; [4x ⬣³]; ▲².⬣²)"             → TessellGraph.sixUniformFourOneOne(8, 8)
+        "regular/(▲⁶)"                               → Tiling.triangleNet(24, 16),
+        "regular/(■⁴)"                               → Tiling.squareNet(8, 8),
+        "regular/(⬣³)"                               → Tiling.hexagonNet(8, 8),
+        "uniform/(▲⁴.⬣)"                             → Tiling.uniform2(24, 16),
+        "uniform/(▲³.■²)"                            → Tiling.elongatedTriangular(12, 12),
+        "uniform/(▲.⬣.▲.⬣)"                          → Tiling.uniform(24, 16),
+        "2-uniform/(▲⁶; ▲⁴.⬣)"                       → Tiling.twoUniform2(8, 8),
+        "2-uniform/(▲⁶; ▲⁴.⬣)_alt"                   → Tiling.twoUniform3(24, 16),
+        "2-uniform/(▲⁶; ▲².⬣²)"                      → Tiling.twoUniform(8, 8),
+        "2-uniform/(▲⁴.⬣; ▲².⬣²)"                    → Tiling.twoUniform4(24, 16),
+        "2-uniform/(▲.⬣.▲.⬣; ▲².⬣²)"                 → Tiling.twoUniform5(24, 16),
+        "3-uniform/(▲⁶; ⬣³; ▲².⬣²)"                  → Tiling.threeUniformOneOneOne(8, 8),
+        "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)"                → Tiling.threeUniformOneOneOne2(8, 8),
+        "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)_alt"            → Tiling.threeUniformOneOneOne3(8, 8),
+        "3-uniform/(▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣)"              → Tiling.threeUniformOneOneOne6(24, 16),
+        "3-uniform/(▲⁴.⬣; ▲³.■²; ▲.■².⬣)"            → Tiling.threeUniformOneOneOne7(12, 12),
+        "3-uniform/(▲³.■²; ▲².⬣²; ▲.■².⬣)"           → Tiling.threeUniformOneOneOne8(12, 12),
+        "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)"             → Tiling.threeUniformOneOneOne4(24, 16),
+        "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)_alt"         → Tiling.threeUniformOneOneOne5(24, 16),
+        "3-uniform/([2x ▲⁶]; ▲⁴.⬣)"                  → Tiling.threeUniformTwoOne(8, 8),
+        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)"            → Tiling.fourUniformOneOneOneOne(8, 8),
+        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt"        → Tiling.fourUniformOneOneOneOne1(8, 8),
+        "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt2"       → Tiling.fourUniformOneOneOneOne2(8, 8),
+        "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)"             → Tiling.fourUniformTwoOneOne(8, 8),
+        "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)_alt"         → Tiling.fourUniformTwoOneOne2(8, 8),
+        "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt2"        → Tiling.fourUniformTwoOneOne3(8, 8),
+        "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)"             → Tiling.fourUniformTwoOneOne4(8, 8),
+        "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)_alt"         → Tiling.fourUniformTwoOneOne5(8, 8),
+        "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt3"        → Tiling.fourUniformTwoOneOne6(8, 8),
+        "4-uniform/(▲⁶; [2x ▲⁴.⬣]; ▲².⬣²)"           → Tiling.fourUniformTwoOneOne7(8, 8),
+        "4-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → Tiling.fourUniformTwoOneOne8(24, 16),
+        "5-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²; ⬣³)"       → Tiling.fiveUniformTwoOneOneOne(8, 8),
+        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])"       → Tiling.fiveUniformTwoOneOneOne2(8, 8),
+        "5-uniform/(▲⁶; ▲⁴.⬣; [2x ▲².⬣²]; ⬣³)"       → Tiling.fiveUniformTwoOneOneOne3(8, 8),
+        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt"   → Tiling.fiveUniformTwoOneOneOne4(8, 8),
+        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt2"  → Tiling.fiveUniformTwoOneOneOne5(8, 8),
+        "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt3"  → Tiling.fiveUniformTwoOneOneOne6(8, 8),
+        "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)"             → Tiling.fiveUniformThreeOneOne(8, 8),
+        "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)_alt2"        → Tiling.fiveUniformThreeOneOne2(8, 8),
+        "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → Tiling.fiveUniformThreeOneOne3(8, 8),
+        "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)_alt"       → Tiling.fiveUniformThreeOneOne4(8, 8),
+        "5-uniform/(▲⁶; [3x ⬣³]; ▲².⬣²)"             → Tiling.fiveUniformTwoTwoOne(8, 8),
+        "5-uniform/([2x ▲⁶]; ▲⁴.⬣; [2x ▲².⬣²])"      → Tiling.fiveUniformTwoTwoOne2(8, 8),
+        "5-uniform/(▲⁶; [2x ▲².⬣²]; [2x ⬣³])"        → Tiling.fiveUniformTwoTwoOne3(8, 8),
+        "5-uniform/([2x ▲⁶]; [2x ▲⁴.⬣]; ▲².⬣²)"      → Tiling.fiveUniformTwoTwoOne4(8, 8),
+        "5-uniform/(▲³.■²; [2x ▲².⬣²]; [2x ▲.■².⬣])" → Tiling.fiveUniformTwoTwoOne5(12, 12),
+        "5-uniform/([4x ▲⁶]; ▲⁴.⬣)"                  → Tiling.fiveUniformFourOne(8, 8),
+        "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)"           → Tiling.fiveUniformFourOne2(12, 12),
+        "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)_alt"       → Tiling.fiveUniformFourOne3(12, 12),
+        "6-uniform/(▲⁶; [4x ⬣³]; ▲².⬣²)"             → Tiling.sixUniformFourOneOne(8, 8)
       )
 
       val wd = os.pwd / "out"
@@ -102,13 +105,13 @@ object Console extends SVG {
     def test(): Unit = {
       val wd = os.pwd / "out"
       os.makeDir.all(wd / "jvm" / "myTest")
-      val t = TessellGraph.threeUniformOneOneOne8(6, 6)
+      val t = Tiling.threeUniformOneOneOne8(6, 6)
       saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/myTest/" + "test1")
       logger.debug("test done")
     }
 
     def docs(): Unit = {
-      val small = new TessellGraph(
+      val small = Tiling.fromG(
         Graph(
           1 ~ 2,
           2 ~ 3,
@@ -128,7 +131,7 @@ object Console extends SVG {
           14 ~ 15,
           15 ~ 2
         ))
-      val big = new TessellGraph(
+      val big = Tiling.fromG(
         Graph(
           102 ~ 106,
           102 ~ 98,

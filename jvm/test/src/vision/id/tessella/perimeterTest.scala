@@ -5,12 +5,12 @@ import org.scalatest.FlatSpec
 import scalax.collection.Graph
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.TessellGraph.Tessell
+import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
 
-class perimeterTest extends FlatSpec with SVG {
+class perimeterTest extends FlatSpec with Methods with SVG {
 
-  val hive: Tessell = TessellGraph.hexagonNet(2, 2)
+  val hive: Tiling = Tiling.hexagonNet(2, 2)
 
   "A 'hive' tessellation" must "have a perimeter length of 14 units" in {
     assert(hive.polygon.perimeter === 14.0)
@@ -36,7 +36,7 @@ class perimeterTest extends FlatSpec with SVG {
       ))
   }
 
-  val periRx: Tessell = new Tessell(Graph(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
+  val periRx: Tiling = Tiling.fromG(Graph.from(edges = List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1)))
 
   "A perimeter ordered to right" can "have its nodes ordered" in {
     assert(periRx.periNodes === List(1, 2, 5, 7, 1))
@@ -46,7 +46,7 @@ class perimeterTest extends FlatSpec with SVG {
     assert(periRx.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 1))
   }
 
-  val periLx: Tessell = new Tessell(Graph(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1))
+  val periLx: Tiling = Tiling.fromG(Graph.from(edges = List(1 ~ 3, 3 ~ 5, 5 ~ 2, 2 ~ 1)))
 
   "A perimeter ordered to left" can "have its nodes ordered" in {
     assert(periLx.periNodes === List(1, 2, 5, 3, 1))

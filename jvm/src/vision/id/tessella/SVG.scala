@@ -1,12 +1,12 @@
 package vision.id.tessella
 
-import os.RelPath
 import scala.xml._
+import os.RelPath
 
+import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D._
-import vision.id.tessella.TessellGraph.Tessell
 
-trait SVG {
+trait SVG extends Methods {
 
   val multiple: Double = 25.0
 
@@ -75,7 +75,7 @@ trait SVG {
   // compensate for fonts, more centered on node
   private def prettyLabel(l: Label2D): Label2D = l.move(-0.12, 0.1)
 
-  def draw(t: Tessell,
+  def draw(t: Tiling,
            perim: Boolean = true,
            polys: Boolean = false,
            labelStyle: Int = 1,

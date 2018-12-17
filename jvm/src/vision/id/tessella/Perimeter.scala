@@ -39,15 +39,19 @@ trait Perimeter {
         * if no perimeter loose edges with outdegree 2 found, this method recursively scan for others
         *
         * @param out  outdegree of one endpoint
-        * @param same if true other endpoint same outdegree, false +1
+        * @param same if true other endpoint same outdegree, if false +1
         * @return
         */
-      def progLooseEdges(out: Int, same: Boolean): List[graph.EdgeT] =
-        graph.edges.filter(_.isPerimeterLooseProg(out, same)).toList match {
-          case Nil if same ⇒ progLooseEdges(out, same = false) // increase
-          case Nil         ⇒ progLooseEdges(out + 1, same = true) // increase
-          case es          ⇒ es
-        }
+      def progLooseEdges(out: Int, same: Boolean): Iterable[graph.EdgeT] = {
+        val perimeterEdges = graph.edges.filter(_.isPerimeterLooseProg(out, same))
+        if (perimeterEdges.isEmpty) {
+          if (same)
+            progLooseEdges(out, same = false)
+          else
+            progLooseEdges(out + 1, same = true)
+        } else
+          perimeterEdges
+      }
 
       val periGraph: Graph[Int, UnDiEdge] = {
 
@@ -61,20 +65,20 @@ trait Perimeter {
             val (n1, n2): (graph.NodeT, graph.NodeT) =
               if (e._1.degree == 1) (graph get e._1, graph get e._2) else (graph get e._2, graph get e._1)
             // nodes potentially on the perimeter
-            val candidates: List[graph.NodeT] = n1.diSuccessors.toList.filterNot(_ == n2)
+            val candidates: Set[graph.NodeT] = n1.diSuccessors.filterNot(_ == n2)
             // next is the farthest from n2 not passing through n1
             val next: graph.NodeT = candidates.maxBy(_.shortestWithBlocksTo(n2, Set(n1)).get.size)
-            loop(p ++ List(n1.toOuter ~ next.toOuter))
+            loop(p + n1.toOuter ~ next.toOuter)
           }
         }
 
         // start with loose (easy to find) edges
-        val es: List[UnDiEdge[Int]] = (graph.edges.filter(_.isPerimeterLoose).toList match {
-          case Nil  ⇒ progLooseEdges(3, same = true) // if nothing progressively explore higher degrees
-          case some ⇒ some
+        val es: Iterable[UnDiEdge[Int]] = (graph.edges.filter(_.isPerimeterLoose) match {
+          case none if none.isEmpty ⇒ progLooseEdges(3, same = true) // if nothing progressively explore higher degrees
+          case some                 ⇒ some
         }).map(_.toOuter)
 
-        loop(Graph() ++ es)
+        loop(Graph.from(edges = es))
       }
 
       require(periGraph.isCyclic, "perimeter not cyclic")
@@ -89,13 +93,14 @@ trait Perimeter {
       val orderedCycle: periGraph.Cycle = periGraph.nodes.minBy(_.toOuter).withOrdering(nodeOrdering).findCycle.get
 
       val ns = orderedCycle.nodes.toList
+
       ns.tail
         .foldLeft(graph.newPathBuilder(graph get ns.head.toOuter))((pb, n) ⇒ pb += (graph get n.toOuter))
         .result()
     }
 
     def perimeterNodesEdges: (List[Int], List[UnDiEdge[Int]]) = {
-      val p = perimeter
+      val p  = perimeter
       val ns = p.nodes.toList.map(_.toOuter)
       val es = p.edges.toList.map(_.toOuter)
       (ns :+ ns.head, es :+ (ns.last ~ ns.head))

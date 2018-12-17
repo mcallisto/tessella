@@ -2,15 +2,14 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 
-import scalax.collection.GraphPredef._ // shortcuts
-
+import scalax.collection.GraphPredef._
+import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
-import vision.id.tessella.TessellGraph.Tessell
 
-class tessellMapTest extends FlatSpec {
+class tessellMapTest extends FlatSpec with Methods {
 
   "A 3x3 square net" can "be converted in a map of nodes with coords" in {
-    val t = TessellGraph.squareNet(3, 3)
+    val t = Tiling.squareNet(3, 3)
     assert(
       t.toTessellMap.toPrintable === Map(
         5  → "{0.0:1.0}",
@@ -33,7 +32,7 @@ class tessellMapTest extends FlatSpec {
   }
 
   "A 6x2 square net" can "be converted in a map of nodes with coords" in {
-    val t = TessellGraph.squareNet(6, 2)
+    val t = Tiling.squareNet(6, 2)
     assert(
       t.toTessellMap.toPrintable === Map(
         5  → "{4.0:0.0}",
@@ -61,8 +60,7 @@ class tessellMapTest extends FlatSpec {
   }
 
   "A 4x2 triangle net with a removed central point" can "be" in {
-    val newg = TessellGraph.triangleNet(4, 2).graph - 5
-    val t    = new TessellGraph(newg)
+    val t = Tiling.triangleNet(4, 2) -- List(5)
     assert(
       t.toTessellMap.toPrintable === Map(
         1 → "{0.0:0.0}",
@@ -78,8 +76,7 @@ class tessellMapTest extends FlatSpec {
   }
 
   "An 8x2 triangle net with two removed central points" can "be" in {
-    val newg = TessellGraph.triangleNet(8, 2).graph - 7 - 9
-    val t    = new TessellGraph(newg)
+    val t = Tiling.triangleNet(8, 2) -- List(7, 9)
     assert(
       t.toTessellMap.toPrintable === Map(
         5  → "{4.0:0.0}",
@@ -98,12 +95,9 @@ class tessellMapTest extends FlatSpec {
       ))
   }
 
-  val vertexCaseStudy: Tessell = new Tessell(
-    TessellGraph.poly(6).graph + (1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6))
-  val neigh2: List[(Int, List[Int])] = {
-    import vertexCaseStudy.ExtNode
-    (vertexCaseStudy.graph get 1).getNeighsPaths
-  }
+  val vertexCaseStudy: Tiling = Tiling.poly(6) ++ List(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6)
+  val neigh2: List[(Int, List[Int])] =
+    vertexCaseStudy.outerNodeNeighbors(vertexCaseStudy get 1, vertexCaseStudy.periNodes)
 
   "A mapped node" can "be completed if it has 2 or more mapped neighbors(2)" in {
     val tm = new TessellMap(
@@ -201,7 +195,7 @@ class tessellMapTest extends FlatSpec {
         4  → "{1.0:1.73205081}"
       ))
     assert(
-      TessellGraph.squareNet(3, 2).toTessellMap.toPrintable === Map(
+      Tiling.squareNet(3, 2).toTessellMap.toPrintable === Map(
         5  → "{0.0:1.0}",
         10 → "{1.0:2.0}",
         1  → "{0.0:0.0}",
@@ -216,7 +210,7 @@ class tessellMapTest extends FlatSpec {
         4  → "{3.0:0.0}"
       ))
     assert(
-      TessellGraph.triangleNet(6, 2).toTessellMap.toPrintable === Map(
+      Tiling.triangleNet(6, 2).toTessellMap.toPrintable === Map(
         5  → "{-0.5:0.8660254}",
         10 → "{0.0:1.73205081}",
         1  → "{0.0:0.0}",
@@ -231,7 +225,7 @@ class tessellMapTest extends FlatSpec {
         4  → "{3.0:0.0}"
       ))
     assert(
-      TessellGraph.hexagonNet(2, 3).toTessellMap.toPrintable === Map(
+      Tiling.hexagonNet(2, 3).toTessellMap.toPrintable === Map(
         5  → "{3.0:1.73205081}",
         10 → "{2.5:2.59807621}",
         14 → "{1.0:3.46410162}",

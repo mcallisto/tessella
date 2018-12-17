@@ -5,26 +5,17 @@ import org.scalatest.FlatSpec
 import scalax.collection.Graph
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.TessellGraph.Tessell
+import vision.id.tessella.Alias.Tiling
 
-class neighborsTest extends FlatSpec with Symmetry {
+class neighborsTest extends FlatSpec with Methods with Symmetry {
 
-  val vertexFortyTwo: Tessell = new Tessell(
-    TessellGraph.poly(42).graph + (1 ~ 43, 2 ~ 43, 3 ~ 44, 44 ~ 45, 45 ~ 46, 46 ~ 47, 47 ~ 43))
+  val vertexFortyTwo: Tiling =
+    Tiling.poly(42) ++ List(1 ~ 43, 2 ~ 43, 3 ~ 44, 44 ~ 45, 45 ~ 46, 46 ~ 47, 47 ~ 43)
 
   "Node neighbors" can "be found for perimeter nodes" in {
-    val vertexOtherCase = new Tessell(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1))
-    import vertexOtherCase.ExtNode
+    val vertexOtherCase = Tiling.fromG(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1))
     assert(
-      (vertexOtherCase.graph get 1).getNeighsPaths === List(
-        (6, List(5)),
-        (5, List(4)),
-        (4, List(3, 2)),
-        (2, List(7)),
-        (7, List())
-      ))
-    assert(
-      (vertexOtherCase.graph get 1).getNeighsPaths === List(
+      vertexOtherCase.outerNodeNeighbors(vertexOtherCase get 1, vertexOtherCase.periNodes) === List(
         (6, List(5)),
         (5, List(4)),
         (4, List(3, 2)),
@@ -32,10 +23,8 @@ class neighborsTest extends FlatSpec with Symmetry {
         (7, List())
       ))
 
-    val neighsPeri = {
-      import vertexFortyTwo.ExtNode
-      (vertexFortyTwo.graph get 10).getNeighsPaths
-    }
+    val neighsPeri =
+      vertexFortyTwo.outerNodeNeighbors(vertexFortyTwo get 10, vertexFortyTwo.periNodes)
     assert(
       neighsPeri === List(
         (9,
@@ -48,21 +37,18 @@ class neighborsTest extends FlatSpec with Symmetry {
 
   they can "be found for full nodes" in {
 
-    val vertexCaseStudy: Tessell =
-      new Tessell(TessellGraph.poly(6).graph + (1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6))
-    import vertexCaseStudy.ExtNode
+    val vertexCaseStudy: Tiling =
+      Tiling.poly(6) ++ List(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6)
     assert(
-      (vertexCaseStudy.graph get 1).getNeighsPaths === List(
+      vertexCaseStudy.outerNodeNeighbors(vertexCaseStudy get 1, vertexCaseStudy.periNodes) === List(
         (2, List(3, 4, 5, 6)),
         (6, List(10, 9)),
         (9, List(7)),
         (7, List(8, 2))
       ))
 
-    val neighsFull1 = {
-      import vertexFortyTwo.ExtNode
-      (vertexFortyTwo.graph get 2).getNeighsPaths
-    }
+    val neighsFull1 =
+      vertexFortyTwo.outerNodeNeighbors(vertexFortyTwo get 2, vertexFortyTwo.periNodes)
     assert(
       neighsFull1 === List(
         (1,
@@ -72,11 +58,8 @@ class neighborsTest extends FlatSpec with Symmetry {
         (43, List(1))
       ))
 
-    val hex = TessellGraph.hexagonNet(2, 3)
-    val neighsFull2 = {
-      import hex.ExtNode
-      (hex.graph get 15).getNeighsPaths
-    }
+    val hex         = Tiling.hexagonNet(2, 3)
+    val neighsFull2 = hex.outerNodeNeighbors(hex get 15, hex.periNodes)
     assert(
       neighsFull2 === List(
         (14, List(9, 10, 11, 16)),
@@ -87,7 +70,7 @@ class neighborsTest extends FlatSpec with Symmetry {
   }
 
   they can "be found for full nodes in edge case #18" in {
-    val edgeCase = new Tessell(
+    val edgeCase = Tiling.fromG(
       Graph(
         1 ~ 2,
         2 ~ 3,
@@ -124,10 +107,7 @@ class neighborsTest extends FlatSpec with Symmetry {
         23 ~ 9,
         23 ~ 21
       ))
-    val neighsFull = {
-      import edgeCase.ExtNode
-      (edgeCase.graph get 3).getNeighsPaths
-    }
+    val neighsFull = edgeCase.outerNodeNeighbors(edgeCase get 3, edgeCase.periNodes)
     assert(
       neighsFull === List(
         (1, List(2)),
