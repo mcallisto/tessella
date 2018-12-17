@@ -18,7 +18,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
   def scalaVersion: T[String] = "2.12.7"
 
-  def publishVersion: T[String] = "0.0.1"
+  def publishVersion: T[String] = "0.1.0"
 
   override def artifactName: T[String] = artName
 
@@ -53,11 +53,6 @@ trait Testable extends ScalaModule {
 
 object jvm extends Versioned { outer ⇒
 
-  override def unmanagedClasspath: T[Agg[PathRef]] = mill T {
-    if (!ammonite.ops.exists(millSourcePath / "lib")) Agg()
-    else Agg.from(ammonite.ops.ls(millSourcePath / "lib").map(PathRef(_)))
-  }
-
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scala-graph::graph-core:1.12.5",
     ivy"org.scala-graph::graph-constrained:1.12.5",
@@ -69,10 +64,6 @@ object jvm extends Versioned { outer ⇒
   )
 
   object test extends outer.Tests with Testable with Packageable {
-
-    override def unmanagedClasspath: T[Agg[PathRef]] = T {
-      super.unmanagedClasspath() ++ outer.unmanagedClasspath()
-    }
 
     def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
 
