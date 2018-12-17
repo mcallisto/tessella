@@ -40,7 +40,7 @@ On top of the edge layer, the following optional additions are possible:
 * filled polygons coloured according to number of sides
 > ![(⬟².10)_filled](docs/(⬟².10)_filled.svg)
 * full vertices coloured according to type of adjacent polygons (gonality)
-> ![(▲⁶; (⬣³)²; (▲².⬣²)²)](docs/(▲⁶;2x⬣³;2x▲².⬣²).svg)
+> ![(▲⁶; (⬣³)²; (▲².⬣²)²)](docs/(▲⁶;(⬣³)²;(▲².⬣²)²).svg)
 
 ### Redraw the images in the docs folder
 
