@@ -32,6 +32,15 @@ trait SVG extends Methods {
     42 → "darkolivegreen"
   )
 
+  val marksColor: List[String] = List(
+    "blue",
+    "dark_blue",
+    "cyan",
+    "black",
+    "purple",
+    "turquoise"
+  )
+
   def saveFilePretty(xml: NodeBuffer, filename: String): Unit = {
     val prettyPrinter = new PrettyPrinter(80, 2)
     val prettyXml     = prettyPrinter.format(wrap(xml))
@@ -92,6 +101,7 @@ trait SVG extends Methods {
       case _ ⇒ null
     }
     val marks: Any = markStyle match {
+      case 1 ⇒ getGonalMarks(t.toGonals(tm), diff)
       case _ ⇒ null
     }
     new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ labels &+ marks
@@ -131,5 +141,20 @@ trait SVG extends Methods {
             prettyLabel(_).sum(diff).scale(multiple).toSVG(style = "")
           ),
           "fill:red")
+
+  def getGonalMarks(l: List[List[Point2D]], diff: Point2D): Elem =
+    group(
+      prepare(
+        l.indices.toList.map(
+          i ⇒
+            group(prepare[Point2D](
+              l(i),
+              p ⇒ new Circle(p.c, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
+            ),
+              "fill:" + marksColor(i % 6))),
+        (e: Elem) ⇒ e
+      ),
+      ""
+    )
 
 }

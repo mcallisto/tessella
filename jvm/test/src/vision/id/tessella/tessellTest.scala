@@ -60,14 +60,33 @@ class tessellTest extends FlatSpec with Methods {
   "Several difficult perimeter cases" can "be identified" in {
     val case1: Tiling =
       Tiling.poly(4) ++ List(
-        2 ~ 5, 5 ~ 6, 6 ~ 3, 5 ~ 7, 7 ~ 8, 8 ~ 6, 7 ~ 9, 9 ~ 10, 10 ~ 8
+        2 ~ 5,
+        5 ~ 6,
+        6 ~ 3,
+        5 ~ 7,
+        7 ~ 8,
+        8 ~ 6,
+        7 ~ 9,
+        9 ~ 10,
+        10 ~ 8
       )
     assert(case1.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 7, 7 ~ 9, 9 ~ 10, 10 ~ 8, 8 ~ 6, 6 ~ 3, 3 ~ 4, 4 ~ 1))
     val case2: Tiling = Tiling.poly(3) ++ List(2 ~ 4, 3 ~ 4, 5 ~ 4, 5 ~ 2, 4 ~ 6, 5 ~ 6)
     assert(case2.periEdges === List(1 ~ 2, 2 ~ 5, 5 ~ 6, 6 ~ 4, 4 ~ 3, 3 ~ 1))
     val case3: Tiling = case1 ++ List(
-        2 ~ 11, 11 ~ 12, 12 ~ 5, 13 ~ 11, 13 ~ 14, 14 ~ 12, 3 ~ 15, 15 ~ 16, 16 ~ 6, 15 ~ 17, 17 ~ 18, 18 ~ 16
-      )
+      2 ~ 11,
+      11 ~ 12,
+      12 ~ 5,
+      13 ~ 11,
+      13 ~ 14,
+      14 ~ 12,
+      3 ~ 15,
+      15 ~ 16,
+      16 ~ 6,
+      15 ~ 17,
+      17 ~ 18,
+      18 ~ 16
+    )
     assert(
       case3.periEdges === List(
         1 ~ 2,
@@ -95,12 +114,19 @@ class tessellTest extends FlatSpec with Methods {
     assert(case5.periEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 8, 8 ~ 12, 12 ~ 11, 11 ~ 10, 10 ~ 9, 9 ~ 5, 5 ~ 1))
   }
 
+  val three: Tiling = Tiling.threeUniformOneOneOne8(6, 6)
+
   "A tessellation" can "have its pgon counted by type" in {
     assert(
-      Tiling.threeUniformOneOneOne8(6, 6).pgonsMap === Map(
+      three.pgonsMap === Map(
         4 → 18,
         3 → 38,
         6 → 12
       ))
   }
+
+  it must "have a gonality" in {
+    assert(three.gonality === 3)
+  }
+
 }
