@@ -104,7 +104,7 @@ trait SVG extends Methods {
       case 1 ⇒ getGonalMarks(t.toGonals(tm), diff)
       case _ ⇒ null
     }
-    new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ labels &+ marks
+    new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ marks &+ labels
   }
 
   def getGrid(g: List[Segment2D], diff: Point2D): Elem =
