@@ -1,3 +1,4 @@
+[![Build Status][travis-badge]][travis-link]
 # Tilings by regular polygons
 This Scala library helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
 
@@ -88,3 +89,6 @@ There are only 21 possible combinations of regular p-gons for the full vertex an
 Can be named after the different full vertices it's composed of.
 
 Example: `(▲.■.⬣.■)` or `(▲⁶; ▲².■.▲.■)`
+
+[travis-badge]: https://travis-ci.org/mcallisto/tessella.svg
+[travis-link]: https://travis-ci.org/mcallisto/tessella
