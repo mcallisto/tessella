@@ -1,4 +1,4 @@
-[![Build Status][travis-badge]][travis-link]
+[![Build Status][travis-badge]][travis-link] [![Maven Central][maven-badge]][maven-link]
 # Tilings by regular polygons
 This Scala library helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
 
@@ -19,6 +19,24 @@ An undirected graph is not necessarily a valid `Tiling`, see [graph validation](
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
 
 ## How to
+
+### Use
+
+#### From a Mill project
+```scala
+import mill._, scalalib._
+
+object foo extends ScalaModule {
+  def ivyDeps = Agg(
+    ivy"vision.id::tessella:0.1.0"
+  )
+}
+```
+
+#### From an SBT project
+```scala
+libraryDependencies += "vision.id" % "tessella" % "0.1.0"
+```
 
 ### Test
 The library is built with [Mill](http://www.lihaoyi.com/mill).
@@ -91,3 +109,5 @@ Example: `(▲.■.⬣.■)` or `(▲⁶; ▲².■.▲.■)`
 
 [travis-badge]: https://travis-ci.org/mcallisto/tessella.svg
 [travis-link]: https://travis-ci.org/mcallisto/tessella
+[maven-badge]: https://maven-badges.herokuapp.com/maven-central/vision.id/tessella_2.12/badge.svg
+[maven-link]: https://maven-badges.herokuapp.com/maven-central/vision.id/tessella_2.12
