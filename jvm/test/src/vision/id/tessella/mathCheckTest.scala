@@ -22,7 +22,7 @@ class mathCheckTest extends FlatSpec with Checkers with CoordGenerators {
     check(forAll { (dividend: Double, divisor: Double) ⇒
       val result = mod(dividend, divisor)
       (dividend, divisor) match {
-        case (_, 0.0)                                                      ⇒ result === 0.0
+        case (_, 0.0)                                                      ⇒ result.isNaN
         case (dend, _) if dend.abs > oneBillion || dend.abs < stdPrecision ⇒ result <= divisor.abs
         case _                                                             ⇒ result < divisor.abs
       }
@@ -46,7 +46,7 @@ class mathCheckTest extends FlatSpec with Checkers with CoordGenerators {
     check(forAll { (dividend: Double, divisor: Double) ⇒
       val result = dividend % divisor
       (dividend, divisor) match {
-        case (_, 0.0)                                                      ⇒ result === 0.0
+        case (_, 0.0)                                                      ⇒ result.isNaN
         case (dend, _) if dend.abs > oneBillion || dend.abs < stdPrecision ⇒ result <= divisor.abs
         case _                                                             ⇒ result < divisor.abs
       }
