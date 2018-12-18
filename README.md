@@ -43,13 +43,13 @@ On top of the edge layer, the following optional additions are possible:
 *  full vertices coloured according to type of adjacent polygons (gonality)
 > ![(▲⁶; (⬣³)²; (▲².⬣²)²)](docs/(▲⁶;(⬣³)²;(▲².⬣²)²).svg)
 
-### Redraw the images in the docs folder
+### Redraw the images in the /docs folder
 
-Use the `mill jvm.run output docs` command.
+Uncomment the first test in the `outputTest` class and run it.
 
 ### Draw several examples of algorithmic tessellations
 
-Use the `mill jvm.run output algos` command and view them ordered in the temporary `out/jvm/myAlgos` folder.
+Uncomment the second test in the `outputTest` class, run it and view them ordered in the temporary `out/jvm/myAlgos` folder.
 
 ## Vertex
 For the library methods a given vertex is described by the ordered adjacent regular p-gons joined at the vertex.
