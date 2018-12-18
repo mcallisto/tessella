@@ -62,10 +62,8 @@ class polarCheckTest extends FlatSpec with Checkers with CoordGenerators {
     check(forAll(notTooDistant)(polar ⇒ polar === polar.reflect.reflect))
   }
 
-  //     arg0 = 761681.3879656947⇝3.141592653589793
-  //     arg0 = 2384.9955225317935⇝2.1161173975014E-44
   it must "be equal to itself with negative radius and inverted angle" in {
-    check(forAll(notTooDistant)(polar ⇒ polar === polar.reflect.rotate(τ / 2)))
+    check(forAll(notTooDistant)(polar ⇒ polar === new PointPolar(-polar.r, polar.ϕ).rotate(τ / 2)))
   }
 
   it must "be always equal to itself no matter how many full angle rotations" in {
