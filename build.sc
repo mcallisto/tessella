@@ -1,7 +1,6 @@
 import mill._
 import scalalib._
 import publish._
-import ammonite.ops._
 import coursier.maven.MavenRepository
 
 trait Packageable {
@@ -16,7 +15,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
   val gitName: String = artName
 
-  def scalaVersion: T[String] = "2.12.7"
+  def scalaVersion: T[String] = "2.12.8"
 
   def publishVersion: T[String] = "0.1.0"
 

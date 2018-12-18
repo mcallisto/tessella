@@ -14,12 +14,19 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] {
 
   final implicit class XTiling(graph: Tiling) {
 
+    private implicit class XNode(node: graph.NodeT) {
+
+      def isPerimeter: Boolean = periNodes.contains(node.toOuter)
+
+      def neighs: List[(Int, List[Int])] = graph.outerNodeNeighbors(node.toOuter, periNodes)
+    }
+
     // ----------------- perimeter -------------------
 
     val (periNodes, periEdges): (List[Int], List[UnDiEdge[Int]]) = graph.perimeterNodesEdges
 
     val (periNeighs, periPaths): (List[List[Int]], List[List[List[Int]]]) =
-      periNodes.init.map(graph.outerNodeNeighbors(_, periNodes).unzip).unzip
+      periNodes.init.map(node ⇒ (graph get node).neighs.unzip).unzip
 
     val vertexes: List[Vertex] = periPaths.map(paths ⇒ Vertex.p(paths.init.map(_.size + 2)))
 
@@ -27,6 +34,27 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] {
     val polygon: UnitSimplePgon = new UnitSimplePgon(vertexes.map(v ⇒ new PointPolar(1.0, τ / 2 - v.α)))
 
     def isPolygonSymmetricTo(that: Tiling): Boolean = this.polygon.lαs.isRotationOrReflectionOf(that.polygon.lαs)
+
+    // ----------------- gonality -------------------
+
+    /**
+      * @return map of different type of vertices and nodes where they are found
+      */
+    def mapGonals: Map[Full, List[Int]] =
+      graph.nodes
+        .filterNot(_.isPerimeter)
+        .toList
+        .map(n ⇒
+          n.neighs.unzip match {
+            case (_, paths) ⇒ (Full.p(paths.map(_.size + 2)).minor, n)
+        })
+        .groupBy({ case (vertices, _) ⇒ vertices })
+        .map({ case (vertices, sidesNodes) ⇒ vertices → sidesNodes.map({ case (_, node) ⇒ node.toOuter }) })
+
+    /**
+      * @return number of different type of vertices
+      */
+    def gonality: Int = mapGonals.size
 
     // ----------------- to cartesian coords -------------------
 
@@ -65,10 +93,10 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] {
         else {
           val mapped: List[Int] = tm.m.keys.toList
           val nexttm: Try[TessellMap] = findCompletable(mapped) match {
-            case Some(node) ⇒ tm.completeNode(node, graph.outerNodeNeighbors(node, periNodes))
+            case Some(node) ⇒ tm.completeNode(node, (graph get node).neighs)
             case None ⇒
               findAddable(mapped) match {
-                case Some(node) ⇒ tm.addFromNeighbors(node, graph.outerNodeNeighbors(node, periNodes))
+                case Some(node) ⇒ tm.addFromNeighbors(node, (graph get node).neighs)
                 case None       ⇒ tm.addFromPerimeter(periNodes.init, polygon.lαs)
               }
           }
@@ -77,12 +105,15 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] {
       }
 
       val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
-      loop(TessellMap.firstThree(firstNode.toOuter, graph.outerNodeNeighbors(firstNode, periNodes)))
+      loop(TessellMap.firstThree(firstNode.toOuter, firstNode.neighs))
     }
 
     def labelize: (Int, Point2D) ⇒ Label2D = { case (node, point) ⇒ new Label2D(point.c, node.toString) }
 
     def toLabels2D(tm: TessellMap): List[Label2D] = tm.m.map({ case (node, point) ⇒ labelize(node, point) }).toList
+
+    def toGonals(tm: TessellMap): List[List[Point2D]] =
+      mapGonals.map({ case (_, nodes) ⇒ nodes.map(tm.m(_)) }).toList
 
     def toSegments2D(tm: TessellMap): List[Segment2D] = graph.edges.toList.map(
       e ⇒ Segment2D.fromPoint2Ds(tm.m(e._1.toOuter), tm.m(e._2.toOuter))

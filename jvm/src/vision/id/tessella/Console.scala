@@ -97,7 +97,7 @@ object Console extends SVG {
       os.makeDir.all(wd / "jvm" / "myAlgos" / "6-uniform")
       m.foreach({
         case (name, t) ⇒
-          saveFilePretty(draw(t, labelStyle = 0), "out/jvm/myAlgos/" + name)
+          saveFilePretty(draw(t, labelStyle = 0, markStyle = 1), "out/jvm/myAlgos/" + name)
           logger.debug(name + " done")
       })
     }
@@ -371,6 +371,7 @@ object Console extends SVG {
       saveFilePretty(draw(small, labelStyle = 2, polys = false, perim = false), "docs/" + "(⬟².10)_label")
       saveFilePretty(draw(small, labelStyle = 0, polys = true, perim = false), "docs/" + "(⬟².10)_filled")
       saveFilePretty(draw(small, labelStyle = 0, polys = false, perim = true), "docs/" + "(⬟².10)_perimeter")
+      saveFilePretty(draw(Tiling.fiveUniformTwoTwoOne(8, 8), labelStyle = 0, markStyle = 1, perim = false), "docs/" + "(▲⁶;(⬣³)²;(▲².⬣²)²)")
       logger.debug("docs done")
     }
 
