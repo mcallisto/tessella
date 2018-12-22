@@ -119,9 +119,9 @@ class tessellTest extends FlatSpec with Methods {
   "A tessellation" can "have its pgon counted by type" in {
     assert(
       three.pgonsMap === Map(
-        4 → 18,
-        3 → 38,
-        6 → 12
+        4 -> 18,
+        3 -> 38,
+        6 -> 12
       ))
   }
 

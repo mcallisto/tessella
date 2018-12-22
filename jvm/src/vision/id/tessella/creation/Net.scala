@@ -1,4 +1,4 @@
-package vision.id.tessella
+package vision.id.tessella.creation
 
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
@@ -18,11 +18,11 @@ trait Net extends Reticulate {
     * @param f to empty hexagons in the net
     * @return
     */
-  private def triHexBase(l: Int, hex: Int = 0, f: (Int, Int) ⇒ Boolean): (Tiling, Int) = {
+  private def triHexBase(l: Int, hex: Int = 0, f: (Int, Int) => Boolean): (Tiling, Int) = {
     val topRight = l + 2
     val emptyNodes = for {
-      i ← 1 to topRight
-      j ← 1 to hex
+      i <- 1 to topRight
+      j <- 1 to hex
       if f(i, j)
     } yield i + topRight * j
     val bottomLeft = topRight * (hex + 1) + 1
@@ -41,24 +41,24 @@ trait Net extends Reticulate {
     */
   private def hexAreaRow(l: Int, hex: Int = 0, step: Int = 0): (Tiling, Int) = {
     val invertedStep = 3 - step % 3
-    triHexBase(l, hex, (i, j) ⇒ (i + invertedStep + j % 3) % 3 == 0)
+    triHexBase(l, hex, (i, j) => (i + invertedStep + j % 3) % 3 == 0)
   }
 
-  private val fs: Map[Int, Int ⇒ (Tiling, Int)] = Map(
-    3 → { l ⇒
+  private val fs: Map[Int, Int => (Tiling, Int)] = Map(
+    3 -> { l =>
       (triangleNet(l * 2, 1), l + 2)
     },
-    4 → { l ⇒
+    4 -> { l =>
       (squareNet(l, 1), l + 2)
     },
-    36   → { triHexBase(_, 1, (i, _) ⇒ i % 2 == 1) },
-    63   → { triHexBase(_, 1, (i, _) ⇒ i % 2 == 0) },
-    336  → { triHexBase(_, 1, (i, _) ⇒ i % 3 == 1) },
-    363  → { triHexBase(_, 1, (i, _) ⇒ i % 3 == 0) },
-    633  → { triHexBase(_, 1, (i, _) ⇒ i % 3 == 2) },
-    3362 → { hexAreaRow(_, 2, 2) },
-    3632 → { hexAreaRow(_, 2, 1) },
-    6332 → { hexAreaRow(_, 2, 0) }
+    36   -> { triHexBase(_, 1, (i, _) => i % 2 == 1) },
+    63   -> { triHexBase(_, 1, (i, _) => i % 2 == 0) },
+    336  -> { triHexBase(_, 1, (i, _) => i % 3 == 1) },
+    363  -> { triHexBase(_, 1, (i, _) => i % 3 == 0) },
+    633  -> { triHexBase(_, 1, (i, _) => i % 3 == 2) },
+    3362 -> { hexAreaRow(_, 2, 2) },
+    3632 -> { hexAreaRow(_, 2, 1) },
+    6332 -> { hexAreaRow(_, 2, 0) }
   )
 
   private def netVariant(layers: List[Int], l: Int, r: Int): Tiling = {
@@ -69,7 +69,7 @@ trait Net extends Reticulate {
     require(fs.keys.toList.intersect(layers.distinct).sorted == layers.distinct.sorted)
 
     val (g, _) = (0 until r).foldLeft((Graph.empty[Int, UnDiEdge], 1))({
-      case ((gg, start), row) ⇒
+      case ((gg, start), row) =>
         val (t, s) = fs(layers(row % size))(l)
         (gg ++ t.renumber(start), start + s - 1)
     })

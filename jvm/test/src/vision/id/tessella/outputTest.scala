@@ -13,87 +13,88 @@ class outputTest extends FlatSpec with SVG {
 //    assert(docs().isInstanceOf[Unit])
 //  }
 
-//  "The images in the out/jvm/myAlgos/ folder" can "be created" in {
+//  "The images in the out/jvm/test/myAlgos/ folder" can "be created" in {
 //    assert(algos().isInstanceOf[Unit])
 //  }
 
-//  "The test image in the out/jvm/myTest/ folder" can "be created" in {
+//  "The test image in the out/jvm/test/myTest/ folder" can "be created" in {
 //    assert(test().isInstanceOf[Unit])
 //  }
 
+  val m = Map(
+    "regular/(▲⁶)"                               -> Tiling.triangleNet(24, 16),
+    "regular/(■⁴)"                               -> Tiling.squareNet(8, 8),
+    "regular/(⬣³)"                               -> Tiling.hexagonNet(8, 8),
+    "uniform/(▲⁴.⬣)"                             -> Tiling.uniform2(24, 16),
+    "uniform/(▲³.■²)"                            -> Tiling.elongatedTriangular(12, 12),
+    "uniform/(▲.⬣.▲.⬣)"                          -> Tiling.uniform(24, 16),
+    "2-uniform/(▲⁶; ▲⁴.⬣)"                       -> Tiling.twoUniform2(8, 8),
+    "2-uniform/(▲⁶; ▲⁴.⬣)_alt"                   -> Tiling.twoUniform3(24, 16),
+    "2-uniform/(▲⁶; ▲².⬣²)"                      -> Tiling.twoUniform(8, 8),
+    "2-uniform/(▲⁴.⬣; ▲².⬣²)"                    -> Tiling.twoUniform4(24, 16),
+    "2-uniform/(▲.⬣.▲.⬣; ▲².⬣²)"                 -> Tiling.twoUniform5(24, 16),
+    "3-uniform/(▲⁶; ⬣³; ▲².⬣²)"                  -> Tiling.threeUniformOneOneOne(8, 8),
+    "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)"                -> Tiling.threeUniformOneOneOne2(8, 8),
+    "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)_alt"            -> Tiling.threeUniformOneOneOne3(8, 8),
+    "3-uniform/(▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣)"              -> Tiling.threeUniformOneOneOne6(24, 16),
+    "3-uniform/(▲⁴.⬣; ▲³.■²; ▲.■².⬣)"            -> Tiling.threeUniformOneOneOne7(12, 12),
+    "3-uniform/(▲³.■²; ▲².⬣²; ▲.■².⬣)"           -> Tiling.threeUniformOneOneOne8(12, 12),
+    "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)"             -> Tiling.threeUniformOneOneOne4(24, 16),
+    "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)_alt"         -> Tiling.threeUniformOneOneOne5(24, 16),
+    "3-uniform/([2x ▲⁶]; ▲⁴.⬣)"                  -> Tiling.threeUniformTwoOne(8, 8),
+    "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)"            -> Tiling.fourUniformOneOneOneOne(8, 8),
+    "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt"        -> Tiling.fourUniformOneOneOneOne1(8, 8),
+    "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt2"       -> Tiling.fourUniformOneOneOneOne2(8, 8),
+    "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)"             -> Tiling.fourUniformTwoOneOne(8, 8),
+    "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)_alt"         -> Tiling.fourUniformTwoOneOne2(8, 8),
+    "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt2"        -> Tiling.fourUniformTwoOneOne3(8, 8),
+    "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)"             -> Tiling.fourUniformTwoOneOne4(8, 8),
+    "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)_alt"         -> Tiling.fourUniformTwoOneOne5(8, 8),
+    "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt3"        -> Tiling.fourUniformTwoOneOne6(8, 8),
+    "4-uniform/(▲⁶; [2x ▲⁴.⬣]; ▲².⬣²)"           -> Tiling.fourUniformTwoOneOne7(8, 8),
+    "4-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           -> Tiling.fourUniformTwoOneOne8(24, 16),
+    "5-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²; ⬣³)"       -> Tiling.fiveUniformTwoOneOneOne(8, 8),
+    "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])"       -> Tiling.fiveUniformTwoOneOneOne2(8, 8),
+    "5-uniform/(▲⁶; ▲⁴.⬣; [2x ▲².⬣²]; ⬣³)"       -> Tiling.fiveUniformTwoOneOneOne3(8, 8),
+    "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt"   -> Tiling.fiveUniformTwoOneOneOne4(8, 8),
+    "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt2"  -> Tiling.fiveUniformTwoOneOneOne5(8, 8),
+    "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt3"  -> Tiling.fiveUniformTwoOneOneOne6(8, 8),
+    "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)"             -> Tiling.fiveUniformThreeOneOne(8, 8),
+    "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)_alt2"        -> Tiling.fiveUniformThreeOneOne2(8, 8),
+    "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           -> Tiling.fiveUniformThreeOneOne3(8, 8),
+    "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)_alt"       -> Tiling.fiveUniformThreeOneOne4(8, 8),
+    "5-uniform/(▲⁶; [3x ⬣³]; ▲².⬣²)"             -> Tiling.fiveUniformTwoTwoOne(8, 8),
+    "5-uniform/([2x ▲⁶]; ▲⁴.⬣; [2x ▲².⬣²])"      -> Tiling.fiveUniformTwoTwoOne2(8, 8),
+    "5-uniform/(▲⁶; [2x ▲².⬣²]; [2x ⬣³])"        -> Tiling.fiveUniformTwoTwoOne3(8, 8),
+    "5-uniform/([2x ▲⁶]; [2x ▲⁴.⬣]; ▲².⬣²)"      -> Tiling.fiveUniformTwoTwoOne4(8, 8),
+    "5-uniform/(▲³.■²; [2x ▲².⬣²]; [2x ▲.■².⬣])" -> Tiling.fiveUniformTwoTwoOne5(12, 12),
+    "5-uniform/([4x ▲⁶]; ▲⁴.⬣)"                  -> Tiling.fiveUniformFourOne(8, 8),
+    "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)"           -> Tiling.fiveUniformFourOne2(12, 12),
+    "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)_alt"       -> Tiling.fiveUniformFourOne3(12, 12),
+    "6-uniform/(▲⁶; [4x ⬣³]; ▲².⬣²)"             -> Tiling.sixUniformFourOneOne(8, 8)
+  )
+
   def algos(): Unit = {
-    val m = Map(
-      "regular/(▲⁶)"                               → Tiling.triangleNet(24, 16),
-      "regular/(■⁴)"                               → Tiling.squareNet(8, 8),
-      "regular/(⬣³)"                               → Tiling.hexagonNet(8, 8),
-      "uniform/(▲⁴.⬣)"                             → Tiling.uniform2(24, 16),
-      "uniform/(▲³.■²)"                            → Tiling.elongatedTriangular(12, 12),
-      "uniform/(▲.⬣.▲.⬣)"                          → Tiling.uniform(24, 16),
-      "2-uniform/(▲⁶; ▲⁴.⬣)"                       → Tiling.twoUniform2(8, 8),
-      "2-uniform/(▲⁶; ▲⁴.⬣)_alt"                   → Tiling.twoUniform3(24, 16),
-      "2-uniform/(▲⁶; ▲².⬣²)"                      → Tiling.twoUniform(8, 8),
-      "2-uniform/(▲⁴.⬣; ▲².⬣²)"                    → Tiling.twoUniform4(24, 16),
-      "2-uniform/(▲.⬣.▲.⬣; ▲².⬣²)"                 → Tiling.twoUniform5(24, 16),
-      "3-uniform/(▲⁶; ⬣³; ▲².⬣²)"                  → Tiling.threeUniformOneOneOne(8, 8),
-      "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)"                → Tiling.threeUniformOneOneOne2(8, 8),
-      "3-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²)_alt"            → Tiling.threeUniformOneOneOne3(8, 8),
-      "3-uniform/(▲⁶; ▲⁴.⬣; ▲.⬣.▲.⬣)"              → Tiling.threeUniformOneOneOne6(24, 16),
-      "3-uniform/(▲⁴.⬣; ▲³.■²; ▲.■².⬣)"            → Tiling.threeUniformOneOneOne7(12, 12),
-      "3-uniform/(▲³.■²; ▲².⬣²; ▲.■².⬣)"           → Tiling.threeUniformOneOneOne8(12, 12),
-      "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)"             → Tiling.threeUniformOneOneOne4(24, 16),
-      "3-uniform/(▲².⬣²; ▲.⬣.▲.⬣; ⬣³)_alt"         → Tiling.threeUniformOneOneOne5(24, 16),
-      "3-uniform/([2x ▲⁶]; ▲⁴.⬣)"                  → Tiling.threeUniformTwoOne(8, 8),
-      "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)"            → Tiling.fourUniformOneOneOneOne(8, 8),
-      "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt"        → Tiling.fourUniformOneOneOneOne1(8, 8),
-      "4-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; ⬣³)_alt2"       → Tiling.fourUniformOneOneOneOne2(8, 8),
-      "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)"             → Tiling.fourUniformTwoOneOne(8, 8),
-      "4-uniform/(▲⁶; [2x ⬣³]; ▲².⬣²)_alt"         → Tiling.fourUniformTwoOneOne2(8, 8),
-      "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt2"        → Tiling.fourUniformTwoOneOne3(8, 8),
-      "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)"             → Tiling.fourUniformTwoOneOne4(8, 8),
-      "4-uniform/(▲⁶; [2x ▲².⬣²]; ⬣³)_alt"         → Tiling.fourUniformTwoOneOne5(8, 8),
-      "4-uniform/(▲⁶; ▲².⬣²; [2x ⬣³])_alt3"        → Tiling.fourUniformTwoOneOne6(8, 8),
-      "4-uniform/(▲⁶; [2x ▲⁴.⬣]; ▲².⬣²)"           → Tiling.fourUniformTwoOneOne7(8, 8),
-      "4-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → Tiling.fourUniformTwoOneOne8(24, 16),
-      "5-uniform/([2x ▲⁶]; ▲⁴.⬣; ▲².⬣²; ⬣³)"       → Tiling.fiveUniformTwoOneOneOne(8, 8),
-      "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])"       → Tiling.fiveUniformTwoOneOneOne2(8, 8),
-      "5-uniform/(▲⁶; ▲⁴.⬣; [2x ▲².⬣²]; ⬣³)"       → Tiling.fiveUniformTwoOneOneOne3(8, 8),
-      "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt"   → Tiling.fiveUniformTwoOneOneOne4(8, 8),
-      "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt2"  → Tiling.fiveUniformTwoOneOneOne5(8, 8),
-      "5-uniform/(▲⁶; ▲⁴.⬣; ▲².⬣²; [2x ⬣³])_alt3"  → Tiling.fiveUniformTwoOneOneOne6(8, 8),
-      "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)"             → Tiling.fiveUniformThreeOneOne(8, 8),
-      "5-uniform/(▲⁶; [3x ▲².⬣²]; ⬣³)_alt2"        → Tiling.fiveUniformThreeOneOne2(8, 8),
-      "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)"           → Tiling.fiveUniformThreeOneOne3(8, 8),
-      "5-uniform/([3x ▲⁶]; ▲⁴.⬣; ▲².⬣²)_alt"       → Tiling.fiveUniformThreeOneOne4(8, 8),
-      "5-uniform/(▲⁶; [3x ⬣³]; ▲².⬣²)"             → Tiling.fiveUniformTwoTwoOne(8, 8),
-      "5-uniform/([2x ▲⁶]; ▲⁴.⬣; [2x ▲².⬣²])"      → Tiling.fiveUniformTwoTwoOne2(8, 8),
-      "5-uniform/(▲⁶; [2x ▲².⬣²]; [2x ⬣³])"        → Tiling.fiveUniformTwoTwoOne3(8, 8),
-      "5-uniform/([2x ▲⁶]; [2x ▲⁴.⬣]; ▲².⬣²)"      → Tiling.fiveUniformTwoTwoOne4(8, 8),
-      "5-uniform/(▲³.■²; [2x ▲².⬣²]; [2x ▲.■².⬣])" → Tiling.fiveUniformTwoTwoOne5(12, 12),
-      "5-uniform/([4x ▲⁶]; ▲⁴.⬣)"                  → Tiling.fiveUniformFourOne(8, 8),
-      "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)"           → Tiling.fiveUniformFourOne2(12, 12),
-      "5-uniform/([4x ▲.⬣.▲.⬣]; ▲.■².⬣)_alt"       → Tiling.fiveUniformFourOne3(12, 12),
-      "6-uniform/(▲⁶; [4x ⬣³]; ▲².⬣²)"             → Tiling.sixUniformFourOneOne(8, 8)
-    )
 
     val wd = os.pwd / "out"
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "regular")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "uniform")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "2-uniform")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "3-uniform")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "4-uniform")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "5-uniform")
-    os.makeDir.all(wd / "jvm" / "myAlgos" / "6-uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "regular")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "2-uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "3-uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "4-uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "5-uniform")
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "6-uniform")
     m.foreach({
-      case (name, t) ⇒
-        saveFilePretty(draw(t, labelStyle = 0, markStyle = 1), "out/jvm/myAlgos/" + name)
+      case (name, t) =>
+        saveFilePretty(draw(t, labelStyle = 0, markStyle = 1), "out/jvm/test/myAlgos/" + name)
     })
   }
 
   def test(): Unit = {
     val wd = os.pwd / "out"
-    os.makeDir.all(wd / "jvm" / "myTest")
+    os.makeDir.all(wd / "jvm" / "test" / "myTest")
     val t = Tiling.threeUniformOneOneOne8(6, 6)
-    saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/myTest/" + "test1")
+    saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/test/myTest/" + "test1")
   }
 
   def docs(): Unit = {

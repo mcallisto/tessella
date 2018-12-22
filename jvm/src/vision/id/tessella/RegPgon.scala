@@ -10,11 +10,11 @@ sealed abstract class RegPgon(val sides: Int, val symbol: Option[Char])
   def compare(that: RegPgon): Int = this.sides - that.sides
 
   override val toString: String = symbol match {
-    case Some(s) ⇒ s.toString
-    case None    ⇒ sides.toString
+    case Some(s) => s.toString
+    case None    => sides.toString
   }
 
-  val α: Double = UnitRegularPgon.ofSides(sides).α
+  val alpha: Double = UnitRegularPgon.ofSides(sides).alpha
 
 }
 
@@ -33,7 +33,7 @@ case object Icosagon  extends RegPgon(20, None)
 case object Gon24     extends RegPgon(24, None)
 case object Gon42     extends RegPgon(42, None)
 
-object RegPgon extends TryUtils {
+object RegPgon extends TryUtils with ListUtils {
 
   val all: List[RegPgon] = List(
     Triangle,
@@ -52,69 +52,69 @@ object RegPgon extends TryUtils {
     Gon42
   )
 
-  val sidesToPgon: Map[Int, RegPgon] = all.map(pgon ⇒ (pgon.sides, pgon)).toMap
+  val sidesToPgon: Map[Int, RegPgon] = all.map(pgon => (pgon.sides, pgon)).toMap
 
   val symbolToPgon: Map[Char, RegPgon] =
-    all.filter(_.symbol.isDefined).map(pgon ⇒ (pgon.symbol.get, pgon)).toMap
+    all.filter(_.symbol.isDefined).map(pgon => (pgon.symbol.safeGet(), pgon)).toMap
 
   def ofSides(sides: Int): Try[RegPgon] = sidesToPgon.get(sides) match {
-    case Some(pgon) ⇒ Success(pgon)
-    case None ⇒
+    case Some(pgon) => Success(pgon)
+    case None =>
       Failure(
         throw new IllegalArgumentException("non-tiling sides number: " + sides))
   }
 
   def fromString(s: String): Try[RegPgon] = s.toList match {
-    case h :: Nil if symbolToPgon.contains(h) ⇒ Success(symbolToPgon(h))
-    case _                                    ⇒ Try(s.trim.toInt).flatMap(sides ⇒ ofSides(sides))
+    case h :: Nil if symbolToPgon.contains(h) => Success(symbolToPgon(h))
+    case _                                    => Try(s.trim.toInt).flatMap(sides => ofSides(sides))
   }
 
   val sups: Map[Int, Char] = Map(
-    2 → '²',
-    3 → '³',
-    4 → '⁴',
-    5 → '⁵',
-    6 → '⁶'
+    2 -> '²',
+    3 -> '³',
+    4 -> '⁴',
+    5 -> '⁵',
+    6 -> '⁶'
   )
 
-  val supsInv: Map[Char, Int] = sups.map({ case (k, v) ⇒ (v, k) })
+  val supsInv: Map[Char, Int] = sups.map({ case (k, v) => (v, k) })
 
   def fromStrings(s: String): Try[List[RegPgon]] = s.toList match {
-    case '(' :: t ⇒
+    case '(' :: t =>
       t match {
-        case ss ⇒
-          if (ss.isEmpty || ss.last != ')')
+        case ss =>
+          if (ss.isEmpty || ss.safeLast != ')')
             Failure(throw new IllegalArgumentException("must end with )"))
           else
             ss.init match {
-              case Nil ⇒ Success(List())
-              case centre ⇒
+              case Nil => Success(List())
+              case centre =>
                 val l: List[String] = centre.mkString
                   .split('.')
                   .toList
-                  .flatMap(d ⇒
+                  .flatMap(d =>
                     d.indexOf('*') match {
-                      case -1 ⇒
+                      case -1 =>
                         supsInv.get(d.last) match {
-                          case Some(sup) ⇒ List.fill(sup)(d.init)
-                          case None      ⇒ List(d)
+                          case Some(sup) => List.fill(sup)(d.init)
+                          case None      => List(d)
                         }
-                      case i ⇒ List.fill(d.drop(i + 1).toInt)(d.take(i))
+                      case i => List.fill(d.drop(i + 1).toInt)(d.take(i))
                   })
-                sequence(l.foldLeft(Nil: List[Try[RegPgon]])((acc, r) ⇒
+                sequence(l.foldLeft(Nil: List[Try[RegPgon]])((acc, r) =>
                   acc :+ fromString(r)))
             }
       }
-    case _ ⇒ Failure(throw new IllegalArgumentException("must start with ("))
+    case _ => Failure(throw new IllegalArgumentException("must start with ("))
   }
 
   def listCompare(a: List[RegPgon], b: List[RegPgon]): Int = b match {
-    case Nil if a.isEmpty ⇒ 0
-    case Nil              ⇒ 1
-    case hb :: tb ⇒
+    case Nil if a.isEmpty => 0
+    case Nil              => 1
+    case hb :: tb =>
       a match {
-        case Nil      ⇒ -1
-        case ha :: ta ⇒ if (ha == hb) listCompare(ta, tb) else ha.compare(hb)
+        case Nil      => -1
+        case ha :: ta => if (ha == hb) listCompare(ta, tb) else ha.compare(hb)
       }
   }
 

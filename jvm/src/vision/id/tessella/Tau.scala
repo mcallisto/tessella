@@ -8,6 +8,6 @@ import java.lang.Math.PI
   */
 object Tau {
 
-  val τ: Double = 2.0 * PI
+  val TAU: Double = 2.0 * PI
 
 }

@@ -16,7 +16,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val disconnected: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 4 ~ 5, 5 ~ 6, 6 ~ 4))
 
-  given(disconnected) { g ⇒
+  given(disconnected) { g =>
     "A disconnected graph" can "NOT be a tessellation" in {
       assert(g.isConnected === false)
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
@@ -29,7 +29,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val nodesWith1Edge: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 3 ~ 4))
 
-  given(nodesWith1Edge) { g ⇒
+  given(nodesWith1Edge) { g =>
     "A graph with 1-degree nodes" can "NOT be a tessellation" in {
       assert((g get 4).degree === 1)
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
@@ -43,7 +43,7 @@ class constrainedTest extends FlatSpec with Visualizer {
   val nodesWith7Edges: Graph[Int, UnDiEdge] = Graph.from(
     edges = List(2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 6, 6 ~ 7, 7 ~ 8, 8 ~ 2, 1 ~ 2, 1 ~ 3, 1 ~ 4, 1 ~ 5, 1 ~ 6, 1 ~ 7, 1 ~ 8))
 
-  given(nodesWith7Edges) { g ⇒
+  given(nodesWith7Edges) { g =>
     "A graph with a 7-degree node" can "NOT be a tessellation" in {
       assert((g get 1).degree === 7)
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
@@ -56,7 +56,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val negativeTriangle: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ -2, -2 ~ 3, 3 ~ 1))
 
-  given(negativeTriangle) { g ⇒
+  given(negativeTriangle) { g =>
     "A graph with nodes having negative value" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -68,7 +68,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val papillon: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 2 ~ 4, 4 ~ 5, 5 ~ 2))
 
-  given(papillon) { g ⇒
+  given(papillon) { g =>
     "A graph with two non adjacent p-gons sharing a vertex" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -83,7 +83,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val moreThanFullVertex: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(8 ~ 9, 9 ~ 10, 10 ~ 6)
 
-  given(moreThanFullVertex) { g ⇒
+  given(moreThanFullVertex) { g =>
     "A graph with three squares and a pentagon at a vertex" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -95,7 +95,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val areaOverlap1: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(8 ~ 9, 9 ~ 10, 10 ~ 11, 11 ~ 3)
 
-  given(areaOverlap1) { g ⇒
+  given(areaOverlap1) { g =>
     "A graph with three squares and a regular pentagon overlapped at a vertex" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -110,7 +110,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val vertexOverlapping: Graph[Int, UnDiEdge] = sixSquares ++ List(12 ~ 15, 15 ~ 16, 16 ~ 14)
 
-  given(vertexOverlapping) { g ⇒
+  given(vertexOverlapping) { g =>
     "A graph with an overlapping vertex" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -123,7 +123,7 @@ class constrainedTest extends FlatSpec with Visualizer {
   val areaOverlap2: Graph[Int, UnDiEdge] =
     sixSquares ++ List(12 ~ 15, 15 ~ 16, 16 ~ 17, 17 ~ 18, 18 ~ 19, 19 ~ 20, 20 ~ 14)
 
-  given(areaOverlap2) { g ⇒
+  given(areaOverlap2) { g =>
     "A graph with an overlapping area" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -145,7 +145,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 //                                                     18 ~ 17,
 //                                                     17 ~ 13)
 //
-//  given(gap) { g ⇒
+//  given(gap) { g =>
 //    "A graph with a gap" can "NOT be a tessellation" in {
 //      assertThrows[IllegalArgumentException](Tiling.fromG(g))
 //    }
@@ -176,7 +176,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val edgeOverlap: Graph[Int, UnDiEdge] = preOverlap ++ List(20 ~ 22, 22 ~ 21, 21 ~ 19, 21 ~ 23, 23 ~ 24, 24 ~ 19)
 
-  given(edgeOverlap) { g ⇒
+  given(edgeOverlap) { g =>
     "A graph with an overlapping edge" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }
@@ -188,7 +188,7 @@ class constrainedTest extends FlatSpec with Visualizer {
 
   val areaOverlap3: Graph[Int, UnDiEdge] = preOverlap ++ List(19 ~ 21, 21 ~ 22, 22 ~ 17)
 
-  given(areaOverlap3) { g ⇒
+  given(areaOverlap3) { g =>
     "A graph with another overlapping area" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromG(g))
     }

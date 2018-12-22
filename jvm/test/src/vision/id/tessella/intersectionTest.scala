@@ -6,40 +6,40 @@ import org.scalatest.FlatSpec
 
 import vision.id.tessella.Cartesian2D._
 import vision.id.tessella.Polar.PointPolar
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 
-class intersectionTest extends FlatSpec {
+class intersectionTest extends FlatSpec with ListUtils with TryUtils {
 
   val cart: Point2D   = new Point2D((1.0, 1.0))
-  val pol: PointPolar = new PointPolar(sqrt(2.0), τ / 8)
+  val pol: PointPolar = new PointPolar(sqrt(2.0), TAU / 8)
 
   "Two points" can "be checked for the intersection of their unit circles" in {
     assert(new Point2D(0.0, 0.0).unitContacts(new Point2D(0.0, 0.0)).isFailure)
     assert(
-      new Point2D(0.0, 0.0).unitContacts(new Point2D(2.0, 0.0)).get.map(_.toString) === List(
+      new Point2D(0.0, 0.0).unitContacts(new Point2D(2.0, 0.0)).safeGet.map(_.toString) === List(
         "{1.0:0.0}"
       ))
     assert(
-      new Point2D(0.0, 0.0).unitContacts(new Point2D(-2.0, 0.0)).get.map(_.toString) === List(
+      new Point2D(0.0, 0.0).unitContacts(new Point2D(-2.0, 0.0)).safeGet.map(_.toString) === List(
         "{-1.0:0.0}"
       ))
     assert(
-      new Point2D(0.0, 0.0).unitContacts(new Point2D(0.0, -2.0)).get.map(_.toString) === List(
+      new Point2D(0.0, 0.0).unitContacts(new Point2D(0.0, -2.0)).safeGet.map(_.toString) === List(
         "{0.0:-1.0}"
       ))
-    assert(new Point2D(0.0, 0.0).unitContacts(new Point2D(3.0, 0.0)).get === List())
+    assert(new Point2D(0.0, 0.0).unitContacts(new Point2D(3.0, 0.0)).safeGet === List())
     assert(
-      new Point2D(0.0, 0.0).unitContacts(new Point2D(1.0, 0.0)).get.map(_.toString) === List(
+      new Point2D(0.0, 0.0).unitContacts(new Point2D(1.0, 0.0)).safeGet.map(_.toString) === List(
         "{0.5:-0.8660254}",
         "{0.5:0.8660254}"
       ))
     assert(
-      new Point2D(0.0, 0.0).unitContacts(new Point2D(-1.0, -1.0)).get.map(_.toString) === List(
+      new Point2D(0.0, 0.0).unitContacts(new Point2D(-1.0, -1.0)).safeGet.map(_.toString) === List(
         "{-1.0:0.0}",
         "{0.0:-1.0}"
       ))
     assert(
-      new Point2D(2.0, 0.0).unitContacts(new Point2D(1.0, 1.0)).get.map(_.toString) === List(
+      new Point2D(2.0, 0.0).unitContacts(new Point2D(1.0, 1.0)).safeGet.map(_.toString) === List(
         "{2.0:1.0}",
         "{1.0:0.0}"
       ))
@@ -48,18 +48,18 @@ class intersectionTest extends FlatSpec {
   they must "have intersections ordered" in {
     val a  = new Point2D(0.0, 0.0)
     val b  = new Point2D(1.0, 1.0)
-    val u1 = a.unitContacts(b).get
-    val u2 = b.unitContacts(a).get
-    assert(u1.head === u2(1))
-    assert(u1(1) === u2.head)
+    val u1 = a.unitContacts(b).safeGet
+    val u2 = b.unitContacts(a).safeGet
+    assert(u1.safeHead === u2(1))
+    assert(u1(1) === u2.safeHead)
   }
 
   "Three points" can "be checked if they all have a fourth at unit distance" in {
     assert(
-      new Point2D(1.0, 1.0).getFourth(new Point2D(0.0, 0.0), new Point2D(2.0, 0.0)).get.toString ===
+      new Point2D(1.0, 1.0).getFourth(new Point2D(0.0, 0.0), new Point2D(2.0, 0.0)).safeGet.toString ===
         "{1.0:0.0}")
     assert(
-      new Point2D(0.0, 0.0).getFourth(new Point2D(2.0, 0.0), new Point2D(1.0, 1.0)).get.toString ===
+      new Point2D(0.0, 0.0).getFourth(new Point2D(2.0, 0.0), new Point2D(1.0, 1.0)).safeGet.toString ===
         "{1.0:0.0}")
   }
 

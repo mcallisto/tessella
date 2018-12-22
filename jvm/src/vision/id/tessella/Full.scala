@@ -19,9 +19,9 @@ class Full(ps: List[RegPgon]) extends Vertex(ps) with Symmetry {
 
 }
 
-object Full {
+object Full extends TryUtils {
 
-  private def fromTryRegPgon(tr: Try[List[RegPgon]]): Try[Full] = tr.flatMap(ps ⇒ Try(new Full(ps)))
+  private def fromTryRegPgon(tr: Try[List[RegPgon]]): Try[Full] = tr.flatMap(ps => Try(new Full(ps)))
 
   /**
     * create full vertex with p-gons of given sides
@@ -30,10 +30,10 @@ object Full {
     * @return
     */
   def fromSides(psSides: List[Int]): Try[Full] =
-    fromTryRegPgon(RegPgon.sequence(psSides.map(sides ⇒ RegPgon.ofSides(sides))))
+    fromTryRegPgon(RegPgon.sequence(psSides.map(sides => RegPgon.ofSides(sides))))
 
-  def p(psSides: List[Int]): Full = fromSides(psSides).get
+  def p(psSides: List[Int]): Full = fromSides(psSides).safeGet
 
-  def s(s: String): Full = new Full(Vertex.fromString(s).get.ps)
+  def s(s: String): Full = new Full(Vertex.fromString(s).safeGet.ps)
 
 }

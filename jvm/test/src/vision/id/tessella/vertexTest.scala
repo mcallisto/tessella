@@ -2,9 +2,9 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 
-class vertexTest extends FlatSpec with MathUtils {
+class vertexTest extends FlatSpec with MathUtils with TryUtils {
 
   val fourThree: Vertex = Vertex(List(Square, Triangle))
 
@@ -14,7 +14,7 @@ class vertexTest extends FlatSpec with MathUtils {
 
   it can "be created from a list of sides of reg p-gons" in {
     assert(Vertex.p(List()) === Vertex(List()))
-    assert(Vertex.fromSides(List(4, 3)).get === fourThree)
+    assert(Vertex.fromSides(List(4, 3)).safeGet === fourThree)
     assert(Vertex.p(List(4, 3)) === fourThree)
   }
 
@@ -27,7 +27,7 @@ class vertexTest extends FlatSpec with MathUtils {
   }
 
   it must "have the interior angle not larger than 360°" in {
-    assertThrows[IllegalArgumentException] {
+    assertThrows[Exception] {
       Vertex.s("(⬣⁴)")
     }
   }
@@ -66,7 +66,7 @@ class vertexTest extends FlatSpec with MathUtils {
       Vertex.s("(■)").toPoint2Ds().map(_.toString) ===
         List("{1.0:0.0}", "{0.0:1.0}"))
     assert(
-      Vertex.s("(■)").toPoint2Ds(τ / 4).map(_.toString) ===
+      Vertex.s("(■)").toPoint2Ds(TAU / 4).map(_.toString) ===
         List("{0.0:1.0}", "{-1.0:0.0}"))
     assert(
       Vertex.s("(▲)").toPoint2Ds().map(_.toString) ===

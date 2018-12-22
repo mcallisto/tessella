@@ -5,7 +5,7 @@ import scalax.collection.GraphPredef.EdgeLikeIn
 import scalax.collection.constrained.constraints.{Acyclic, Connected}
 import scalax.collection.constrained.{CompanionAlias, Graph}
 import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 
 import scala.language.higherKinds
 
@@ -15,8 +15,8 @@ trait NodeChecks[N, E[X] <: EdgeLikeIn[X]] {
 
     def hasPositiveValues: Boolean =
       graph.nodes.forall(_.toOuter match {
-        case i: Int ⇒ i > 0
-        case _      ⇒ false
+        case i: Int => i > 0
+        case _      => false
       })
 
     def hasRegularNodes: Boolean = graph.nodes.forall(_.isRegular)

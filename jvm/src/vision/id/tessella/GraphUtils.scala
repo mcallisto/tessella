@@ -11,11 +11,18 @@ trait GraphUtils {
     def renumber(start: Int = 1): Graph[Int, UnDiEdge] = {
 
       val m: Map[Int, Int] = g.nodes.toList.map(_.toOuter).sorted.zip(start until (g.nodes.size + start)).toMap
-      val new_edges        = g.edges.map(e ⇒ m(e._1.toOuter) ~ m(e._2.toOuter))
-      val new_nodes        = g.nodes.filter(_.degree == 0).map(n ⇒ m(n.toOuter))
-      Graph.from(new_nodes, new_edges)
+      val newEdges         = g.edges.map(_.toOuter).map(e => m(e._n(0)) ~ m(e._n(1)))
+      val newNodes         = g.nodes.filter(_.degree == 0).map(n => m(n.toOuter))
+      Graph.from(newNodes, newEdges)
     }
 
+    def withoutOrphans: Graph[Int, UnDiEdge] = removeOrphans(g)
   }
+
+  private def removeOrphans(g: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] =
+    g.nodes.filter(_.degree <= 1) match {
+      case none if none.isEmpty => g
+      case orphans              => removeOrphans(g -- orphans)
+    }
 
 }

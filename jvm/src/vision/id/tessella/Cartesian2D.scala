@@ -6,7 +6,7 @@ import scala.util.{Failure, Success, Try}
 import scala.xml._
 import com.typesafe.scalalogging.Logger
 
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 import vision.id.tessella.Polar.{PointPolar, RegularPgon}
 
 object Cartesian2D {
@@ -25,13 +25,13 @@ object Cartesian2D {
       * @param f  operation
       * @return
       */
-    def op(c1: Coords2D, c2: Coords2D, f: (Double, Double) ⇒ Double): Coords2D = (f(c1._1, c2._1), f(c1._2, c2._2))
+    def op(c1: Coords2D, c2: Coords2D, f: (Double, Double) => Double): Coords2D = (f(c1._1, c2._1), f(c1._2, c2._2))
 
-    def equal(c1: Coords2D, c2: Coords2D): Boolean = (c1._1 ≈ c2._1) && (c1._2 ≈ c2._2)
+    def equal(c1: Coords2D, c2: Coords2D): Boolean = (c1._1 ~= c2._1) && (c1._2 ~= c2._2)
 
     def comparison(c1: Coords2D, c2: Coords2D): Int =
-      if (c1._1 ≈ c2._1) {
-        if (c1._2 ≈ c2._2) 0
+      if (c1._1 ~= c2._1) {
+        if (c1._2 ~= c2._2) 0
         else c1._2.compare(c2._2)
       } else c1._1.compare(c2._1)
   }
@@ -45,7 +45,7 @@ object Cartesian2D {
       * @param f operation
       * @return
       */
-    private def map2(c: Coords2D, f: (Coords2D, Coords2D) ⇒ Coords2D): List[Coords2D] = cs.map(f(_, c))
+    private def map2(c: Coords2D, f: (Coords2D, Coords2D) => Coords2D): List[Coords2D] = cs.map(f(_, c))
 
     /**
       * map to coords function combining xs and ys
@@ -54,7 +54,7 @@ object Cartesian2D {
       * @param f operation
       * @return
       */
-    def mapOp(c: Coords2D, f: (Double, Double) ⇒ Double): List[Coords2D] = map2(c, op(_, _, f))
+    def mapOp(c: Coords2D, f: (Double, Double) => Double): List[Coords2D] = map2(c, op(_, _, f))
 
     def sum(c: Coords2D): Points2D = new Points2D(mapOp(c, _ + _))
 
@@ -68,7 +68,7 @@ object Cartesian2D {
 
     def sum(p: Point2D): Points2D = sum(p.c)
 
-    def sum(lα: PointPolar): Points2D = sum(lα.toPoint2D)
+    def sum(lalpha: PointPolar): Points2D = sum(lalpha.toPoint2D)
 
     def diff(p: Point2D): Points2D = diff(p.c)
 
@@ -85,7 +85,7 @@ object Cartesian2D {
     def scale(xy: Double): Points2D = scale(xy, xy)
 
     def equalCoords(that: Points2D): Boolean =
-      this.cs.lengthCompare(that.cs.size) == 0 && cs.indices.forall(i ⇒ equal(this.cs(i), that.cs(i)))
+      this.cs.lengthCompare(that.cs.size) == 0 && cs.indices.forall(i => equal(this.cs(i), that.cs(i)))
 
     /**
       * get the lowest and higher points
@@ -94,10 +94,10 @@ object Cartesian2D {
       * @return
       */
     def getMinMax: (Point2D, Point2D) = cs match {
-      case Nil ⇒ (Point2D.origin, Point2D.origin)
-      case _ ⇒
+      case Nil => (Point2D.origin, Point2D.origin)
+      case _ =>
         val (cmin, cmax) = cs.foldLeft((orig, orig))({
-          case ((min, max), c) ⇒ (op(min, c, Math.min), op(max, c, Math.max))
+          case ((min, max), c) => (op(min, c, Math.min), op(max, c, Math.max))
         })
         (new Point2D(cmin), new Point2D(cmax))
     }
@@ -117,8 +117,8 @@ object Cartesian2D {
     override def hashCode: Int = 41 * (41 + x.hashCode()) + y.hashCode
 
     override def equals(other: Any): Boolean = other match {
-      case that: Point2D ⇒ (that canEqual this) && equal(this.c, that.c)
-      case _             ⇒ false
+      case that: Point2D => (that canEqual this) && equal(this.c, that.c)
+      case _             => false
     }
 
     def canEqual(other: Any): Boolean = other.isInstanceOf[Point2D]
@@ -152,7 +152,7 @@ object Cartesian2D {
 
     def max(that: Point2D): Point2D = max(that.c)
 
-    def sum(lα: PointPolar): Point2D = sum(lα.toPoint2D)
+    def sum(lalpha: PointPolar): Point2D = sum(lalpha.toPoint2D)
 
     def move(x: Double, y: Double): Point2D = sum((x, y))
 
@@ -162,9 +162,9 @@ object Cartesian2D {
 
     def distanceFrom(that: Point2D): Double = this.diff(that).toPolar.r
 
-    def angleFrom(that: Point2D): Double = this.diff(that).toPolar.ϕ
+    def angleFrom(that: Point2D): Double = this.diff(that).toPolar.phi
 
-    def midCoords(that: Point2D, a: Double, d: Double): Coords2D = op(c, that.c, (is, at) ⇒ a * (at - is) / d)
+    def midCoords(that: Point2D, a: Double, d: Double): Coords2D = op(c, that.c, (is, at) => a * (at - is) / d)
 
     def midProportional(that: Point2D, a: Double, d: Double): Point2D = sum(midCoords(that, a, d))
 
@@ -179,10 +179,10 @@ object Cartesian2D {
       */
     def unitContacts(that: Point2D): Try[List[Point2D]] =
       Try(distanceFrom(that) match {
-        case zero if zero ≈ 0.0 ⇒ throw new IllegalArgumentException("equal coords")
-        case two if two ≈ 2.0   ⇒ List(halfWay(that))
-        case over if over > 2.0 ⇒ List()
-        case d ⇒
+        case zero if zero ~= 0.0 => throw new IllegalArgumentException("equal coords")
+        case two if two ~= 2.0   => List(halfWay(that))
+        case over if over > 2.0  => List()
+        case d =>
           val a: Double   = (d * d) / (d * 2)
           val p2: Point2D = midProportional(that, a, d)
           val h: Double   = Math.sqrt(1.0 - a * a)
@@ -190,7 +190,7 @@ object Cartesian2D {
           List(p2.sum(py, -px), p2.sum(-py, px))
       })
 
-    def isUnitDistance(that: Point2D): Boolean = distanceFrom(that) ≈ 1.0
+    def isUnitDistance(that: Point2D): Boolean = distanceFrom(that) ~= 1.0
 
     /**
       * get the point at unit distance from all three points, if exists
@@ -201,18 +201,16 @@ object Cartesian2D {
       */
     def getFourth(second: Point2D, third: Point2D): Try[Point2D] =
       second.unitContacts(third) match {
-        case Failure(e) ⇒ Failure(e)
-        case Success(cs) ⇒
+        case Failure(e) => Failure(e)
+        case Success(cs) =>
           Try(cs match {
-            case Nil ⇒ throw new IllegalArgumentException("out of reach")
-            case coords :: Nil ⇒
-              if (isUnitDistance(coords)) coords
-              else throw new IllegalArgumentException("one not matching")
-            case c1 :: c2 :: Nil ⇒
-              if (isUnitDistance(c1)) c1
-              else if (isUnitDistance(c2)) c2
-              else throw new IllegalArgumentException("both not matching")
-            case _ ⇒ throw new Error
+            case Nil                                     => throw new IllegalArgumentException("out of reach")
+            case coords :: Nil if isUnitDistance(coords) => coords
+            case _ :: Nil                                => throw new IllegalArgumentException("one not matching")
+            case c1 :: _ :: Nil if isUnitDistance(c1)    => c1
+            case _ :: c2 :: Nil if isUnitDistance(c2)    => c2
+            case _ :: _ :: Nil                           => throw new IllegalArgumentException("both not matching")
+            case _                                       => throw new Error
           })
       }
 
@@ -232,7 +230,7 @@ object Cartesian2D {
       * @return
       */
     def rotate(angle: Double, centre: Point2D = Point2D.origin): Point2D =
-      centre.sum(centre.diff(this).toPolar.rotate(τ / 2 + angle))
+      centre.sum(centre.diff(this).toPolar.rotate(TAU / 2 + angle))
 
     /**
       * perp product
@@ -283,15 +281,15 @@ object Cartesian2D {
     override def hashCode: Int = 41 * (41 * (41 * (41 + s.x.hashCode()) + s.y.hashCode) + e.x.hashCode) + e.y.hashCode
 
     override def equals(other: Any): Boolean = other match {
-      case that: Segment2D ⇒
+      case that: Segment2D =>
         (that canEqual this) &&
           ((this.s == that.s && this.e == that.e) || (this.s == that.e && this.e == that.s))
-      case _ ⇒ false
+      case _ => false
     }
 
     def canEqual(other: Any): Boolean = other.isInstanceOf[Segment2D]
 
-    override def toString: String = "[" + s + "↕" + e + "]"
+    override def toString: String = "[" + s + "|" + e + "]"
 
     /**
       *
@@ -303,9 +301,9 @@ object Cartesian2D {
                      x2={e.x.roundAt().toString} y2={e.y.roundAt().toString}/>,
                style)
 
-    private def map2(c: Coords2D, f: (Coords2D, Coords2D) ⇒ Coords2D): (Coords2D, Coords2D) = (f(s.c, c), f(e.c, c))
+    private def map2(c: Coords2D, f: (Coords2D, Coords2D) => Coords2D): (Coords2D, Coords2D) = (f(s.c, c), f(e.c, c))
 
-    def mapOp(c: Coords2D, f: (Double, Double) ⇒ Double): (Coords2D, Coords2D) = map2(c, op(_, _, f))
+    def mapOp(c: Coords2D, f: (Double, Double) => Double): (Coords2D, Coords2D) = map2(c, op(_, _, f))
 
     def sum(c: Coords2D): Segment2D = new Segment2D(mapOp(c, _ + _))
 
@@ -325,9 +323,9 @@ object Cartesian2D {
 
     def length: Double = s.distanceFrom(e)
 
-    def angle: Double = toPolar.ϕ
+    def angle: Double = toPolar.phi
 
-    def op2(f: (Point2D, Point2D) ⇒ Point2D): Point2D = f(s, e)
+    def op2(f: (Point2D, Point2D) => Point2D): Point2D = f(s, e)
 
     def min: Point2D = op2(_.min(_))
 
@@ -336,8 +334,7 @@ object Cartesian2D {
     def diff: Point2D = op2(_.diff(_))
 
     /**
-      * see http://geomalgorithms.com/a05-_intersect-1.html
-      *
+      * @see http://geomalgorithms.com/a05-_intersect-1.html
       * @note touching of two endpoints is considered intersecting
       * @param that other segment
       * @return
@@ -349,7 +346,7 @@ object Cartesian2D {
       val w: Point2D = this.s.diff(that.s)
       val d: Double  = u.perp(v)
 
-      if (d ≈ 0.0) { // parallel segments
+      if (d ~= 0.0) { // parallel segments
 
         if (u.perp(w) != 0.0 || v.perp(w) != 0.0) false // but NOT collinear
         else { // collinear segments - get  overlap (or not)
@@ -358,26 +355,23 @@ object Cartesian2D {
 
           // endpoints of S1 in eqn for S2
           val (t0, t1): (Double, Double) = (v.x match {
-            case 0.0 ⇒ (w.y / v.y, w2.y / v.y)
-            case _   ⇒ (w.x / v.x, w2.x / v.x)
+            case 0.0 => (w.y / v.y, w2.y / v.y)
+            case _   => (w.x / v.x, w2.x / v.x)
           }) match { // must have t0 smaller than t1
-            case ok @ (a, b) if a < b ⇒ ok
-            case ko                   ⇒ ko.swap
+            case ok @ (a, b) if a < b => ok
+            case ko                   => ko.swap
           }
 
-          if (t0 > 1.0 || t1 < 0.0) false // NO overlap
-          else if (Math.min(0.0, t0) == Math.max(1.0, t1)) true // intersect is a point (that.s +  min(t0, 0) * v)
-          else true // intersect is a sub segment (that.s + min(t0, 0) * v; that.s + max(t1, 1) * v)
-
+          !(t0 > 1.0 || t1 < 0.0) // NO overlap
         }
       } else { // segments are skew and may intersect in a point
 
         v.perp(w) / d match { // intersect parameter for this segment
-          case sI if sI < 0.0 || sI > 1.0 ⇒ false // no intersect with this
-          case _ ⇒
+          case sI if sI < 0.0 || sI > 1.0 => false // no intersect with this
+          case _ =>
             u.perp(w) / d match { // intersect parameter for that segment
-              case tI if tI < 0.0 || tI > 1.0 ⇒ false // no intersect with that
-              case _                          ⇒ true // intersect point (this.s + sI * u)
+              case tI if tI < 0.0 || tI > 1.0 => false // no intersect with that
+              case _                          => true // intersect point (this.s + sI * u)
             }
         }
 
@@ -446,7 +440,8 @@ object Cartesian2D {
 
   class Polyline2D(cs: List[Coords2D]) extends Points2D(cs) {
 
-    def toPointsAttr: String = cs.map(c ⇒ c._1.roundAt().toString + "," + c._2.roundAt().toString).mkString(" ")
+    def toPointsAttr: String =
+      cs.map({ case (x, y) => x.roundAt().toString + "," + y.roundAt().toString }).mkString(" ")
 
     /**
       *
@@ -480,7 +475,7 @@ object Cartesian2D {
 
     override def scale(xy: Double): Polygon = scale(xy, xy)
 
-    def toSegments2D: List[Segment2D] = cs.circularSliding(2).toList.map(l ⇒ new Segment2D(l.head, l(1)))
+    def toSegments2D: List[Segment2D] = cs.circularSliding(2).toList.map(l => new Segment2D(l.safeHead, l(1)))
 
     def includes(p: Point2D): Boolean = Polygon.segmentsIncludes(toSegments2D, p)
 
@@ -496,7 +491,7 @@ object Cartesian2D {
       */
     def barycenter: Point2D = {
       val s      = cs.size
-      val (x, y) = cs.foldLeft((0.0, 0.0))((sum, c) ⇒ (sum._1 + c._1, sum._2 + c._2))
+      val (x, y) = cs.foldLeft((0.0, 0.0))({ case ((sumx, sumy), (x, y)) => (sumx + x, sumy + y) })
       new Point2D(x / s, y / s)
     }
   }
@@ -514,7 +509,7 @@ object Cartesian2D {
       */
     def segmentsIncludes(segments: List[Segment2D], p: Point2D): Boolean =
       segments.foldLeft(0)(
-        (wn, segm) ⇒
+        (wn, segm) =>
           wn + (
             if (segm.s.y <= p.y) {
               // an upward crossing and p left of edge
@@ -537,22 +532,22 @@ object Cartesian2D {
       require(side.s == adjacent.s)
 
       val l = side.length
-      require(adjacent.length ≈ l, l + " is different from " + adjacent.length)
+      require(adjacent.length ~= l, l + " is different from " + adjacent.length)
 
       //logger.debug("side " + side)
       //logger.debug("adjacent " + adjacent)
 
-      val sideAngle = side.toPolar.ϕ
+      val sideAngle = side.toPolar.phi
       //logger.debug("sideAngle " + sideAngle + " " + sideAngle.toRoundedDegrees())
-      val adjacentAngle = adjacent.toPolar.ϕ
+      val adjacentAngle = adjacent.toPolar.phi
       //logger.debug("adjacentAngle " + adjacentAngle + " " + adjacentAngle.toRoundedDegrees())
       val diff = sideAngle - adjacentAngle
       //logger.debug("diff " + diff + " " + diff.toRoundedDegrees())
       val absDiff = Math.abs(diff)
       //logger.debug("absDiff " + absDiff + " " + absDiff.toRoundedDegrees())
-      val a = if (absDiff > τ / 2) τ - absDiff else absDiff
+      val a = if (absDiff > TAU / 2) TAU - absDiff else absDiff
       //logger.debug("a " + a + " " + a.toRoundedDegrees())
-      val condition = ((diff + τ) % τ) ⪅ (τ / 2)
+      val condition = ((diff + TAU) % TAU) <~= (TAU / 2)
       val rotation  = sideAngle + (if (condition) a else 0)
       //logger.debug("rotation " + rotation + " " + rotation.toRoundedDegrees())
       val traslation = side.e

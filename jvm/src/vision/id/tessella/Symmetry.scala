@@ -14,7 +14,7 @@ trait Symmetry {
     * @tparam T $ELEMTYPE
     * @return
     */
-  private def results[T](l: List[T], action: (List[T], Int) ⇒ List[T], times: Int): IndexedSeq[List[T]] =
+  private def results[T](l: List[T], action: (List[T], Int) => List[T], times: Int): IndexedSeq[List[T]] =
     l +: (1 until times).map(action(l, _))
 
   /**
@@ -23,7 +23,7 @@ trait Symmetry {
     * @tparam T $ELEMTYPE
     * @return
     */
-  private def check[T](l: List[T], other: List[T], f: List[T] ⇒ IndexedSeq[List[T]]): Boolean =
+  private def check[T](l: List[T], other: List[T], f: List[T] => IndexedSeq[List[T]]): Boolean =
     l.lengthCompare(other.size) == 0 && f(other).distinct.contains(l)
 
   /**
@@ -33,7 +33,7 @@ trait Symmetry {
   implicit final class Symm[T](l: List[T]) {
 
     def reflect(steps: Int = 1): List[T] =
-      (0 until steps).foldLeft(l)({ case (m, _) ⇒ m.reverse })
+      (0 until steps).foldLeft(l)({ case (m, _) => m.reverse })
 
     def reflections: IndexedSeq[List[T]] =
       results[T](l, _.reflect(_), 2)
@@ -48,9 +48,9 @@ trait Symmetry {
       * @return
       */
     def rotate(steps: Int): List[T] = l.size match {
-      case 0 ⇒ l
-      case 1 ⇒ l
-      case size ⇒
+      case 0 => l
+      case 1 => l
+      case size =>
         val s = steps.abs % size
         if (steps < 0)
           l.drop(s) ++ l.take(s)

@@ -16,20 +16,20 @@ trait SVG extends Methods {
     </svg>
 
   val fillMap: Map[Int, String] = Map(
-    3  → "yellow",
-    4  → "goldenrod",
-    5  → "hotpink",
-    6  → "grey",
-    7  → "orange",
-    8  → "coral",
-    9  → "darkgray",
-    10 → "lightpink",
-    12 → "lightgreen",
-    15 → "darkseagreen",
-    18 → "olivedrab",
-    20 → "olive",
-    24 → "palegreen",
-    42 → "darkolivegreen"
+    3  -> "yellow",
+    4  -> "goldenrod",
+    5  -> "hotpink",
+    6  -> "grey",
+    7  -> "orange",
+    8  -> "coral",
+    9  -> "darkgray",
+    10 -> "lightpink",
+    12 -> "lightgreen",
+    15 -> "darkseagreen",
+    18 -> "olivedrab",
+    20 -> "olive",
+    24 -> "palegreen",
+    42 -> "darkolivegreen"
   )
 
   val marksColor: List[String] = List(
@@ -55,7 +55,7 @@ trait SVG extends Methods {
     xmlDecl = true
   )
 
-  def prepare[T](ts: List[T], f: T ⇒ Elem): NodeBuffer =
+  def prepare[T](ts: List[T], f: T => Elem): NodeBuffer =
     ts.map(f).foldLeft(new NodeBuffer)(_ &+ _)
 
   def addStyle(e: Elem, style: String): Elem =
@@ -89,20 +89,24 @@ trait SVG extends Methods {
            polys: Boolean = false,
            labelStyle: Int = 1,
            markStyle: Int = 0): NodeBuffer = {
-    val tm             = t.toTessellMap
-    val p              = t.toPerimeterPolygon(tm)
-    val diff           = getDiff(p)
-    val grid           = getGrid(t.toSegments2D(tm), diff)
-    val perimeter: Any = if (perim) getPerimeter(p, diff) else null
-    val polygons: Any  = if (polys) getPolygons(t.toPolygons(tm), diff) else null
-    val labels: Any = labelStyle match {
-      case 1 ⇒ getLabels(t.toPerimeterLabels2D(tm), diff)
-      case 2 ⇒ getLabels(t.toLabels2D(tm), diff)
-      case _ ⇒ null
+    val tm   = t.toTessellMap
+    val p    = t.toPerimeterPolygon(tm)
+    val diff = getDiff(p)
+    val grid = getGrid(t.toSegments2D(tm), diff)
+    val perimeter: NodeBuffer =
+      if (perim) new NodeBuffer() &+ getPerimeter(p, diff)
+      else new NodeBuffer()
+    val polygons: NodeBuffer =
+      if (polys) new NodeBuffer() &+ getPolygons(t.toPolygons(tm), diff)
+      else new NodeBuffer()
+    val labels: NodeBuffer = labelStyle match {
+      case 1 => new NodeBuffer() &+ getLabels(t.toPerimeterLabels2D(tm), diff)
+      case 2 => new NodeBuffer() &+ getLabels(t.toLabels2D(tm), diff)
+      case _ => new NodeBuffer()
     }
     val marks: Any = markStyle match {
-      case 1 ⇒ getGonalMarks(t.toGonals(tm), diff)
-      case _ ⇒ null
+      case 1 => new NodeBuffer() &+ getGonalMarks(t.toGonals(tm), diff)
+      case _ => new NodeBuffer()
     }
     new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ marks &+ labels
   }
@@ -122,13 +126,13 @@ trait SVG extends Methods {
     group(
       prepare(
         grouped.keys.toList.map(
-          k ⇒
+          k =>
             group(prepare[Polygon](
                     grouped(k),
                     _.sum(diff).scale(multiple).toSVG("stroke:none")
                   ),
                   "fill:" + fillMap(k))),
-        (e: Elem) ⇒ e
+        (e: Elem) => e
       ),
       style = ""
     )
@@ -146,13 +150,13 @@ trait SVG extends Methods {
     group(
       prepare(
         l.indices.toList.map(
-          i ⇒
+          i =>
             group(prepare[Point2D](
-              l(i),
-              p ⇒ new Circle(p.c, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
-            ),
-              "fill:" + marksColor(i % 6))),
-        (e: Elem) ⇒ e
+                    l(i),
+                    p => new Circle(p.c, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
+                  ),
+                  "fill:" + marksColor(i % 6))),
+        (e: Elem) => e
       ),
       ""
     )

@@ -5,7 +5,7 @@ import scala.util.Try
 
 import com.typesafe.scalalogging.Logger
 
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 import vision.id.tessella.Cartesian2D._
 
 object Polar {
@@ -18,20 +18,20 @@ object Polar {
   class PointPolar(val c: Coords2D) extends CoordsOps /*with Ordered[PointPolar]*/ {
 
     /**
-      * normalized angle, always 0 ≤ ϕ ≤ τ
+      * normalized angle, always 0 ≤ phi ≤ TAU
       */
-    val (r, ϕ): (Double, Double) = c match { case (radius, angle) ⇒ (radius, mod(angle, τ)) }
+    val (r, phi): (Double, Double) = c match { case (radius, angle) => (radius, mod(angle, TAU)) }
 
-    override def hashCode: Int = 41 * (41 + r.hashCode()) + ϕ.hashCode
+    override def hashCode: Int = 41 * (41 + r.hashCode()) + phi.hashCode
 
     override def equals(other: Any): Boolean = other match {
-      case that: PointPolar ⇒ (that canEqual this) && equal(this.toCartesianCoords2D, that.toCartesianCoords2D)
-      case _                ⇒ false
+      case that: PointPolar => (that canEqual this) && equal(this.toCartesianCoords2D, that.toCartesianCoords2D)
+      case _                => false
     }
 
     def canEqual(other: Any): Boolean = other.isInstanceOf[PointPolar]
 
-    def toCartesianCoords2D: Coords2D = (r * cos(ϕ), r * sin(ϕ))
+    def toCartesianCoords2D: Coords2D = (r * cos(phi), r * sin(phi))
 
     def toPoint2D: Point2D = new Point2D(toCartesianCoords2D)
 
@@ -43,51 +43,51 @@ object Polar {
 
     def rotate(a: Double): PointPolar = sum(0, a)
 
-    def reflect: PointPolar = new PointPolar(r, τ - ϕ)
+    def reflect: PointPolar = new PointPolar(r, TAU - phi)
 
-    override def toString: String = r + "⇝" + ϕ.toRoundedDegrees() + "°"
+    override def toString: String = r + "~>" + phi.toRoundedDegrees() + "°"
 
   }
 
   /**
     * polygonal chain
     *
-    * @param lϕs list of polar points (sides and angles)
+    * @param pps list of polar points (sides and angles)
     */
-  class Polyline(val lϕs: List[PointPolar]) extends CoordsOps {
+  class Polyline(val pps: List[PointPolar]) extends CoordsOps {
 
     val logger = Logger("POLYLINE")
 
-    def ls: List[Double] = lϕs.map(_.r)
+    def ls: List[Double] = pps.map(_.r)
 
     /**
       * lines of length 0 are not allowed
       */
     require(!ls.contains(0.0))
 
-    def ϕs: List[Double] = lϕs.map(_.ϕ)
+    def phis: List[Double] = pps.map(_.phi)
 
-    def n: Int = lϕs.size
+    def n: Int = pps.size
 
     def length: Double = ls.foldLeft(0.0)(_ + _)
 
     def isClose: Boolean = end == Point2D.origin
 
-    override def toString: String = lϕs.map(_.toString).mkString(",")
+    override def toString: String = pps.map(_.toString).mkString(",")
 
-    def equalCoords(that: Polyline): Boolean = this.lϕs.zip(that.lϕs).forall({ case (p1, p2) ⇒ p1 == p2 })
+    def equalCoords(that: Polyline): Boolean = this.pps.zip(that.pps).forall({ case (p1, p2) => p1 == p2 })
 
-    private def follow: ((Point2D, Double), PointPolar) ⇒ (Point2D, Double) =
-      (acc, lϕ) ⇒ acc match { case (point, α) ⇒ (point.sum(lϕ.rotate(α)), α + lϕ.ϕ) }
+    private def follow: ((Point2D, Double), PointPolar) => (Point2D, Double) =
+      (acc, lphi) => acc match { case (point, alpha) => (point.sum(lphi.rotate(alpha)), alpha + lphi.phi) }
 
-    def end: Point2D = lϕs.foldLeft((Point2D.origin, 0.0))(follow)._1
+    def end: Point2D = pps.foldLeft((Point2D.origin, 0.0))(follow) match { case (p, _) => p }
 
     /**
       * reflected polar points
       *
       * @return
       */
-    def reflectedPoints: List[PointPolar] = lϕs.map(_.reflect)
+    def reflectedPoints: List[PointPolar] = pps.map(_.reflect)
 
     /**
       * reflection
@@ -102,7 +102,7 @@ object Polar {
       * @param a starting rotation angle
       * @return
       */
-    def toPoint2Ds(a: Double = 0.0): List[Point2D] = lϕs.scanLeft((Point2D.origin, a))(follow).map(_._1)
+    def toPoint2Ds(a: Double = 0.0): List[Point2D] = pps.scanLeft((Point2D.origin, a))(follow).map({ case (p, _) => p })
 
     /**
       * @param a starting rotation angle
@@ -119,19 +119,15 @@ object Polar {
       if (n < 2) this
       else {
         // add ending line, so we do not finish with a straight
-        val las = lϕs :+ new PointPolar(0.0, 1.0)
-        val r = las.foldLeft((List(): List[PointPolar], 0.0))((l, lϕ) ⇒
+        val las = pps :+ new PointPolar(0.0, 1.0)
+        val (newPps, _) = las.foldLeft((List(): List[PointPolar], 0.0))((l, lphi) =>
           l match {
-            case (acc, tot) ⇒
-              // found a straight line
-              if ((lϕ.ϕ % τ) ≈ 0.0) (acc, tot + lϕ.r)
-              // not straight, but there was a straight before
-              else if (tot > 0.0) (acc ++ List(new PointPolar(tot, 0.0), lϕ), 0.0)
-              // not straight
-              else (acc :+ lϕ, 0.0)
+            case (acc, tot) if (lphi.phi % TAU) ~= 0.0 => (acc, tot + lphi.r) // found a straight line
+            case (acc, tot) if tot > 0.0 => (acc ++ List(new PointPolar(tot, 0.0), lphi), 0.0) // previous straight
+            case (acc, _)                => (acc :+ lphi, 0.0) // not straight
         })
         // remove ending line
-        new Polyline(r._1.init)
+        new Polyline(newPps.init)
       }
 
     /**
@@ -142,7 +138,7 @@ object Polar {
       */
     def toSegments2D(a: Double = 0.0): List[Segment2D] = {
       val cs = toPoint2Ds(a).map(_.c)
-      (for (i ← 1 to n) yield new Segment2D(cs(i - 1), cs(i))).toList
+      (for (i <- 1 to n) yield new Segment2D(cs(i - 1), cs(i))).toList
     }
 
     /**
@@ -155,8 +151,8 @@ object Polar {
       val ss = simplify.toSegments2D()
       val s  = ss.size
       for {
-        i ← 0 until s
-        j ← i until s
+        i <- 0 until s
+        j <- i until s
       } if (i != j && ss(i).isNotJoiningButIntersecting(ss(j))) return true
       false
     }
@@ -171,15 +167,15 @@ object Polar {
       val ss = simplify.toSegments2D()
       val s  = ss.size
       (for {
-        i ← 0 until s
-        j ← i until s
+        i <- 0 until s
+        j <- i until s
         if i != j && ss(i).isNotJoiningButIntersecting(ss(j))
       } yield (ss(i), ss(j))).toList
     }
 
   }
 
-  class UnitPolyline(val lαs: List[PointPolar]) extends Polyline(lαs) {
+  class UnitPolyline(pps: List[PointPolar]) extends Polyline(pps) {
 
     require(ls == List.fill(n)(1.0))
 
@@ -189,11 +185,11 @@ object Polar {
 
   object UnitPolyline {
 
-    def ofAngles(αs: List[Double]): UnitPolyline = new UnitPolyline(αs.map(new PointPolar(1.0, _)))
+    def ofAngles(alphas: List[Double]): UnitPolyline = new UnitPolyline(alphas.map(new PointPolar(1.0, _)))
 
   }
 
-  class Pgon(val lαs: List[PointPolar]) extends Polyline(lαs) {
+  class Pgon(pps: List[PointPolar]) extends Polyline(pps) {
 
     require(n > 2, this)
 
@@ -214,7 +210,7 @@ object Polar {
       */
     override def toSegments2D(a: Double = 0.0): List[Segment2D] = {
       val cs = super.toPoint2Ds(a).map(_.c)
-      (for (i ← 1 to n) yield new Segment2D(cs(i - 1), cs(i))).toList
+      (for (i <- 1 to n) yield new Segment2D(cs(i - 1), cs(i))).toList
     }
 
     def toPolygon(a: Double = 0.0): Polygon = new Polygon(toPoint2Ds(a).map(_.c))
@@ -229,8 +225,8 @@ object Polar {
       val ps = toPoint2Ds().map(_.c)
       val s  = ps.size
       for {
-        i ← 0 until s
-        j ← i until s
+        i <- 0 until s
+        j <- i until s
       } if (i != j && equal(ps(i), ps(j))) return true
       false
     }
@@ -239,8 +235,8 @@ object Polar {
       val ps = toPoint2Ds().map(_.c)
       val s  = ps.size
       (for {
-        i ← 0 until s
-        j ← i until s
+        i <- 0 until s
+        j <- i until s
         if i != j && equal(ps(i), ps(j))
       } yield ps(i)).toList
     }
@@ -249,15 +245,15 @@ object Polar {
 
   }
 
-  class SimplePgon(lαs: List[PointPolar]) extends Pgon(lαs) {
+  class SimplePgon(pps: List[PointPolar]) extends Pgon(pps) {
 
     /**
       * cannot have line going backwards on top of the previous one
       *
       * @todo check if commented out version is better
       */
-    require(!ϕs.contains(τ / 2), ϕs)
-//    require(!ϕs.exists(~=(_, τ / 2)), ϕs)
+    require(!phis.contains(TAU / 2), phis)
+//    require(!phis.exists(~=(_, TAU / 2)), phis)
 
     require(!isTouching, "touches: " + touches)
 
@@ -265,7 +261,7 @@ object Polar {
 
   }
 
-  class UnitSimplePgon(lαs: List[PointPolar]) extends SimplePgon(lαs) {
+  class UnitSimplePgon(pps: List[PointPolar]) extends SimplePgon(pps) {
 
     require(ls == List.fill(n)(1.0))
 
@@ -275,24 +271,24 @@ object Polar {
 
   object UnitSimplePgon {
 
-    def ofAngles(αs: List[Double]): UnitSimplePgon = new UnitSimplePgon(αs.map(new PointPolar(1.0, _)))
+    def ofAngles(alphas: List[Double]): UnitSimplePgon = new UnitSimplePgon(alphas.map(new PointPolar(1.0, _)))
 
   }
 
-  class RegularPgon(lϕs: List[PointPolar]) extends SimplePgon(lϕs) {
+  class RegularPgon(pps: List[PointPolar]) extends SimplePgon(pps) with ListUtils {
 
     require(ls.distinct.lengthCompare(1) == 0)
 
-    require(ϕs.distinct.lengthCompare(1) == 0)
+    require(phis.distinct.lengthCompare(1) == 0)
 
     /**
       * polar angle
       *
       * @return
       */
-    val ϕ: Double = ϕs.head
+    val phi: Double = phis.safeHead
 
-    val l: Double = ls.head
+    val l: Double = ls.safeHead
 
     override def toString: String = "{" + n.toString + "}"
 
@@ -301,14 +297,14 @@ object Polar {
       *
       * @return radians
       */
-    def α: Double = τ / 2 - ϕ
+    def alpha: Double = TAU / 2 - phi
 
     /**
       * exterior angle
       *
       * @return radians
       */
-    def β: Double = τ - α
+    def beta: Double = TAU - alpha
 
     /**
       * inradius
@@ -317,7 +313,7 @@ object Polar {
       *
       * @return
       */
-    def r: Double = (1.0 / tan(τ / 2 / n)) * l / 2
+    def r: Double = (1.0 / tan(TAU / 2 / n)) * l / 2
 
     /**
       * circumradius
@@ -326,7 +322,7 @@ object Polar {
       *
       * @return
       */
-    def R: Double = (1.0 / sin(τ / 2 / n)) * l / 2
+    def R: Double = (1.0 / sin(TAU / 2 / n)) * l / 2
 
     /**
       * area
@@ -341,17 +337,17 @@ object Polar {
 
     val logger = Logger("REGULAR PGON")
 
-    def angle(n: Int): Double = ((n - 2) * τ / 2) / n
+    def angle(n: Int): Double = ((n - 2) * TAU / 2) / n
 
-    def polarAngle(n: Int): Double = τ / 2 - angle(n)
+    def polarAngle(n: Int): Double = TAU / 2 - angle(n)
 
     /**
       * inverse of above method angle
       */
-    def sides(α: Double): Try[Int] = Try {
-      val n       = 2 / (1 - (α / (τ / 2))) //; logger.debug(n.toString)
+    def sides(alpha: Double): Try[Int] = Try {
+      val n       = 2 / (1 - (alpha / (TAU / 2))) //; logger.debug(n.toString)
       val rounded = n.roundAt(0) //; logger.debug(rounded.toString)
-      if ((n - rounded) ≈ (0, stdPrecision * 10))
+      if ((n - rounded) ~= (0, stdPrecision * 10))
         rounded.toInt
       else
         throw new IllegalArgumentException("interior angle  not compatible with regular polygon")
@@ -361,9 +357,9 @@ object Polar {
 
   }
 
-  class UnitRegularPgon(lαs: List[PointPolar]) extends RegularPgon(lαs) {
+  class UnitRegularPgon(pps: List[PointPolar]) extends RegularPgon(pps) {
 
-    require(ls.head == 1.0)
+    require(ls.safeHead == 1.0)
 
     override def perimeter: Double = n
 

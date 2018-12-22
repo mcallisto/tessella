@@ -17,14 +17,14 @@ trait CoordGenerators extends MathUtils {
 
   def genPoint2D: Gen[Point2D] =
     for {
-      x ← arbitrary[Double]
-      y ← arbitrary[Double]
+      x <- arbitrary[Double]
+      y <- arbitrary[Double]
     } yield new Point2D(x, y)
 
   def genSegment2D: Gen[Segment2D] =
     for {
-      p0 ← genPoint2D
-      p1 ← genPoint2D suchThat (!_.equals(p0))
+      p0 <- genPoint2D
+      p1 <- genPoint2D suchThat (!_.equals(p0))
     } yield Segment2D.fromPoint2Ds(p0, p1)
 
 }

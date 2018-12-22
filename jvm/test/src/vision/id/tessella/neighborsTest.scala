@@ -15,7 +15,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
   "Node neighbors" can "be found for perimeter nodes" in {
     val vertexOtherCase = Tiling.fromG(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1))
     assert(
-      vertexOtherCase.outerNodeNeighbors(vertexOtherCase get 1, vertexOtherCase.periNodes) === List(
+      vertexOtherCase.outerNodeHood(vertexOtherCase get 1, vertexOtherCase.periNodes) === List(
         (6, List(5)),
         (5, List(4)),
         (4, List(3, 2)),
@@ -24,7 +24,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val neighsPeri =
-      vertexFortyTwo.outerNodeNeighbors(vertexFortyTwo get 10, vertexFortyTwo.periNodes)
+      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 10, vertexFortyTwo.periNodes)
     assert(
       neighsPeri === List(
         (9,
@@ -40,7 +40,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
     val vertexCaseStudy: Tiling =
       Tiling.poly(6) ++ List(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6)
     assert(
-      vertexCaseStudy.outerNodeNeighbors(vertexCaseStudy get 1, vertexCaseStudy.periNodes) === List(
+      vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.periNodes) === List(
         (2, List(3, 4, 5, 6)),
         (6, List(10, 9)),
         (9, List(7)),
@@ -48,7 +48,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val neighsFull1 =
-      vertexFortyTwo.outerNodeNeighbors(vertexFortyTwo get 2, vertexFortyTwo.periNodes)
+      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 2, vertexFortyTwo.periNodes)
     assert(
       neighsFull1 === List(
         (1,
@@ -59,7 +59,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val hex         = Tiling.hexagonNet(2, 3)
-    val neighsFull2 = hex.outerNodeNeighbors(hex get 15, hex.periNodes)
+    val neighsFull2 = hex.outerNodeHood(hex get 15, hex.periNodes)
     assert(
       neighsFull2 === List(
         (14, List(9, 10, 11, 16)),
@@ -107,7 +107,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
         23 ~ 9,
         23 ~ 21
       ))
-    val neighsFull = edgeCase.outerNodeNeighbors(edgeCase get 3, edgeCase.periNodes)
+    val neighsFull = edgeCase.outerNodeHood(edgeCase get 3, edgeCase.periNodes)
     assert(
       neighsFull === List(
         (1, List(2)),

@@ -5,14 +5,14 @@ import java.lang.Math.sqrt
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 import vision.id.tessella.Cartesian2D._
-import vision.id.tessella.Polar.{PointPolar, RegularPgon, UnitRegularPgon}
+import vision.id.tessella.Polar.{PointPolar, UnitRegularPgon}
 
-class cartesian2DTest extends FlatSpec {
+class cartesian2DTest extends FlatSpec with TryUtils {
 
   val cart: Point2D   = new Point2D((1.0, 1.0))
-  val pol: PointPolar = new PointPolar(sqrt(2.0), τ / 8)
+  val pol: PointPolar = new PointPolar(sqrt(2.0), TAU / 8)
 
   "Two coords" must "be ordered by first element and then second" in {
     val c0 = (0.0, 1.0)
@@ -33,12 +33,12 @@ class cartesian2DTest extends FlatSpec {
   }
 
   it must "be in the cartesian pos quadrant if angle in first half 𝜋" in {
-    val c = new PointPolar(1.0, τ / 6).toPoint2D
+    val c = new PointPolar(1.0, TAU / 6).toPoint2D
     assert(c.x > 0 && c.y > 0)
   }
 
   it must "be in the x-neg and y-pos quadrant if angle in second half 𝜋" in {
-    val c = new PointPolar(1.0, τ / 3).toPoint2D
+    val c = new PointPolar(1.0, TAU / 3).toPoint2D
     assert(c.x < 0 && c.y > 0)
   }
 
@@ -63,9 +63,9 @@ class cartesian2DTest extends FlatSpec {
 
   it can "be rotated of a given angle around a centre" in {
     val p = new Point2D(3.0, 2.0)
-    assert(p.rotate(τ / 4, new Point2D(3.0, 3.0)) === new Point2D(4.0, 3.0))
-    assert(p.rotate(τ / 2, new Point2D(3.0, 3.0)) === new Point2D(3.0, 4.0))
-    assert(p.rotate(τ / 4, p) === p)
+    assert(p.rotate(TAU / 4, new Point2D(3.0, 3.0)) === new Point2D(4.0, 3.0))
+    assert(p.rotate(TAU / 2, new Point2D(3.0, 3.0)) === new Point2D(3.0, 4.0))
+    assert(p.rotate(TAU / 4, p) === p)
   }
 
   "Two points" must "be ordered for x and then for y" in {
@@ -138,8 +138,8 @@ class cartesian2DTest extends FlatSpec {
 
   it can "be rotated of a given angle around a centre" in {
     val s = new Segment2D((3.0, 2.0), (0.0, -5.0))
-    assert(s.rotate(τ / 4, new Point2D(3.0, 3.0)) === new Segment2D((4.0, 3.0), (11.0, 0.0)))
-    assert(s.rotate(τ / 2, new Point2D(3.0, 3.0)) === new Segment2D((3.0, 4.0), (6.0, 11.0)))
+    assert(s.rotate(TAU / 4, new Point2D(3.0, 3.0)) === new Segment2D((4.0, 3.0), (11.0, 0.0)))
+    assert(s.rotate(TAU / 2, new Point2D(3.0, 3.0)) === new Segment2D((3.0, 4.0), (6.0, 11.0)))
   }
 
   "A label" can "be moved" in {
@@ -152,67 +152,67 @@ class cartesian2DTest extends FlatSpec {
   "A regular triangle" can "be created from two adjacent sides" in {
     val side1 = new Segment2D((-2.5, -0.8660254), (-2.0, 0.0))
     val side2 = new Segment2D((-2.5, -0.8660254), (-3.0, 0.0))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
-      p.toSegments2D.map(_.toString) === List("[{-2.0:0.0}↕{-3.0:0.0}]",
-                                              "[{-3.0:0.0}↕{-2.5:-0.8660254}]",
-                                              "[{-2.5:-0.8660254}↕{-2.0:0.0}]"))
+      p.toSegments2D.map(_.toString) === List("[{-2.0:0.0}|{-3.0:0.0}]",
+                                              "[{-3.0:0.0}|{-2.5:-0.8660254}]",
+                                              "[{-2.5:-0.8660254}|{-2.0:0.0}]"))
   }
 
   it can "be created from another two adjacent sides" in {
     val side1 = new Segment2D((-1.0, 0.0), (0.0, 0.0))
     val side2 = new Segment2D((-1.0, 0.0), (-0.5, 0.8660254))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
-      p.toSegments2D.map(_.toString) === List("[{0.0:0.0}↕{-0.5:0.8660254}]",
-                                              "[{-0.5:0.8660254}↕{-1.0:0.0}]",
-                                              "[{-1.0:0.0}↕{0.0:0.0}]"))
+      p.toSegments2D.map(_.toString) === List("[{0.0:0.0}|{-0.5:0.8660254}]",
+                                              "[{-0.5:0.8660254}|{-1.0:0.0}]",
+                                              "[{-1.0:0.0}|{0.0:0.0}]"))
   }
 
   it can "be created from another two adjacent sides swapped" in {
     val side1 = new Segment2D((-1.0, 0.0), (-0.5, 0.8660254))
     val side2 = new Segment2D((-1.0, 0.0), (0.0, 0.0))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
-      p.toSegments2D.map(_.toString) === List("[{-0.5:0.8660254}↕{-1.0:0.0}]",
-                                              "[{-1.0:0.0}↕{0.0:0.0}]",
-                                              "[{0.0:0.0}↕{-0.5:0.8660254}]"))
+      p.toSegments2D.map(_.toString) === List("[{-0.5:0.8660254}|{-1.0:0.0}]",
+                                              "[{-1.0:0.0}|{0.0:0.0}]",
+                                              "[{0.0:0.0}|{-0.5:0.8660254}]"))
   }
 
   "A square" can "be created from two adjacent sides" in {
     val side1 = new Segment2D((3.0, -1.0), (1.0, -2.5))
     val side2 = new Segment2D((3.0, -1.0), (1.5, 1.0))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
-      p.toSegments2D.map(_.toString) === List("[{1.0:-2.5}↕{3.0:-1.0}]",
-                                              "[{3.0:-1.0}↕{1.5:1.0}]",
-                                              "[{1.5:1.0}↕{-0.5:-0.5}]",
-                                              "[{-0.5:-0.5}↕{1.0:-2.5}]"))
+      p.toSegments2D.map(_.toString) === List("[{1.0:-2.5}|{3.0:-1.0}]",
+                                              "[{3.0:-1.0}|{1.5:1.0}]",
+                                              "[{1.5:1.0}|{-0.5:-0.5}]",
+                                              "[{-0.5:-0.5}|{1.0:-2.5}]"))
   }
 
   it can "be created from the same two adjacent sides swapped" in {
     val side1 = new Segment2D((3.0, -1.0), (1.5, 1.0))
     val side2 = new Segment2D((3.0, -1.0), (1.0, -2.5))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
-      p.toSegments2D.map(_.toString) === List("[{1.5:1.0}↕{-0.5:-0.5}]",
-                                              "[{-0.5:-0.5}↕{1.0:-2.5}]",
-                                              "[{1.0:-2.5}↕{3.0:-1.0}]",
-                                              "[{3.0:-1.0}↕{1.5:1.0}]"))
+      p.toSegments2D.map(_.toString) === List("[{1.5:1.0}|{-0.5:-0.5}]",
+                                              "[{-0.5:-0.5}|{1.0:-2.5}]",
+                                              "[{1.0:-2.5}|{3.0:-1.0}]",
+                                              "[{3.0:-1.0}|{1.5:1.0}]"))
   }
 
   "An hexagon" can "be created from two adjacent sides" in {
     val side1 = new Segment2D((-0.5, 0.8660254), (0.0, 0.0))
     val side2 = new Segment2D((-0.5, 0.8660254), (-1.5, 0.8660254))
-    val p     = Polygon.createRegularFrom(side1, side2).get
+    val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List(
-        "[{0.0:0.0}↕{-0.5:0.8660254}]",
-        "[{-0.5:0.8660254}↕{-1.5:0.8660254}]",
-        "[{-1.5:0.8660254}↕{-1.99999999:-1.0E-8}]",
-        "[{-1.99999999:-1.0E-8}↕{-1.49999999:-0.86602541}]",
-        "[{-1.49999999:-0.86602541}↕{-0.5:-0.8660254}]",
-        "[{-0.5:-0.8660254}↕{0.0:0.0}]"
+        "[{0.0:0.0}|{-0.5:0.8660254}]",
+        "[{-0.5:0.8660254}|{-1.5:0.8660254}]",
+        "[{-1.5:0.8660254}|{-1.99999999:-1.0E-8}]",
+        "[{-1.99999999:-1.0E-8}|{-1.49999999:-0.86602541}]",
+        "[{-1.49999999:-0.86602541}|{-0.5:-0.8660254}]",
+        "[{-0.5:-0.8660254}|{0.0:0.0}]"
       ))
   }
 

@@ -5,7 +5,7 @@ import scalax.collection.GraphPredef._
 import scalax.collection.constrained.PreCheckFollowUp._
 import scalax.collection.constrained._
 import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 
 import scala.collection.Set
 import scala.language.{higherKinds, postfixOps}
@@ -39,12 +39,12 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     val (periNodes, _): (List[Int], List[UnDiEdge[Int]]) = g.perimeterNodesEdges
 
     val (_, periPaths): (List[List[Int]], List[List[List[Int]]]) =
-      periNodes.init.map(g.outerNodeNeighbors(_, periNodes).unzip).unzip
+      periNodes.init.map(g.outerNodeHood(_, periNodes).unzip).unzip
 
-    val vertexes: List[Vertex] = periPaths.map(paths ⇒ Vertex.p(paths.init.map(_.size + 2)))
+    val vertexes: List[Vertex] = periPaths.map(paths => Vertex.p(paths.init.map(_.size + 2)))
 
     // implies satisfying requirements of UnitSimplePgon
-    new UnitSimplePgon(vertexes.map(v ⇒ new PointPolar(1.0, τ / 2 - v.α)))
+    new UnitSimplePgon(vertexes.map(v => new PointPolar(1.0, TAU / 2 - v.alpha)))
 
   }
 
@@ -58,13 +58,13 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
                        preCheck: PreCheckResult): Boolean = {
     if (!newGraph.hasPositiveValues)
       refusal("non positive nodes = " + newGraph.nodes.filter(_.toOuter match {
-        case i: Int ⇒ i <= 0
-        case _      ⇒ false
+        case i: Int => i <= 0
+        case _      => false
       }))
     if (!newGraph.hasRegularNodes)
       refusal(
         "nodes with wrong number of edges = " +
-          newGraph.nodes.filter(node ⇒ node.degree < 2 || node.degree > 6))
+          newGraph.nodes.filter(node => node.degree < 2 || node.degree > 6))
     if (!newGraph.isConnected)
       refusal("graph not connected")
     if (perimeterSimplePolygon(newGraph.asInstanceOf[Graph[Int, UnDiEdge]]).isFailure)
@@ -82,7 +82,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     PreCheckResult(Abort)
 
   /** To be analyzed, for the time being skip */
-  override def preSubtract(nodes: ⇒ Set[self.NodeT], edges: ⇒ Set[self.EdgeT], simple: Boolean): PreCheckResult =
+  override def preSubtract(nodes: => Set[self.NodeT], edges: => Set[self.EdgeT], simple: Boolean): PreCheckResult =
     PreCheckResult(PostCheck)
 
   override def onAdditionRefused(refusedNodes: Traversable[N],

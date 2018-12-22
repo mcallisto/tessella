@@ -18,11 +18,11 @@ trait MathUtils {
       * @param precision level of precision
       * @return
       */
-    def ≈(other: Double, precision: Double = stdPrecision): Boolean =
+    def ~=(other: Double, precision: Double = stdPrecision): Boolean =
       (d - other).abs < precision
 
-    def ⪅(other: Double, precision: Double = stdPrecision): Boolean =
-      d < other || (d ≈ (other, precision))
+    def <~=(other: Double, precision: Double = stdPrecision): Boolean =
+      d < other || (d ~= (other, precision))
 
     def roundAt(precision: Int = decimalPrecision): Double =
       BigDecimal(d).setScale(precision, BigDecimal.RoundingMode.HALF_UP).toDouble
@@ -39,13 +39,13 @@ trait MathUtils {
     * @return
     */
   def mod(a: Double, d: Double): Double = a % d match {
-    case neg if neg < 0 ⇒ neg + abs(d)
-    case nonNeg         ⇒ nonNeg
+    case neg if neg < 0 => neg + abs(d)
+    case nonNeg         => nonNeg
   }
 
   def mod(a: Int, d: Int): Int = a % d match {
-    case neg if neg < 0 ⇒ neg + abs(d)
-    case nonNeg         ⇒ nonNeg
+    case neg if neg < 0 => neg + abs(d)
+    case nonNeg         => nonNeg
   }
 
 }

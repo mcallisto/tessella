@@ -6,23 +6,23 @@ import com.typesafe.scalalogging.Logger
 
 import vision.id.tessella.Cartesian2D.{Point2D, Points2D, Segment2D}
 import vision.id.tessella.Polar.{PointPolar, Polyline, UnitRegularPgon}
-import vision.id.tessella.Tau.τ
+import vision.id.tessella.Tau.TAU
 
-class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
+class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with TryUtils {
 
   val logger = Logger("TESSELLMAP")
 
-  def toPrintable: Map[Int, String] = m.map({ case (node, point) ⇒ (node, point.toString) })
+  def toPrintable: Map[Int, String] = m.map({ case (node, point) => (node, point.toString) })
 
   def addFromThree(node: Int, mapped: (Int, Int, Int)): Try[TessellMap] =
     Try(m.get(node) match {
-      case Some(_) ⇒ throw new IllegalArgumentException("node already mapped")
-      case None ⇒
+      case Some(_) => throw new IllegalArgumentException("node already mapped")
+      case None =>
         val (n1, n2, n3) = mapped
         val points       = List(n1, n2, n3).map(m)
-        points.head.getFourth(points(1), points(2)) match {
-          case Success(point) ⇒ new TessellMap(m + (node → point))
-          case Failure(e)     ⇒ throw e
+        points.safeHead.getFourth(points(1), points(2)) match {
+          case Success(point) => new TessellMap(m + (node -> point))
+          case Failure(e)     => throw e
         }
     })
 
@@ -34,47 +34,72 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
     * @return
     */
   def addFromNeighbors(node: Int, neigh: List[(Int, List[Int])]): Try[TessellMap] = m.get(node) match {
-    case Some(_) ⇒
+    case Some(_) =>
       Try(throw new IllegalArgumentException("node already mapped"))
-    case None ⇒
+    case None =>
       //logger.debug("\nnode: " + node)
       if (neigh.lengthCompare(2) < 0)
         Try(throw new IllegalArgumentException("not enough neighbors"))
       else {
         val (nodes, _) = neigh.unzip
         nodes.filter(m.get(_).isDefined) match {
-          case n_start :: n_end :: Nil ⇒
-            val point = m(n_start).unitContacts(m(n_end)).get match {
-              case p :: Nil ⇒ p //; logger.debug("\np found because unique: " + p); p
-              case p1 :: p2 :: Nil ⇒
-                val v          = m.values.toList //; logger.debug("\nv: " + v)
-                val containsP2 = v.contains(p2)
-                if (v.contains(p1)) {
-                  if (containsP2)
-                    throw new Error("both points already existing")
-                  else
-                    p2 //; logger.debug("\np2 found by exclusion: " + p2); p2
-                } else if (containsP2)
-                  p1 //; logger.debug("\np1 found by exclusion: " + p1); p1
-                else
-                  throw new IllegalArgumentException("cannot be found")
-              case _ ⇒ throw new Error
+          case n_start :: n_end :: Nil =>
+            val point = m(n_start).unitContacts(m(n_end)).safeGet match {
+              case p :: Nil => p //; logger.debug("\np found because unique: " + p); p
+              case p1 :: p2 :: Nil =>
+                val v = m.values.toList //; logger.debug("\nv: " + v)
+                (v.contains(p1), v.contains(p2)) match {
+                  case (true, true)  => throw new Error("both points already existing")
+                  case (true, false) => p2 //; logger.debug("\np2 found by exclusion: " + p2); p2
+                  case (false, true) => p1 //; logger.debug("\np1 found by exclusion: " + p1); p1
+                  case _             => throw new IllegalArgumentException("cannot be found")
+                }
+              case _ => throw new Error
             }
-            Try(new TessellMap(m + (node → point)))
-          case f :: s :: t :: _ ⇒
-            addFromThree(node, (f, s, t))
-          case _ ⇒
-            Try(throw new IllegalArgumentException("not enough mapped neighbors"))
+            Try(new TessellMap(m + (node -> point)))
+          case f :: s :: t :: _ => addFromThree(node, (f, s, t))
+          case _                => Try(throw new IllegalArgumentException("not enough mapped neighbors"))
         }
       }
   }
 
-  def hasOnSameLine(f: Int, s: Int): Boolean = Segment2D.fromPoint2Ds(m(f), m(s)).length ≈ 2.0
+  def hasOnSameLine(f: Int, s: Int): Boolean = Segment2D.fromPoint2Ds(m(f), m(s)).length ~= 2.0
 
   implicit final class OuterNode(node: Int) {
 
     def isOnSameLineOf(other: Int): Boolean = hasOnSameLine(node, other)
 
+  }
+
+  private def getNeighborsUnmapped(node: Int, nodes: List[Int], all: IndexedSeq[Double]): Map[Int, Point2D] =
+    (for {
+      i <- nodes.indices
+      if m.get(nodes(i)).isEmpty
+    } yield nodes(i) -> m(node).sum(new PointPolar(1.0, all(i)))).toMap
+
+  /**
+    * get angle and direction
+    */
+  private def findAngleDir(node: Int,
+                           nodes: List[Int],
+                           nStart: Int,
+                           t: List[Int],
+                           interiors: List[Double]): (Double, Int) = {
+    // find first and second mapped neighbors nodes (not on the same line with node)
+    val nEnd  = t.find(!_.isOnSameLineOf(nStart)).safeGet()
+    val start = nodes.indexOf(nStart)
+    val end   = nodes.indexOf(nEnd)
+    // find angle between start and end based on coords
+    val s1          = Segment2D.fromPoint2Ds(m(node), m(nStart)).angle
+    val s2          = Segment2D.fromPoint2Ds(m(node), m(nEnd)).angle
+    val angleCoords = mod(s2 - s1, TAU) //; logger.debug("\nangleCoords: " + angleCoords)
+    // find angle between start and end based on ordered perimeter
+    val angPerim = (start until end).foldLeft(0.0)((acc, i) => acc + interiors(i)) //; logger.debug("\nangPerim: " + angPerim)
+    // find orientation
+    val dir = if (angleCoords ~= angPerim) 1 else -1 //; logger.debug("\ndir: " + dir)
+    // find initial angle based on coords
+    val angStart = (0 until start).foldLeft(0.0)((acc, i) => acc + interiors(i))
+    (s1 - (angStart * dir), dir)
   }
 
   /**
@@ -91,53 +116,23 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
 
       val (nodes, paths) = neigh.unzip //; logger.debug("\n\npaths: " + paths)
       nodes.filter(m.get(_).isDefined) match {
-        case Nil ⇒
+        case Nil =>
           throw new IllegalArgumentException("No neighbors mapped")
-        case _ :: Nil ⇒
+        case _ :: Nil =>
           throw new IllegalArgumentException("Only one neighbor mapped")
-        case f :: s :: Nil if f.isOnSameLineOf(s) ⇒
+        case f :: s :: Nil if f.isOnSameLineOf(s) =>
           throw new IllegalArgumentException("2 neighbors mapped but aligned with node")
-        case n_start :: t ⇒
-          /**
-            * get angle and direction
-            *
-            * @param interiors interior angles
-            * @return
-            */
-          def findAngleDir(interiors: List[Double]): (Double, Int) = {
-            // find first and second mapped neighbors nodes (not on the same line with node)
-            val n_end = t.find(!_.isOnSameLineOf(n_start)).get
-            val start = nodes.indexOf(n_start)
-            val end   = nodes.indexOf(n_end)
-            // find angle between start and end based on coords
-            val s1          = Segment2D.fromPoint2Ds(m(node), m(n_start)).angle
-            val s2          = Segment2D.fromPoint2Ds(m(node), m(n_end)).angle
-            val angleCoords = mod(s2 - s1, τ) //; logger.debug("\nangleCoords: " + angleCoords)
-            // find angle between start and end based on ordered perimeter
-            val angPerim = (start until end).foldLeft(0.0)((acc, i) ⇒ acc + interiors(i)) //; logger.debug("\nangPerim: " + angPerim)
-            // find orientation
-            val dir = if (angleCoords ≈ angPerim) 1 else -1 //; logger.debug("\ndir: " + dir)
-            // find initial angle based on coords
-            val angStart = (0 until start).foldLeft(0.0)((acc, i) ⇒ acc + interiors(i))
-            (s1 - (angStart * dir), dir)
-          }
-
-          def getNeighborsUnmapped(all: IndexedSeq[Double]): Map[Int, Point2D] =
-            (for {
-              i ← nodes.indices
-              if m.get(nodes(i)).isEmpty
-            } yield nodes(i) → m(node).sum(new PointPolar(1.0, all(i)))).toMap
-
+        case nStart :: t =>
           def getPgonsUnmapped(all: IndexedSeq[Double], interiors: List[Double], dir: Int): Map[Int, Point2D] = {
             // find p-gons coords not mapped yet
             nodes.indices
-              .flatMap(i ⇒
+              .flatMap(i =>
                 paths(i) match {
-                  case Nil ⇒ List()
-                  case path ⇒
+                  case Nil => List()
+                  case path =>
                     val start = m(node).sum(new PointPolar(1.0, all(i)))
                     val (_, mapped) = path.init.indices.foldLeft((start, List(): List[(Int, Point2D)]))({
-                      case ((pos, acc), j) ⇒
+                      case ((pos, acc), j) =>
                         val newpos = pos.sum(new PointPolar(1.0, all(i) + (j + 1) * (Math.PI - interiors(i)) * dir))
                         val node   = path(j)
                         (newpos, if (m.get(node).isEmpty) acc :+ ((node, newpos)) else acc)
@@ -149,13 +144,13 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
 
           // map interior angles
           val interiors: List[Double] = paths.map({
-            case Nil ⇒ 0
-            case p   ⇒ UnitRegularPgon.ofSides(p.size + 2).α
+            case Nil => 0
+            case p   => UnitRegularPgon.ofSides(p.size + 2).alpha
           })
-          val (initialAngle, dir) = findAngleDir(interiors) //; logger.debug("\ninitialAngle: " + initialAngle)
+          val (initialAngle, dir) = findAngleDir(node, nodes, nStart, t, interiors) //; logger.debug("\ninitialAngle: " + initialAngle)
           // find all neighbors angles
-          val all               = paths.indices.scanLeft(initialAngle)((acc, i) ⇒ acc + interiors(i) * dir)
-          val neighborsUnmapped = getNeighborsUnmapped(all) //; logger.debug("\nneighborsUnmapped: " + neighborsUnmapped)
+          val all               = paths.indices.scanLeft(initialAngle)((acc, i) => acc + interiors(i) * dir)
+          val neighborsUnmapped = getNeighborsUnmapped(node, nodes, all) //; logger.debug("\nneighborsUnmapped: " + neighborsUnmapped)
           val pgonsUnmapped     = getPgonsUnmapped(all, interiors, dir) //; logger.debug("\npgonsUnmapped: " + pgonsUnmapped)
           new TessellMap(m ++ neighborsUnmapped ++ pgonsUnmapped)
       }
@@ -177,10 +172,10 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
     else {
       //logger.debug("\npon: " + pon)
       // pairs of consecutive nodes
-      val cs: List[(Int, Int)] = pon.circularSliding(2).toList.map(c ⇒ (c.head, c(1)))
-      cs.find({ case (first, second) ⇒ mapped.contains(first) && mapped.contains(second) }) match {
-        case None                  ⇒ throw new IllegalArgumentException("no consecutive mapped nodes on perimeter")
-        case Some((first, second)) ⇒ // found couple both mapped
+      val cs: List[(Int, Int)] = pon.circularSliding(2).toList.map(c => (c.safeHead, c(1)))
+      cs.find({ case (first, second) => mapped.contains(first) && mapped.contains(second) }) match {
+        case None                  => throw new IllegalArgumentException("no consecutive mapped nodes on perimeter")
+        case Some((first, second)) => // found couple both mapped
           //logger.debug("\nc: " + (first, second))
           // shift everything to first node and then cut to second
           val i     = pon.indexOf(first)
@@ -189,7 +184,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
           // coords moved to second node and pointing in the right direction
           val angle        = Segment2D.fromPoint2Ds(m(first), m(second)).angle
           val points       = poly.toPoint2Ds(angle).map(_.sum(m(second))) //; logger.debug("\ncoords: " + points)
-          val periUnmapped = nodes.zip(points).filter({ case (node, _) ⇒ !mapped.contains(node) }).toMap
+          val periUnmapped = nodes.zip(points).filter({ case (node, _) => !mapped.contains(node) }).toMap
           //logger.debug("\nadd: " + periUnmapped)
           new TessellMap(m ++ periUnmapped)
       }
@@ -206,8 +201,8 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
   def rotationDir(node1: Int, node2: Int): Boolean = {
 
     def getPoint(n: Int): Point2D = m.get(n) match {
-      case Some(point) ⇒ point
-      case None        ⇒ throw new IllegalArgumentException("node " + n + " does not belong to map")
+      case Some(point) => point
+      case None        => throw new IllegalArgumentException("node " + n + " does not belong to map")
     }
 
     val (point1, point2) = (getPoint(node1), getPoint(node2))
@@ -216,11 +211,11 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
       val vertex = Point2D.origin.move(x, 0.0)
       val angle1 = point1.angleFrom(vertex)
       val angle2 = point2.angleFrom(vertex)
-      mod(angle1 - angle2, τ) >= τ / 2
+      mod(angle1 - angle2, TAU) >= TAU / 2
     }
 
-    if (point1.y ≈ 0.0) {
-      if (point2.y ≈ 0.0) {
+    if (point1.y ~= 0.0) {
+      if (point2.y ~= 0.0) {
         point1.x >= point2.x
       } else checkDirection(1.0)
     } else checkDirection()
@@ -228,13 +223,13 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils {
   }
 
   def diagonal: Double = {
-    val box = new Points2D(m.values.toList.map(_.c)).getMinMax
-    box._1.distanceFrom(box._2)
+    val (min, max) = new Points2D(m.values.toList.map(_.c)).getMinMax
+    min.distanceFrom(max)
   }
 
 }
 
-object TessellMap {
+object TessellMap extends ListUtils {
 
   /**
     * map first three nodes
@@ -246,12 +241,12 @@ object TessellMap {
     */
   def firstThree(node: Int, neigh: List[(Int, List[Int])]): TessellMap = {
     val (nodes, paths) = neigh.unzip
-    val angle          = UnitRegularPgon.ofSides(paths.head.size + 2).α
+    val angle          = UnitRegularPgon.ofSides(paths.safeHead.size + 2).alpha
     new TessellMap(
       Map(
-        node       → Point2D.origin,
-        nodes.head → Point2D.origin.move(1.0, 0.0),
-        nodes(1)   → Point2D.origin.sum(new PointPolar(1.0, angle))
+        node           -> Point2D.origin,
+        nodes.safeHead -> Point2D.origin.move(1.0, 0.0),
+        nodes(1)       -> Point2D.origin.sum(new PointPolar(1.0, angle))
       ))
   }
 
