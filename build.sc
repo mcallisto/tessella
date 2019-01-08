@@ -7,27 +7,27 @@ trait Packageable {
 
   val organization: String = "vision.id"
 
-  val artName: String = "tessella"
+  val name: String = "tessella"
 
 }
 
 trait Versioned extends ScalaModule with PublishModule with Packageable {
 
-  val gitName: String = artName
+  val githubName: String = name
 
   def scalaVersion: T[String] = "2.12.8"
 
-  def publishVersion: T[String] = "0.1.1"
+  def publishVersion: T[String] = "0.1.2"
 
-  override def artifactName: T[String] = artName
+  override def artifactName: T[String] = name
 
   def pomSettings: T[PomSettings] = PomSettings(
     description =
       "Tilings by regular polygons, helps working with finite unit-regular-polygon tessellations of a flat surface",
     organization = organization,
-    url = "https://github.com/mcallisto/" + gitName,
+    url = "https://github.com/mcallisto/" + githubName,
     licenses = Seq(License.`Apache-2.0`),
-    versionControl = VersionControl.github("mcallisto", gitName),
+    versionControl = VersionControl.github("mcallisto", githubName),
     developers = Seq(
       Developer("mcallisto", "Mario Càllisto", "https://github.com/mcallisto")
     )
@@ -67,7 +67,7 @@ object jvm extends Versioned { outer ⇒
     def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
 
     def one(args: String*) = T.command {
-      super.runMain("org.scalatest.run", args.map(List(organization, artName, _).mkString(".")): _*)
+      super.runMain("org.scalatest.run", args.map(List(organization, name, _).mkString(".")): _*)
     }
   }
 
