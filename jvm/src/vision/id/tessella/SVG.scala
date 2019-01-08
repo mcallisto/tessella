@@ -89,7 +89,7 @@ trait SVG extends Methods {
            polys: Boolean = false,
            labelStyle: Int = 1,
            markStyle: Int = 0): NodeBuffer = {
-    val tm   = t.toTessellMap
+    val tm   = t.toNodesMap
     val p    = t.toPerimeterPolygon(tm)
     val diff = getDiff(p)
     val grid = getGrid(t.toSegments2D(tm), diff)

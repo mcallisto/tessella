@@ -6,12 +6,12 @@ import scalax.collection.GraphPredef._
 import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
 
-class tessellMapTest extends FlatSpec with Methods {
+class nodesMapTest extends FlatSpec with Methods {
 
   "A 3x3 square net" can "be converted in a map of nodes with coords" in {
     val t = Tiling.squareNet(3, 3)
     assert(
-      t.toTessellMap.toPrintable === Map(
+      t.toNodesMap.toPrintable === Map(
         5  -> "{0.0:1.0}",
         10 -> "{1.0:2.0}",
         14 -> "{1.0:3.0}",
@@ -34,7 +34,7 @@ class tessellMapTest extends FlatSpec with Methods {
   "A 6x2 square net" can "be converted in a map of nodes with coords" in {
     val t = Tiling.squareNet(6, 2)
     assert(
-      t.toTessellMap.toPrintable === Map(
+      t.toNodesMap.toPrintable === Map(
         5  -> "{4.0:0.0}",
         10 -> "{2.0:1.0}",
         14 -> "{6.0:1.0}",
@@ -62,7 +62,7 @@ class tessellMapTest extends FlatSpec with Methods {
   "A 4x2 triangle net with a removed central point" can "be" in {
     val t = Tiling.triangleNet(4, 2) -- List(5)
     assert(
-      t.toTessellMap.toPrintable === Map(
+      t.toNodesMap.toPrintable === Map(
         1 -> "{0.0:0.0}",
         6 -> "{1.5:0.8660254}",
         9 -> "{1.0:1.73205081}",
@@ -78,7 +78,7 @@ class tessellMapTest extends FlatSpec with Methods {
   "An 8x2 triangle net with two removed central points" can "be" in {
     val t = Tiling.triangleNet(8, 2) -- List(7, 9)
     assert(
-      t.toTessellMap.toPrintable === Map(
+      t.toNodesMap.toPrintable === Map(
         5  -> "{4.0:0.0}",
         10 -> "{3.5:0.8660254}",
         14 -> "{2.0:1.73205081}",
@@ -100,7 +100,7 @@ class tessellMapTest extends FlatSpec with Methods {
     vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.periNodes)
 
   "A mapped node" can "be completed if it has 2 or more mapped neighbors(2)" in {
-    val tm = new TessellMap(
+    val tm = new NodesMap(
       Map(
         1 -> new Point2D(0.0, 0.0),
         6 -> new Point2D(1.0, 0.0),
@@ -120,7 +120,7 @@ class tessellMapTest extends FlatSpec with Methods {
         4  -> "{1.0:-1.73205081}"
       ))
     // mirrored on the x axis
-    val xm = new TessellMap(
+    val xm = new NodesMap(
       Map(
         1 -> new Point2D(0.0, 0.0),
         6 -> new Point2D(-1.0, 0.0),
@@ -140,7 +140,7 @@ class tessellMapTest extends FlatSpec with Methods {
         4  -> "{-1.0:-1.73205081}"
       ))
     // mirrored on the y axis
-    val ym = new TessellMap(
+    val ym = new NodesMap(
       Map(
         1 -> new Point2D(0.0, 0.0),
         6 -> new Point2D(1.0, 0.0),
@@ -159,7 +159,7 @@ class tessellMapTest extends FlatSpec with Methods {
         8  -> "{-1.3660254:0.3660254}",
         4  -> "{1.0:1.73205081}"
       ))
-    val tm1 = new TessellMap(
+    val tm1 = new NodesMap(
       Map(
         1 -> new Point2D(0.0, 0.0),
         7 -> new Point2D(-0.8660254, 0.5),
@@ -182,7 +182,7 @@ class tessellMapTest extends FlatSpec with Methods {
 
   "A starting map" can "be created" in {
     assert(
-      vertexCaseStudy.toTessellMap.toPrintable === Map(
+      vertexCaseStudy.toNodesMap.toPrintable === Map(
         5  -> "{0.0:1.73205081}",
         10 -> "{-1.3660254:0.3660254}",
         1  -> "{0.0:0.0}",
@@ -195,7 +195,7 @@ class tessellMapTest extends FlatSpec with Methods {
         4  -> "{1.0:1.73205081}"
       ))
     assert(
-      Tiling.squareNet(3, 2).toTessellMap.toPrintable === Map(
+      Tiling.squareNet(3, 2).toNodesMap.toPrintable === Map(
         5  -> "{0.0:1.0}",
         10 -> "{1.0:2.0}",
         1  -> "{0.0:0.0}",
@@ -210,7 +210,7 @@ class tessellMapTest extends FlatSpec with Methods {
         4  -> "{3.0:0.0}"
       ))
     assert(
-      Tiling.triangleNet(6, 2).toTessellMap.toPrintable === Map(
+      Tiling.triangleNet(6, 2).toNodesMap.toPrintable === Map(
         5  -> "{-0.5:0.8660254}",
         10 -> "{0.0:1.73205081}",
         1  -> "{0.0:0.0}",
@@ -225,7 +225,7 @@ class tessellMapTest extends FlatSpec with Methods {
         4  -> "{3.0:0.0}"
       ))
     assert(
-      Tiling.hexagonNet(2, 3).toTessellMap.toPrintable === Map(
+      Tiling.hexagonNet(2, 3).toNodesMap.toPrintable === Map(
         5  -> "{3.0:1.73205081}",
         10 -> "{2.5:2.59807621}",
         14 -> "{1.0:3.46410162}",

@@ -58,16 +58,16 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
 
     // ----------------- to cartesian coords -------------------
 
-    def toTessellMap: TessellMap = {
+    def toNodesMap: NodesMap = {
 
       val size = graph.nodes.size
 
-      def loop(tm: TessellMap): TessellMap = {
+      def loop(tm: NodesMap): NodesMap = {
 
         if (tm.m.size == size) tm
         else {
           val mapped: List[Int] = tm.m.keys.toList
-          val nexttm: Try[TessellMap] = graph.findCompletable(mapped, tm) match {
+          val nexttm: Try[NodesMap] = graph.findCompletable(mapped, tm) match {
             case Some(node) => tm.completeNode(node, (graph get node).neighs)
             case None =>
               graph.findAddable(mapped) match {
@@ -80,35 +80,35 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
       }
 
       val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
-      loop(TessellMap.firstThree(firstNode.toOuter, firstNode.neighs))
+      loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighs))
     }
 
     def labelize: (Int, Point2D) => Label2D = { case (node, point) => new Label2D(point.c, node.toString) }
 
-    def toLabels2D(tm: TessellMap): List[Label2D] = tm.m.map({ case (node, point) => labelize(node, point) }).toList
+    def toLabels2D(tm: NodesMap): List[Label2D] = tm.m.map({ case (node, point) => labelize(node, point) }).toList
 
-    def toGonals(tm: TessellMap): List[List[Point2D]] =
+    def toGonals(tm: NodesMap): List[List[Point2D]] =
       mapGonals.map({ case (_, nodes) => nodes.map(tm.m(_)) }).toList
 
-    def toSegments2D(tm: TessellMap): List[Segment2D] =
+    def toSegments2D(tm: NodesMap): List[Segment2D] =
       graph.edges.toList
         .map(_.toOuter)
         .map(
           e => Segment2D.fromPoint2Ds(tm.m(e._n(0)), tm.m(e._n(1)))
         )
 
-    def perimeterCoords(tm: TessellMap): List[Point2D] = periNodes.init.map(tm.m(_))
+    def perimeterCoords(tm: NodesMap): List[Point2D] = periNodes.init.map(tm.m(_))
 
-    def toPerimeterPolygon(tm: TessellMap): Polygon = new Polygon(perimeterCoords(tm).map(_.c))
+    def toPerimeterPolygon(tm: NodesMap): Polygon = new Polygon(perimeterCoords(tm).map(_.c))
 
-    def toPerimeterLabels2D(tm: TessellMap): List[Label2D] =
+    def toPerimeterLabels2D(tm: NodesMap): List[Label2D] =
       periNodes.init
         .zip(perimeterCoords(tm))
         .map({
           case (node, point) => labelize(node, point)
         })
 
-    def toPolygons(tm: TessellMap): List[Polygon] = {
+    def toPolygons(tm: NodesMap): List[Polygon] = {
 
       def createPoly(start: Int, end1: Int, end2: Int): Polygon = {
         val s = tm.m(start)
@@ -153,7 +153,7 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
 
     // ----------------- other stuff -------------------
 
-    def pgonsMap: Map[Int, Int] = toPolygons(toTessellMap).groupBy(_.cs.size).map({ case (k, ps) => (k, ps.size) })
+    def pgonsMap: Map[Int, Int] = toPolygons(toNodesMap).groupBy(_.cs.size).map({ case (k, ps) => (k, ps.size) })
 
     def toG: Graph[Int, UnDiEdge] = Graph.from(Nil, graph.edges)
 

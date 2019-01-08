@@ -59,16 +59,16 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
     }
 
-    def toTessellMap: Try[TessellMap] = {
+    def toTessellMap: Try[NodesMap] = {
 
       val size = graph.nodes.size
 
-      def loop(tm: TessellMap): Try[TessellMap] = {
+      def loop(tm: NodesMap): Try[NodesMap] = {
 
         if (tm.m.size == size) Success(tm)
         else {
           val mapped: List[Int] = tm.m.keys.toList
-          val nexttm: Try[TessellMap] = graph.findCompletable(mapped, tm) match {
+          val nexttm: Try[NodesMap] = graph.findCompletable(mapped, tm) match {
             case Some(node) => tm.completeNode(node, (graph get node).neighs)
             case None =>
               graph.findAddable(mapped) match {
@@ -81,7 +81,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       }
 
       val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
-      loop(TessellMap.firstThree(firstNode.toOuter, firstNode.neighs))
+      loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighs))
     }
 
     def hasGap: Boolean = graph.toTessellMap match {

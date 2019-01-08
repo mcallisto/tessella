@@ -150,7 +150,7 @@ trait Neighbors extends Symmetry with ListUtils {
       *  try to find one node already mapped with at least three nodes neighbors
       *  of which at least two already mapped and at least one node not yet mapped
       */
-    def findCompletable(mapped: List[Int], tm: TessellMap): Option[Int] =
+    def findCompletable(mapped: List[Int], tm: NodesMap): Option[Int] =
       mapped.find(node => {
         val neighbors = (graph get node).neighbors.toList.map(_.toOuter)
         val hasEnoughNeighborsMapped = neighbors.intersect(mapped) match {

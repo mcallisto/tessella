@@ -54,7 +54,7 @@ The library is built with [Mill](http://www.lihaoyi.com/mill).
 
 ### Draw a tessellation
 
-Each node of the tessellation can be `Map`ped to a cartesian point with the `Tiling.toTessellMap` method. The tessellation can then be rendered as a layered SVG image with the `Draw(…)` method of the `SVG` trait.
+Each node of the tessellation can be `Map`ped to a cartesian point with the `Tiling.toNodesMap` method. The tessellation can then be rendered as a layered SVG image with the `Draw(…)` method of the `SVG` trait.
 
 The lowest node is always at coordinates `(0.0, 0.0)` and the second lowest at `(1.0, 0.0)`.
 

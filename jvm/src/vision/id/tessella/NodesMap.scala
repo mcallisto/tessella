@@ -8,20 +8,20 @@ import vision.id.tessella.Cartesian2D.{Point2D, Points2D, Segment2D}
 import vision.id.tessella.Polar.{PointPolar, Polyline, UnitRegularPgon}
 import vision.id.tessella.Tau.TAU
 
-class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with TryUtils {
+class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with TryUtils {
 
-  val logger = Logger("TESSELLMAP")
+  val logger = Logger("NODESMAP")
 
   def toPrintable: Map[Int, String] = m.map({ case (node, point) => (node, point.toString) })
 
-  def addFromThree(node: Int, mapped: (Int, Int, Int)): Try[TessellMap] =
+  def addFromThree(node: Int, mapped: (Int, Int, Int)): Try[NodesMap] =
     Try(m.get(node) match {
       case Some(_) => throw new IllegalArgumentException("node already mapped")
       case None =>
         val (n1, n2, n3) = mapped
         val points       = List(n1, n2, n3).map(m)
         points.safeHead.getFourth(points(1), points(2)) match {
-          case Success(point) => new TessellMap(m + (node -> point))
+          case Success(point) => new NodesMap(m + (node -> point))
           case Failure(e)     => throw e
         }
     })
@@ -33,7 +33,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
     * @param neigh neighbors data
     * @return
     */
-  def addFromNeighbors(node: Int, neigh: List[(Int, List[Int])]): Try[TessellMap] = m.get(node) match {
+  def addFromNeighbors(node: Int, neigh: List[(Int, List[Int])]): Try[NodesMap] = m.get(node) match {
     case Some(_) =>
       Try(throw new IllegalArgumentException("node already mapped"))
     case None =>
@@ -56,7 +56,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
                 }
               case _ => throw new Error
             }
-            Try(new TessellMap(m + (node -> point)))
+            Try(new NodesMap(m + (node -> point)))
           case f :: s :: t :: _ => addFromThree(node, (f, s, t))
           case _                => Try(throw new IllegalArgumentException("not enough mapped neighbors"))
         }
@@ -109,7 +109,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
     * @param neigh neighbors data
     * @return
     */
-  def completeNode(node: Int, neigh: List[(Int, List[Int])]): Try[TessellMap] = Try(
+  def completeNode(node: Int, neigh: List[(Int, List[Int])]): Try[NodesMap] = Try(
     if (m.get(node).isEmpty)
       throw new IllegalArgumentException("node not mapped")
     else {
@@ -152,7 +152,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
           val all               = paths.indices.scanLeft(initialAngle)((acc, i) => acc + interiors(i) * dir)
           val neighborsUnmapped = getNeighborsUnmapped(node, nodes, all) //; logger.debug("\nneighborsUnmapped: " + neighborsUnmapped)
           val pgonsUnmapped     = getPgonsUnmapped(all, interiors, dir) //; logger.debug("\npgonsUnmapped: " + pgonsUnmapped)
-          new TessellMap(m ++ neighborsUnmapped ++ pgonsUnmapped)
+          new NodesMap(m ++ neighborsUnmapped ++ pgonsUnmapped)
       }
 
     }
@@ -165,7 +165,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
     * @param polars ordered polar coords of the perimeter
     * @return
     */
-  def addFromPerimeter(pon: List[Int], polars: List[PointPolar]): Try[TessellMap] = Try {
+  def addFromPerimeter(pon: List[Int], polars: List[PointPolar]): Try[NodesMap] = Try {
     val mapped = m.keys.toList
     if (pon.diff(mapped).isEmpty)
       throw new IllegalArgumentException("found no extra nodes to map")
@@ -186,7 +186,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
           val points       = poly.toPoint2Ds(angle).map(_.sum(m(second))) //; logger.debug("\ncoords: " + points)
           val periUnmapped = nodes.zip(points).filter({ case (node, _) => !mapped.contains(node) }).toMap
           //logger.debug("\nadd: " + periUnmapped)
-          new TessellMap(m ++ periUnmapped)
+          new NodesMap(m ++ periUnmapped)
       }
     }
   }
@@ -229,7 +229,7 @@ class TessellMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with
 
 }
 
-object TessellMap extends ListUtils {
+object NodesMap extends ListUtils {
 
   /**
     * map first three nodes
@@ -239,10 +239,10 @@ object TessellMap extends ListUtils {
     * @param neigh neighbors info
     * @return
     */
-  def firstThree(node: Int, neigh: List[(Int, List[Int])]): TessellMap = {
+  def firstThree(node: Int, neigh: List[(Int, List[Int])]): NodesMap = {
     val (nodes, paths) = neigh.unzip
     val angle          = UnitRegularPgon.ofSides(paths.safeHead.size + 2).alpha
-    new TessellMap(
+    new NodesMap(
       Map(
         node           -> Point2D.origin,
         nodes.safeHead -> Point2D.origin.move(1.0, 0.0),
