@@ -40,12 +40,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
     private implicit class XNode(node: graph.NodeT) {
 
-//      def isPerimeter: Boolean = periNodes.contains(node.toOuter)
-
       def neighs: List[(Int, List[Int])] = graph.outerNodeHood(node.toOuter, periNodes)
     }
-
-//    def withoutOrphans: Graph[Int, UnDiEdge] = removeOrphans(graph)
 
     def periNodes: List[Int] = graph.perimeterNodesEdges match { case (periNodes, _) => periNodes }
 
@@ -62,42 +58,6 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       new UnitSimplePgon(vertexes.map(v => new PointPolar(1.0, TAU / 2 - v.alpha)))
 
     }
-
-//    // slower method checking reduced perimeter polygons, derived from toPolygons
-//    def hasGapAlternative: Boolean = {
-//
-//      def loop(gg: Graph[Int, UnDiEdge]): Boolean = {
-//
-//        def reduced(n: gg.NodeT): Graph[Int, UnDiEdge] =
-//          Graph.from(Nil, gg.edges.filterNot(_.contains(n)).map(_.toOuter)).withoutOrphans
-//
-//        def isReducible(n: gg.NodeT, degree: Int): Boolean = {
-//
-//          def isOnPerimeter: Boolean = degree == 2 || gg.periNodes.contains(n.toOuter)
-//
-//          def safeRemoval: Boolean = {
-//            val newg = reduced(n)
-//            newg.isEmpty || (newg.isConnected && newg.perimeterSimplePolygon.isSuccess)
-//          }
-//
-//          n.degree == degree && isOnPerimeter && safeRemoval
-//        }
-//
-//        if (gg.isEmpty) false
-//        else
-//          gg.nodes.find(isReducible(_, 2)) match {
-//            case Some(n) => loop(reduced(n))
-//            case None =>
-//              gg.nodes.find(isReducible(_, 3)) match {
-//                case None    => true
-//                case Some(n) => loop(reduced(n))
-//              }
-//          }
-//
-//      }
-//
-//      loop(graph)
-//    }
 
     def toTessellMap: Try[TessellMap] = {
 
@@ -124,19 +84,12 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       loop(TessellMap.firstThree(firstNode.toOuter, firstNode.neighs))
     }
 
-    // faster method using TessellMap
     def hasGap: Boolean = graph.toTessellMap match {
-      case Success(tm) => graph.edges.exists(edge => !tm.m(edge._1.toOuter).isUnitDistance(tm.m(edge._2.toOuter)))
+      case Success(tm) => graph.edges.exists(edge => !tm.m(edge._n(0).toOuter).isUnitDistance(tm.m(edge._n(1).toOuter)))
       case Failure(_)  => true
     }
 
   }
-
-//  private def removeOrphans(graph: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] =
-//    graph.nodes.filter(_.degree <= 1) match {
-//      case none if none.isEmpty => graph
-//      case orphans              => removeOrphans(graph -- orphans)
-//    }
 
   private def refusal(msg: String): Nothing =
     throw new IllegalArgumentException("Addition refused: " + msg)
