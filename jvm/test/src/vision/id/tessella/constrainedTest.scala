@@ -133,28 +133,27 @@ class constrainedTest extends FlatSpec with Visualizer {
         "perimeter is not a simple polygon"
   }
 
-//  val gap: Graph[Int, UnDiEdge] = sixSquares ++ List(6 ~ 15,
-//                                                     15 ~ 14,
-//                                                     5 ~ 16,
-//                                                     16 ~ 15,
-//                                                     16 ~ 20,
-//                                                     20 ~ 19,
-//                                                     19 ~ 15,
-//                                                     19 ~ 18,
-//                                                     18 ~ 14,
-//                                                     18 ~ 17,
-//                                                     17 ~ 13)
-//
-//  given(gap) { g =>
-//    "A graph with a gap" can "NOT be a tessellation" in {
-//      assertThrows[IllegalArgumentException](Tiling.fromG(g))
-//    }
-//
-//    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
-//      "Addition refused: " +
-//        "nodes = GraphPredef()" + ", " +
-//        "edges = GraphPredef()"
-//  }
+  val gap: Graph[Int, UnDiEdge] = sixSquares ++ List(6 ~ 15,
+                                                     15 ~ 14,
+                                                     5 ~ 16,
+                                                     16 ~ 15,
+                                                     16 ~ 20,
+                                                     20 ~ 19,
+                                                     19 ~ 15,
+                                                     19 ~ 18,
+                                                     18 ~ 14,
+                                                     18 ~ 17,
+                                                     17 ~ 13)
+
+  given(gap) { g =>
+    "A graph with a gap" can "NOT be a tessellation" in {
+      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+    }
+
+    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+      "Addition refused: " +
+        "tiling with gap"
+  }
 
   val preOverlap: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(7 ~ 9,
                                                                       9 ~ 10,

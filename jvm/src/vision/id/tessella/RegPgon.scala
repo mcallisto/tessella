@@ -4,8 +4,7 @@ import scala.util.{Failure, Success, Try}
 
 import vision.id.tessella.Polar.UnitRegularPgon
 
-sealed abstract class RegPgon(val sides: Int, val symbol: Option[Char])
-    extends Ordered[RegPgon] {
+sealed abstract class RegPgon(val sides: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
 
   def compare(that: RegPgon): Int = this.sides - that.sides
 
@@ -59,9 +58,7 @@ object RegPgon extends TryUtils with ListUtils {
 
   def ofSides(sides: Int): Try[RegPgon] = sidesToPgon.get(sides) match {
     case Some(pgon) => Success(pgon)
-    case None =>
-      Failure(
-        throw new IllegalArgumentException("non-tiling sides number: " + sides))
+    case None       => Failure(throw new IllegalArgumentException("non-tiling sides number: " + sides))
   }
 
   def fromString(s: String): Try[RegPgon] = s.toList match {
@@ -101,8 +98,7 @@ object RegPgon extends TryUtils with ListUtils {
                         }
                       case i => List.fill(d.drop(i + 1).toInt)(d.take(i))
                   })
-                sequence(l.foldLeft(Nil: List[Try[RegPgon]])((acc, r) =>
-                  acc :+ fromString(r)))
+                sequence(l.foldLeft(Nil: List[Try[RegPgon]])((acc, r) => acc :+ fromString(r)))
             }
       }
     case _ => Failure(throw new IllegalArgumentException("must start with ("))

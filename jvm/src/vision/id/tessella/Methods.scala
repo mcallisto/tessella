@@ -60,42 +60,17 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
 
     def toTessellMap: TessellMap = {
 
-      val size = graph.nodes.size //; logger.debug("\n\ntarget size: " + size)
-
-      /**
-        *  try to find one node not yet mapped with at least two neighbors nodes mapped
-        */
-      def findAddable(mapped: List[Int]): Option[Int] =
-        graph.nodes.toList
-          .map(_.toOuter)
-          .diff(mapped)
-          .find(n => (graph get n).neighbors.toList.map(_.toOuter).intersect(mapped).lengthCompare(2) >= 0)
+      val size = graph.nodes.size
 
       def loop(tm: TessellMap): TessellMap = {
-
-        /**
-          *  try to find one node already mapped with at least three nodes neighbors
-          *  of which at least two already mapped and at least one node not yet mapped
-          */
-        def findCompletable(mapped: List[Int]): Option[Int] =
-          mapped.find(node => {
-            val neighbors = (graph get node).neighbors.toList.map(_.toOuter)
-            val hasEnoughNeighborsMapped = neighbors.intersect(mapped) match {
-              case Nil           => false
-              case _ :: Nil      => false
-              case f :: s :: Nil => !tm.hasOnSameLine(f, s)
-              case _             => true
-            }
-            hasEnoughNeighborsMapped && neighbors.diff(mapped).nonEmpty
-          })
 
         if (tm.m.size == size) tm
         else {
           val mapped: List[Int] = tm.m.keys.toList
-          val nexttm: Try[TessellMap] = findCompletable(mapped) match {
+          val nexttm: Try[TessellMap] = graph.findCompletable(mapped, tm) match {
             case Some(node) => tm.completeNode(node, (graph get node).neighs)
             case None =>
-              findAddable(mapped) match {
+              graph.findAddable(mapped) match {
                 case Some(node) => tm.addFromNeighbors(node, (graph get node).neighs)
                 case None       => tm.addFromPerimeter(periNodes.init, polygon.pps)
               }

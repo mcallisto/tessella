@@ -21,7 +21,7 @@ class outputTest extends FlatSpec with SVG {
 //    assert(test().isInstanceOf[Unit])
 //  }
 
-  val m = Map(
+  def m: Map[String, Tiling] = Map(
     "regular/(▲⁶)"                               -> Tiling.triangleNet(24, 16),
     "regular/(■⁴)"                               -> Tiling.squareNet(8, 8),
     "regular/(⬣³)"                               -> Tiling.hexagonNet(8, 8),

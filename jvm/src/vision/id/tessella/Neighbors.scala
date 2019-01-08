@@ -136,5 +136,31 @@ trait Neighbors extends Symmetry with ListUtils {
       val (nodes, paths) = (graph get node).hood(orderedNodes.map(graph get _)).unzip
       nodes.map(_.toOuter).zip(paths.map(_.map(_.toOuter)))
     }
+
+    /**
+      *  try to find one node not yet mapped with at least two neighbors nodes mapped
+      */
+    def findAddable(mapped: List[Int]): Option[Int] =
+      graph.nodes.toList
+        .map(_.toOuter)
+        .diff(mapped)
+        .find(n => (graph get n).neighbors.toList.map(_.toOuter).intersect(mapped).lengthCompare(2) >= 0)
+
+    /**
+      *  try to find one node already mapped with at least three nodes neighbors
+      *  of which at least two already mapped and at least one node not yet mapped
+      */
+    def findCompletable(mapped: List[Int], tm: TessellMap): Option[Int] =
+      mapped.find(node => {
+        val neighbors = (graph get node).neighbors.toList.map(_.toOuter)
+        val hasEnoughNeighborsMapped = neighbors.intersect(mapped) match {
+          case Nil           => false
+          case _ :: Nil      => false
+          case f :: s :: Nil => !tm.hasOnSameLine(f, s)
+          case _             => true
+        }
+        hasEnoughNeighborsMapped && neighbors.diff(mapped).nonEmpty
+      })
+
   }
 }
