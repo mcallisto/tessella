@@ -84,13 +84,13 @@ Uncomment the second test in the `outputTest` class, run it and view them ordere
 
 For the library methods a given vertex is described by the ordered adjacent regular p-gons joined at the vertex.
 
-Example: `(▲.■)`
+Example: `(▲.■)`, alternative form `(3.4)`
 
-_Note:_ description can be shortened if consecutive identical elements, where `(⬣.⬣.▲)` becomes `(⬣².▲)`
+_Note:_ description can be shortened if consecutive identical elements, where `(⬣.⬣.▲)` becomes `(⬣².▲)`, alternative form `(6*2.3)`
 
 A vertex is **full** when the adjacent regular p-gons join to exactly complete a full circle.
 
-Example: `(▲.■.⬣.■)` or `(■.⬣.12)`
+Examples: `(▲.■.⬣.■)` and `(■.⬣.12)`
 
 In a finite tessellation:
 

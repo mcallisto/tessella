@@ -8,7 +8,7 @@ trait ListUtils extends OptionUtils with Symmetry {
       (l ++ l.take(size - 1)).sliding(size, step)
 
     def groupWithIndex: Map[T, List[Int]] =
-      l.zipWithIndex.groupBy({ case(elem, _) => elem }).mapValues(_.unzip match { case (_, indexes) => indexes })
+      l.zipWithIndex.groupBy({ case (elem, _) => elem }).mapValues(_.unzip match { case (_, indexes) => indexes })
 
     def indexesOf(elem: T, from: Int = 0): List[Int] = {
 
@@ -31,6 +31,14 @@ trait ListUtils extends OptionUtils with Symmetry {
     def safeHead: T = sHead(l)
 
     def safeLast: T = sLast(l)
+
+    def circularNeighborsOf(elem: T): Option[List[T]] = l.indexOf(elem) match {
+      case -1                   => None
+      case 0 if l.size == 1     => Some(Nil)
+      case 0                    => Some(List(sLast(l), l(1)))
+      case i if i == l.size - 1 => Some(List(l(i - 1), sHead(l)))
+      case i                    => Some(List(l(i - 1), l(i + 1)))
+    }
 
   }
 

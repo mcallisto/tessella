@@ -9,7 +9,7 @@ import vision.id.tessella.Polar.{PointPolar, UnitRegularPgon}
 /**
   * set of ordered adjacent regular p-gons completing a vertex
   */
-case class Vertex(ps: List[RegPgon]) extends /*Ordered[Vertex] with */ Symmetry with ListUtils with MathUtils {
+case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUtils {
 
   /**
     * being the 3 p-gon the smallest, and not more than 6 of it fitting

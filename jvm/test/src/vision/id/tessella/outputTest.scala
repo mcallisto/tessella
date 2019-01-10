@@ -75,7 +75,6 @@ class outputTest extends FlatSpec with SVG {
   )
 
   def algos(): Unit = {
-
     val wd = os.pwd / "out"
     os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "regular")
     os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "uniform")
@@ -98,26 +97,7 @@ class outputTest extends FlatSpec with SVG {
   }
 
   def docs(): Unit = {
-    val small = Tiling.fromG(
-      Graph(
-        1 ~ 2,
-        2 ~ 3,
-        3 ~ 4,
-        4 ~ 5,
-        5 ~ 1,
-        5 ~ 6,
-        6 ~ 7,
-        7 ~ 8,
-        8 ~ 1,
-        8 ~ 9,
-        9 ~ 10,
-        10 ~ 11,
-        11 ~ 12,
-        12 ~ 13,
-        13 ~ 14,
-        14 ~ 15,
-        15 ~ 2
-      ))
+    val small = Tiling.fromVertex(Vertex.s("(5*2.10)"))
     val big = Tiling.fromG(
       Graph(
         102 ~ 106,

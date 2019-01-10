@@ -2,16 +2,29 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
+
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
+
 import vision.id.tessella.Alias.Tiling
 
-class constrainedTest extends FlatSpec with Visualizer {
+class constrainedTest extends FlatSpec with Visualizer with Methods {
+
+  val oneTriangle: Tiling = Tiling.poly(3)
 
   "A regular triangle" can "be a tessellation" in {
-    val oneTriangle: Tiling = Tiling.poly(3)
     assert(oneTriangle.edges.toList === List(1 ~ 2, 2 ~ 3, 3 ~ 1))
+  }
+
+  given(oneTriangle.toG ++ List(3 ~ -4, -4 ~ 1)) { g =>
+    "An addition to a valid tessellation" must "be with positive nodes" in {
+      assertThrows[IllegalArgumentException](oneTriangle ++ List(3 ~ -4, -4 ~ 1))
+    }
+
+    the[IllegalArgumentException] thrownBy oneTriangle ++ List(3 ~ -4, -4 ~ 1) should have message
+      "Addition refused: " +
+        "added non positive edges = Vector(3~-4, -4~1)"
   }
 
   val disconnected: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 4 ~ 5, 5 ~ 6, 6 ~ 4))

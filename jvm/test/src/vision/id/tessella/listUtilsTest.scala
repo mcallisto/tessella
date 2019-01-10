@@ -28,6 +28,15 @@ class listUtilsTest extends FlatSpec with ListUtils {
     assert(l.indexesOfWithReflection(List(3, 3)) === List(6, 7))
   }
 
+  it can "be searched for the circular neighbors of an element" in {
+    val l = List('a', 'b', 'c', 'd', 'e')
+    assert(l.circularNeighborsOf('f').isEmpty)
+    assert(List(1).circularNeighborsOf(1) === Some(Nil))
+    assert(l.circularNeighborsOf('a') === Some(List('e', 'b')))
+    assert(l.circularNeighborsOf('e') === Some(List('d', 'a')))
+    assert(l.circularNeighborsOf('c') === Some(List('b', 'd')))
+  }
+
   "A list of lists" can "be concatenated from last to head" in {
     val ll = List(List(1, 2, 3), List(4, 3), List(4, 5, 6, 7, 8), List(9, 10, 8))
     assert(ll.headLastConcat === List(List(1, 2, 3), List(3, 4), List(4, 5, 6, 7, 8), List(8, 10, 9)))

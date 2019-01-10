@@ -8,7 +8,7 @@ import scalax.collection.GraphPredef._
 import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
 
-class perimeterTest extends FlatSpec with Methods with SVG {
+class perimeterTest extends FlatSpec with Methods {
 
   val hive: Tiling = Tiling.hexagonNet(2, 2)
 

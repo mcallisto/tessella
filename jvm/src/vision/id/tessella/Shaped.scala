@@ -18,7 +18,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     extends Constraint[N, E](self)
     with NodeChecks[N, E]
     with Perimeter
-    with Neighbors {
+    with Neighbors
+    with GraphUtils {
 
   /** Skips this pre-check to rely on the post-check `postAdd` except for trivial cases. */
   override def preCreate(nodes: Traversable[N], edges: Traversable[E[N]]) =
@@ -32,9 +33,45 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   override def preAdd(edge: E[N]): PreCheckResult =
     PreCheckResult(Abort)
 
-  /** To be analyzed, for the time being skip */
-  override def preAdd(elems: InParam[N, E]*): PreCheckResult =
-    PreCheckResult(PostCheck)
+  protected class Result(followUp: PreCheckFollowUp, val positiveChecked: Boolean, val gapChecked: Boolean)
+      extends PreCheckResult(followUp)
+
+  protected object Result extends PreCheckResultCompanion {
+    def apply(followUp: PreCheckFollowUp) =
+      new Result(followUp, false, false)
+    def apply(followUp: PreCheckFollowUp, positiveChecked: Boolean, gapChecked: Boolean) =
+      new Result(followUp, positiveChecked, gapChecked)
+  }
+
+  /**
+    * Non positive nodes checked here and not post-checked
+    *
+    * Gaps not post-checked if:
+    *   - edges form a path
+    *   - starting from a perimeter node
+    *   - ending in a neighbor perimeter node
+    * */
+  override def preAdd(elems: InParam[N, E]*): Result = {
+    val nodes = elems.filter(_.isNode).map(_.asInstanceOf[Int])
+    if (nodes.exists(_ <= 0))
+      refusal("added non positive nodes = " + nodes.filter(_ <= 0))
+    val edges = elems.filter(_.isEdge).map(_.asInstanceOf[UnDiEdge[Int]])
+    if (edges.exists(_.toList.exists(_ <= 0)))
+      refusal("added non positive edges = " + edges.filter(_.toList.exists(_ <= 0)))
+
+    val periNodes = self.asInstanceOf[Graph[Int, UnDiEdge]].periNodes.init
+
+    val gapChecked = pathEndPoints(edges.toSet) match {
+      case Success((e1, e2)) =>
+        periNodes.contains(e1) && periNodes.contains(e2) && (periNodes.circularNeighborsOf(e1) match {
+          case Some(ns) => ns.contains(e2)
+          case _        => false
+        })
+      case _ => false
+    }
+
+    Result(PostCheck, positiveChecked = true, gapChecked)
+  }
 
   private implicit final class XShaped(graph: Graph[Int, UnDiEdge]) {
 
@@ -99,11 +136,15 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
                        passedNodes: Traversable[N],
                        passedEdges: Traversable[E[N]],
                        preCheck: PreCheckResult): Boolean = {
-    if (!newGraph.hasPositiveValues)
-      refusal("non positive nodes = " + newGraph.nodes.filter(_.toOuter match {
-        case i: Int => i <= 0
-        case _      => false
-      }))
+    preCheck match {
+      case r: Result if r.positiveChecked =>
+      case _ =>
+        if (!newGraph.hasPositiveValues)
+          refusal("non positive nodes = " + newGraph.nodes.filter(_.toOuter match {
+            case i: Int => i <= 0
+            case _      => false
+          }))
+    }
     if (!newGraph.hasRegularNodes)
       refusal(
         "nodes with wrong number of edges = " +
@@ -113,8 +154,12 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     val g = newGraph.asInstanceOf[Graph[Int, UnDiEdge]]
     if (g.perimeterSimplePolygon.isFailure)
       refusal("perimeter is not a simple polygon")
-    if (g.hasGap)
-      refusal("tiling with gap")
+    preCheck match {
+      case r: Result if r.gapChecked =>
+      case _ =>
+        if (g.hasGap)
+          refusal("tiling with gap")
+    }
     true
   }
 

@@ -4,7 +4,7 @@ import scalax.collection.GraphEdge._
 import scalax.collection.constrained._
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.creation.{Net, Uni4Hex, Uni5Hex}
+import vision.id.tessella.creation.{Growth, Net, Uni4Hex, Uni5Hex}
 
 object Alias {
 
@@ -12,7 +12,12 @@ object Alias {
 
   implicit val conf: Config = Shaped
 
-  object Tiling extends CompanionAlias[UnDiEdge](Shaped withStringPrefix "Tiling") with Net with Uni4Hex with Uni5Hex {
+  object Tiling
+      extends CompanionAlias[UnDiEdge](Shaped withStringPrefix "Tiling")
+      with Growth
+      with Net
+      with Uni4Hex
+      with Uni5Hex {
 
     def poly(sides: Int): Tiling = Tiling.from(Nil, for (i <- 1 to sides) yield i ~ (i % sides + 1))
 

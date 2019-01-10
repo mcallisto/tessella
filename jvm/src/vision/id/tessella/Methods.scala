@@ -1,32 +1,117 @@
 package vision.id.tessella
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
+import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.{Label2D, Point2D, Polygon, Segment2D}
-import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
+import vision.id.tessella.Polar.{PointPolar, RegularPgon, UnitSimplePgon}
 import vision.id.tessella.Tau.TAU
 
-trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with TryUtils with GraphUtils {
+trait Methods
+    extends Perimeter
+    with Neighbors
+    with DistinctUtils[Polygon]
+    with TryUtils
+    with GraphUtils
+    with MathUtils
+    with AddUtils {
 
-  final implicit class XTiling(graph: Tiling) {
+  final implicit class XTiling(tiling: Tiling) {
 
-    private implicit class XNode(node: graph.NodeT) {
+    private implicit class XNode(node: tiling.NodeT) {
 
       def isPerimeter: Boolean = periNodes.contains(node.toOuter)
 
-      def neighs: List[(Int, List[Int])] = graph.outerNodeHood(node.toOuter, periNodes)
+      def neighs: List[(Int, List[Int])] = tiling.outerNodeHood(node.toOuter, periNodes)
+
+      /**
+        * get nodes ordered from a given start
+        *
+        * @param direction true is following orderedNodes, false other way
+        * @throws NoSuchElementException if node is not found
+        * @return
+        */
+      def startNodes(direction: Boolean = true): List[Int] = orderedIndex match {
+        case i => periNodes.init.rotateWithDirection(-i, direction)
+      }
+
+      private def orderedIndex: Int = periNodes.indexOf(node.toOuter)
+
+      def startVertexes(dir: Boolean = true): List[Vertex] = vertexes.rotateWithDirection(-orderedIndex, dir)
+
+      /**
+        * get the node where to attach a p-gon, it can move because of adjacent p-gons
+        *
+        * @param a   internal angle of the p-gon to be attached
+        * @param dir direction along the perimeter, true is following perimeterOrderedNodes, false other way
+        * @return id and number of edges to be subtracted from addition
+        */
+      def getAttachNode(a: Double, dir: Boolean): Try[(Int, Int)] = Try {
+        val ns = node.startNodes(dir)
+        val vs = node.startVertexes(dir)
+        vs.indices.foldLeft(0)((add, i) =>
+          vs(i).alpha match {
+            case adjacent if a + adjacent ~= TAU => add + 1 // go to next
+            case toomuch if a + toomuch > TAU    => throw new IllegalArgumentException("angle more than full, dir: " + dir)
+            case _                               => return Try(ns(i), add)
+        })
+        throw new IllegalArgumentException("no more sides")
+      }
+
+    }
+
+    private implicit class XEdge(edge: tiling.EdgeT) {
+
+      /**
+        * @throws NoSuchElementException if edge is not found
+        * @return (first, second) endpoint nodes of the edge ordered
+        */
+      def orderedEndPoints: (tiling.NodeT, tiling.NodeT) = periEdges.indexOf(edge.toOuter) match {
+        case -1 => throw new IllegalArgumentException("cannot find edge")
+        case i  => (tiling get periNodes(i), tiling get periNodes(i + 1))
+      }
+
+      def additionalEdges(sides: Int): Try[List[UnDiEdge[Int]]] = {
+        val (f, s) = edge.orderedEndPoints
+        val angle  = RegularPgon.angle(sides)
+        f.getAttachNode(angle, dir = false)
+          .flatMap({
+            case (back_node, back_excess) =>
+              s.getAttachNode(angle, dir = true)
+                .flatMap({
+                  case (forward_node, forward_excess) =>
+                    val ids: List[Int] = getFreeIds(sides - 2 - back_excess - forward_excess, tiling.emptiesMax)
+                    val es: List[UnDiEdge[Int]] = ids match {
+                      case Nil => List(back_node ~ forward_node)
+                      case _ =>
+                        ids.indices.tail.toList.map(i => ids(i - 1) ~ ids(i)) ++
+                          List(back_node ~ ids.safeHead, ids.safeLast ~ forward_node)
+                    }
+                    Success(es)
+                })
+          })
+      }
+
+      /**
+        * try to add a p-gon to the given edge
+        *
+        * @param sides sides of the reg p-gon to be added
+        * @return
+        */
+      def addPgonOfSides(sides: Int): Try[Tiling] = edge.additionalEdges(sides).flatMap(es => Try(tiling ++ es))
+
     }
 
     // ----------------- perimeter -------------------
 
-    val (periNodes, periEdges): (List[Int], List[UnDiEdge[Int]]) = graph.perimeterNodesEdges
+    val (periNodes, periEdges): (List[Int], List[UnDiEdge[Int]]) = tiling.perimeterNodesEdges
 
     val (periNeighs, periPaths): (List[List[Int]], List[List[List[Int]]]) =
-      periNodes.init.map(node => (graph get node).neighs.unzip).unzip
+      periNodes.init.map(node => (tiling get node).neighs.unzip).unzip
 
     val vertexes: List[Vertex] = periPaths.map(paths => Vertex.p(paths.init.map(_.size + 2)))
 
@@ -41,7 +126,7 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
       * @return map of different type of vertices and nodes where they are found
       */
     def mapGonals: Map[Full, List[Int]] =
-      graph.nodes
+      tiling.nodes
         .filterNot(_.isPerimeter)
         .toList
         .map(n =>
@@ -60,18 +145,18 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
 
     def toNodesMap: NodesMap = {
 
-      val size = graph.nodes.size
+      val size = tiling.nodes.size
 
       def loop(tm: NodesMap): NodesMap = {
 
         if (tm.m.size == size) tm
         else {
           val mapped: List[Int] = tm.m.keys.toList
-          val nexttm: Try[NodesMap] = graph.findCompletable(mapped, tm) match {
-            case Some(node) => tm.completeNode(node, (graph get node).neighs)
+          val nexttm: Try[NodesMap] = tiling.findCompletable(mapped, tm) match {
+            case Some(node) => tm.completeNode(node, (tiling get node).neighs)
             case None =>
-              graph.findAddable(mapped) match {
-                case Some(node) => tm.addFromNeighbors(node, (graph get node).neighs)
+              tiling.findAddable(mapped) match {
+                case Some(node) => tm.addFromNeighbors(node, (tiling get node).neighs)
                 case None       => tm.addFromPerimeter(periNodes.init, polygon.pps)
               }
           }
@@ -79,7 +164,7 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
         }
       }
 
-      val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
+      val firstNode: tiling.NodeT = tiling.nodes.minBy(_.toOuter)
       loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighs))
     }
 
@@ -91,7 +176,7 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
       mapGonals.map({ case (_, nodes) => nodes.map(tm.m(_)) }).toList
 
     def toSegments2D(tm: NodesMap): List[Segment2D] =
-      graph.edges.toList
+      tiling.edges.toList
         .map(_.toOuter)
         .map(
           e => Segment2D.fromPoint2Ds(tm.m(e._n(0)), tm.m(e._n(1)))
@@ -148,14 +233,18 @@ trait Methods extends Perimeter with Neighbors with DistinctUtils[Polygon] with 
         }
       }
 
-      loop(graph, Nil).distinctBy(_.barycenter == _.barycenter)
+      loop(tiling, Nil).distinctBy(_.barycenter == _.barycenter)
     }
+
+    // ----------------- addition -------------------
+
+    def addToEdgePgon(edge: UnDiEdge[Int], sides: Int): Try[Tiling] = (tiling get edge).addPgonOfSides(sides)
 
     // ----------------- other stuff -------------------
 
     def pgonsMap: Map[Int, Int] = toPolygons(toNodesMap).groupBy(_.cs.size).map({ case (k, ps) => (k, ps.size) })
 
-    def toG: Graph[Int, UnDiEdge] = Graph.from(Nil, graph.edges)
+    def toG: Graph[Int, UnDiEdge] = Graph.from(Nil, tiling.edges)
 
   }
 

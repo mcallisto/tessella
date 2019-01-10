@@ -1,11 +1,7 @@
 package vision.id.tessella
 
-import scalax.collection.GraphEdge._
 import scalax.collection.GraphPredef.EdgeLikeIn
-import scalax.collection.constrained.constraints.{Acyclic, Connected}
 import scalax.collection.constrained.{CompanionAlias, Graph}
-import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
-import vision.id.tessella.Tau.TAU
 
 import scala.language.higherKinds
 
