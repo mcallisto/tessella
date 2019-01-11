@@ -176,11 +176,10 @@ trait Methods
       mapGonals.map({ case (_, nodes) => nodes.map(tm.m(_)) }).toList
 
     def toSegments2D(tm: NodesMap): List[Segment2D] =
-      tiling.edges.toList
-        .map(_.toOuter)
-        .map(
-          e => Segment2D.fromPoint2Ds(tm.m(e._n(0)), tm.m(e._n(1)))
-        )
+      tiling.edges.toList.map(_.nodes.map(_.toOuter) match {
+        case n1 :: n2 :: Nil => Segment2D.fromPoint2Ds(tm.m(n1), tm.m(n2))
+        case _               => throw new Error
+      })
 
     def perimeterCoords(tm: NodesMap): List[Point2D] = periNodes.init.map(tm.m(_))
 
