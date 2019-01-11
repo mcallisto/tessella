@@ -24,13 +24,11 @@ trait Perimeter extends ListUtils {
         *
         * @return
         */
-      def isPerimeterLoose: Boolean = edge._n(0).isMinimal || edge._n(1).isMinimal
+      def isPerimeterLoose: Boolean = edge.nodes.exists(_.isMinimal)
 
-      def isPerimeterLooseProg(out: Int, same: Boolean = true): Boolean = {
-        val (d1, d2) = (edge._n(0).degree, edge._n(1).degree)
-        if (same) d1 == out && d2 == out
-        else (d1 == out && d2 == out + 1) || (d1 == out + 1 && d2 == out)
-      }
+      def isPerimeterLooseProg(out: Int, same: Boolean = true): Boolean =
+        if (same) edge.nodes.forall(_.degree == out)
+        else edge.nodes.map(_.degree).sum == out * 2 + 1
     }
 
     /**
