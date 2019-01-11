@@ -13,8 +13,11 @@ trait GraphUtils {
     def renumber(start: Int = 1): Graph[Int, UnDiEdge] = {
 
       val m: Map[Int, Int] = g.nodes.toList.map(_.toOuter).sorted.zip(start until (g.nodes.size + start)).toMap
-      val newEdges         = g.edges.map(_.toOuter).map(e => m(e._n(0)) ~ m(e._n(1)))
-      val newNodes         = g.nodes.filter(_.degree == 0).map(n => m(n.toOuter))
+      val newEdges = g.edges.map(_.nodes.map(_.toOuter) match {
+        case n1 :: n2 :: Nil => m(n1) ~ m(n2)
+        case _               => throw new Error
+      })
+      val newNodes = g.nodes.filter(_.degree == 0).map(n => m(n.toOuter))
       Graph.from(newNodes, newEdges)
     }
 

@@ -122,8 +122,12 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     }
 
     def hasGap: Boolean = graph.toTessellMap match {
-      case Success(tm) => graph.edges.exists(edge => !tm.m(edge._n(0).toOuter).isUnitDistance(tm.m(edge._n(1).toOuter)))
-      case Failure(_)  => true
+      case Success(tm) =>
+        graph.edges.exists(_.nodes.map(_.toOuter) match {
+          case n1 :: n2 :: Nil => !tm.m(n1).isUnitDistance(tm.m(n2))
+          case _               => throw new Error
+        })
+      case Failure(_) => true
     }
 
   }
