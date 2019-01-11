@@ -60,7 +60,7 @@ trait Perimeter extends ListUtils {
           if (p.isConnected && p.isCyclic) p
           else {
             // find an edge with endpoint
-            val e: p.EdgeT = p.edges.find(e => e._n(0).degree == 1 || e._n(1).degree == 1).safeGet()
+            val e: p.EdgeT = p.edges.find(_.nodes.exists(_.degree == 1)).safeGet()
             // n1 node of the endpoint
             val (n1, n2): (graph.NodeT, graph.NodeT) = {
               val nodes = (graph get e._n(0), graph get e._n(1))
