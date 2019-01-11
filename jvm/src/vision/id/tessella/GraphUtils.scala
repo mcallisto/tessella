@@ -52,25 +52,22 @@ trait GraphUtils {
     if (g.exists({ case (_, v) => v.size > 2 }))
       throw new IllegalArgumentException("3 or more degrees node")
 
-    val ends = g.filter({ case (_, v) => v.size == 1 }).keys.toList
-
-    if (ends.size != 2)
-      throw new IllegalArgumentException("1 degrees nodes must be exactly two")
-
-    def toPair(edge: UnDiEdge[Int]): (Int, Int) = (edge._n(0), edge._n(1))
-
-    def loop(es: Set[(Int, Int)], acc: Int): Int = {
+    def loop(es: Set[UnDiEdge[Int]], acc: Int): Int = {
       if (es.isEmpty) acc
       else
-        es.find({ case (f, s) => f == acc || s == acc }) match {
-          case Some((f, s)) if f == acc => loop(es - ((f, s)), s)
-          case Some((f, s))             => loop(es - ((f, s)), f)
-          case None                     => throw new IllegalArgumentException("disconnected node")
+        es.find(_.contains(acc)).map(_.toList) match {
+          case Some(f :: s :: Nil) if f == acc => loop(es - (f ~ s), s)
+          case Some(f :: s :: Nil)             => loop(es - (f ~ s), f)
+          case _                               => throw new IllegalArgumentException("disconnected node")
         }
     }
 
-    loop(edges.map(toPair).filterNot({ case (f, s) => f == ends(0) || s == ends(0) }), ends(1))
-    (ends(0), ends(1))
+    g.filter({ case (_, v) => v.size == 1 }).keys.toList match {
+      case e1 :: e2 :: Nil =>
+        loop(edges.filterNot(_.contains(e1)), e2)
+        (e1, e2)
+      case _ => throw new IllegalArgumentException("1 degrees nodes must be exactly two")
+    }
   }
 
 }
