@@ -25,7 +25,7 @@ Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](
 
 ### Use
 
-#### From a Mill project
+#### From a **[Mill](http://www.lihaoyi.com/mill)** project
 
 ```scala
 import mill._, scalalib._
@@ -37,20 +37,11 @@ object foo extends ScalaModule {
 }
 ```
 
-#### From an SBT project
+#### From an **[sbt](https://www.scala-sbt.org/)** project
 
 ```scala
 libraryDependencies += "vision.id" % "tessella" % "0.1.3"
 ```
-
-### Test
-
-The library is built with [Mill](http://www.lihaoyi.com/mill).
-
-1.  [Install](http://www.lihaoyi.com/mill/#installation) Mill
-2.  Open a terminal and `cd` to the repo directory
-3.  Use the `mill jvm.test` command to run all tests
-4.  Or use the `mill jvm.test.one [testClassName]` command to run a single test class
 
 ### Draw a tessellation
 
@@ -71,6 +62,24 @@ On top of the edge layer, the following optional additions are possible:
 
 *   full vertices coloured according to type of adjacent polygons (gonality)
     > ![(▲⁶; (⬣³)²; (▲².⬣²)²)](docs/(▲⁶;(⬣³)²;(▲².⬣²)²).svg)
+
+### Test
+
+The library can be built with
+
+#### Mill
+
+1.  [Install](http://www.lihaoyi.com/mill/#installation) Mill
+2.  Open a terminal and `cd` to the repo directory
+3.  Use the `mill jvm.test` command to run all tests
+4.  Or use the `mill jvm.test.one [testClassName]` command to run a single test class
+
+#### sbt
+
+1.  Open a terminal and `cd` to the repo directory
+2.  Use the `sbt` command to launch sbt
+3.  Use the `test` command to run all tests
+4.  Or use the `testOnly vision.id.tessella.[testClassName]` command to run a single test class
 
 ### Redraw the images in the /docs folder
 
