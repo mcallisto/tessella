@@ -337,23 +337,24 @@ object Polar {
 
     val logger = Logger("REGULAR PGON")
 
-    def angle(n: Int): Double = ((n - 2) * TAU / 2) / n
+    def angleFrom(edgesNumber: Int): Double = ((edgesNumber - 2) * TAU / 2) / edgesNumber
 
-    def polarAngle(n: Int): Double = TAU / 2 - angle(n)
+    def polarAngleFrom(edgesNumber: Int): Double = TAU / 2 - angleFrom(edgesNumber)
 
     /**
-      * inverse of above method angle
+      * inverse of above method angleFrom
       */
-    def sides(alpha: Double): Try[Int] = Try {
+    def edgesNumberFrom(alpha: Double): Try[Int] = Try {
       val n       = 2 / (1 - (alpha / (TAU / 2))) //; logger.debug(n.toString)
       val rounded = n.roundAt(0) //; logger.debug(rounded.toString)
       if ((n - rounded) ~= (0, stdPrecision * 10))
         rounded.toInt
       else
-        throw new IllegalArgumentException("interior angle  not compatible with regular polygon")
+        throw new IllegalArgumentException("interior angle not compatible with regular polygon")
     }
 
-    def ofSides(n: Int, l: Double): RegularPgon = new RegularPgon(List.fill(n)(new PointPolar(l, polarAngle(n))))
+    def ofEdges(edgesNumber: Int, l: Double): RegularPgon =
+      new RegularPgon(List.fill(edgesNumber)(new PointPolar(l, polarAngleFrom(edgesNumber))))
 
   }
 
@@ -367,8 +368,8 @@ object Polar {
 
   object UnitRegularPgon {
 
-    def ofSides(n: Int): UnitRegularPgon =
-      new UnitRegularPgon(List.fill(n)(new PointPolar(1.0, RegularPgon.polarAngle(n))))
+    def ofEdges(edgesNumber: Int): UnitRegularPgon =
+      new UnitRegularPgon(List.fill(edgesNumber)(new PointPolar(1.0, RegularPgon.polarAngleFrom(edgesNumber))))
 
   }
 

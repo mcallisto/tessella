@@ -12,12 +12,12 @@ class vertexCheckTest extends FlatSpec with Checkers with MathUtils {
 
   "The vertex joining 2 regular p-gons" must "be less than the full circle" in {
     val twoSides: Gen[List[Int]] = Gen.listOfN(2, Gen.choose(3, 100))
-    check(forAll(twoSides)(_.map(UnitRegularPgon.ofSides(_).alpha).sum < TAU))
+    check(forAll(twoSides)(_.map(UnitRegularPgon.ofEdges(_).alpha).sum < TAU))
   }
 
   "The vertex joining 7 regular p-gons" must "be more than the full circle" in {
     val sevenSides: Gen[List[Int]] = Gen.listOfN(7, Gen.choose(3, 100))
-    check(forAll(sevenSides)(_.map(UnitRegularPgon.ofSides(_).alpha).sum > TAU))
+    check(forAll(sevenSides)(_.map(UnitRegularPgon.ofEdges(_).alpha).sum > TAU))
   }
 
 }

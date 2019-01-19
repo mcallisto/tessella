@@ -2,20 +2,20 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 
-import scalax.collection.Graph
 import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
 
-class neighborsTest extends FlatSpec with Methods with Symmetry {
+class neighborsTest extends FlatSpec with TilingUtils with Symmetry {
 
   val vertexFortyTwo: Tiling =
-    Tiling.poly(42) ++ List(1 ~ 43, 2 ~ 43, 3 ~ 44, 44 ~ 45, 45 ~ 46, 46 ~ 47, 47 ~ 43)
+    Gon42.toTiling ++ Set(1 ~ 43, 2 ~ 43, 3 ~ 44, 44 ~ 45, 45 ~ 46, 46 ~ 47, 47 ~ 43).map(Side.fromEdge(_))
 
   "Node neighbors" can "be found for perimeter nodes" in {
-    val vertexOtherCase = Tiling.fromG(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1))
+    val vertexOtherCase =
+      Tiling.fromSides(Set(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1).map(Side.fromEdge(_)))
     assert(
-      vertexOtherCase.outerNodeHood(vertexOtherCase get 1, vertexOtherCase.periNodes) === List(
+      vertexOtherCase.outerNodeHood(vertexOtherCase get 1, vertexOtherCase.perimeterOrderedNodes) === List(
         (6, List(5)),
         (5, List(4)),
         (4, List(3, 2)),
@@ -24,7 +24,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val neighsPeri =
-      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 10, vertexFortyTwo.periNodes)
+      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 10, vertexFortyTwo.perimeterOrderedNodes)
     assert(
       neighsPeri === List(
         (9,
@@ -38,9 +38,9 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
   they can "be found for full nodes" in {
 
     val vertexCaseStudy: Tiling =
-      Tiling.poly(6) ++ List(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6)
+      Hexagon.toTiling ++ Set(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6).map(Side.fromEdge(_))
     assert(
-      vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.periNodes) === List(
+      vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.perimeterOrderedNodes) === List(
         (2, List(3, 4, 5, 6)),
         (6, List(10, 9)),
         (9, List(7)),
@@ -48,7 +48,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val neighsFull1 =
-      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 2, vertexFortyTwo.periNodes)
+      vertexFortyTwo.outerNodeHood(vertexFortyTwo get 2, vertexFortyTwo.perimeterOrderedNodes)
     assert(
       neighsFull1 === List(
         (1,
@@ -59,7 +59,7 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
       ))
 
     val hex         = Tiling.hexagonNet(2, 3)
-    val neighsFull2 = hex.outerNodeHood(hex get 15, hex.periNodes)
+    val neighsFull2 = hex.outerNodeHood(hex get 15, hex.perimeterOrderedNodes)
     assert(
       neighsFull2 === List(
         (14, List(9, 10, 11, 16)),
@@ -70,8 +70,8 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
   }
 
   they can "be found for full nodes in edge case #18" in {
-    val edgeCase = Tiling.fromG(
-      Graph(
+    val edgeCase = Tiling.fromSides(
+      Set(
         1 ~ 2,
         2 ~ 3,
         2 ~ 9,
@@ -106,8 +106,8 @@ class neighborsTest extends FlatSpec with Methods with Symmetry {
         22 ~ 23,
         23 ~ 9,
         23 ~ 21
-      ))
-    val neighsFull = edgeCase.outerNodeHood(edgeCase get 3, edgeCase.periNodes)
+      ).map(Side.fromEdge(_)))
+    val neighsFull = edgeCase.outerNodeHood(edgeCase get 3, edgeCase.perimeterOrderedNodes)
     assert(
       neighsFull === List(
         (1, List(2)),

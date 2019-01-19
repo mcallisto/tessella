@@ -10,7 +10,7 @@ import vision.id.tessella.Polar.RegularPgon
 
 class archimedeanTest extends FlatSpec with MathUtils with SVG with Checkers {
 
-  def interiorAngle(sides: Int): Double = RegularPgon.angle(sides)
+  def interiorAngle(sides: Int): Double = RegularPgon.angleFrom(sides)
 
   "The only monohedral tilings by regular p-gons" must "be (▲⁶), (■⁴) and (⬣³)" in {
 

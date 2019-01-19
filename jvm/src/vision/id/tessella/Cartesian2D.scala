@@ -551,7 +551,7 @@ object Cartesian2D {
       val rotation  = sideAngle + (if (condition) a else 0)
       //logger.debug("rotation " + rotation + " " + rotation.toRoundedDegrees())
       val traslation = side.e
-      RegularPgon.sides(a).map(RegularPgon.ofSides(_, l).toPolygon(rotation).sum(traslation))
+      RegularPgon.edgesNumberFrom(a).map(RegularPgon.ofEdges(_, l).toPolygon(rotation).sum(traslation))
     }
   }
 

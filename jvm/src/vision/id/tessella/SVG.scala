@@ -6,7 +6,7 @@ import os.RelPath
 import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D._
 
-trait SVG extends Methods {
+trait SVG extends TilingUtils {
 
   val multiple: Double = 25.0
 

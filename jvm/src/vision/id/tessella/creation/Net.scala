@@ -18,7 +18,7 @@ trait Net extends Reticulate {
     * @param f to empty hexagons in the net
     * @return
     */
-  private def triHexBase(l: Int, hex: Int = 0, f: (Int, Int) => Boolean): (Tiling, Int) = {
+  private def triHexBase(l: Int, hex: Int = 0, f: (Int, Int) => Boolean): (Graph[Int, UnDiEdge], Int) = {
     val topRight = l + 2
     val emptyNodes = for {
       i <- 1 to topRight
@@ -26,9 +26,9 @@ trait Net extends Reticulate {
       if f(i, j)
     } yield i + topRight * j
     val bottomLeft = topRight * (hex + 1) + 1
-    val g          = triangleNet((l + 1) * 2, hex + 1) -- Graph.from(emptyNodes, Nil)
-    val renumbered = (g -- List(topRight, bottomLeft)).renumber()
-    (Tiling.fromG(renumbered), renumbered.nodes.map(_.toOuter).max - l)
+    val g          = triangleNet((l + 1) * 2, hex + 1).toG -- emptyNodes
+    val renumbered = (g - topRight - bottomLeft).renumber()
+    (renumbered, renumbered.nodes.map(_.toOuter).max - l)
   }
 
   /**
@@ -39,17 +39,17 @@ trait Net extends Reticulate {
     * @param step position of starting hexagon
     * @return
     */
-  private def hexAreaRow(l: Int, hex: Int = 0, step: Int = 0): (Tiling, Int) = {
+  private def hexAreaRow(l: Int, hex: Int = 0, step: Int = 0): (Graph[Int, UnDiEdge], Int) = {
     val invertedStep = 3 - step % 3
     triHexBase(l, hex, (i, j) => (i + invertedStep + j % 3) % 3 == 0)
   }
 
-  private val fs: Map[Int, Int => (Tiling, Int)] = Map(
+  private val fs: Map[Int, Int => (Graph[Int, UnDiEdge], Int)] = Map(
     3 -> { l =>
-      (triangleNet(l * 2, 1), l + 2)
+      (triangleNet(l * 2, 1).toG, l + 2)
     },
     4 -> { l =>
-      (squareNet(l, 1), l + 2)
+      (squareNet(l, 1).toG, l + 2)
     },
     36   -> { triHexBase(_, 1, (i, _) => i % 2 == 1) },
     63   -> { triHexBase(_, 1, (i, _) => i % 2 == 0) },
@@ -73,7 +73,7 @@ trait Net extends Reticulate {
         val (t, s) = fs(layers(row % size))(l)
         (gg ++ t.renumber(start), start + s - 1)
     })
-    Tiling.fromG(g)
+    Tiling.fromSides(g.toSides)
   }
 
   /**

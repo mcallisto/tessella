@@ -1,19 +1,23 @@
 package vision.id.tessella
 
-import scala.util.{Failure, Success, Try}
+import vision.id.tessella.Alias.Tiling
 
+import scala.util.{Failure, Success, Try}
 import vision.id.tessella.Polar.UnitRegularPgon
 
-sealed abstract class RegPgon(val sides: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
+sealed abstract class RegPgon(val edgesNumber: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
 
-  def compare(that: RegPgon): Int = this.sides - that.sides
+  def compare(that: RegPgon): Int = this.edgesNumber - that.edgesNumber
 
   override val toString: String = symbol match {
     case Some(s) => s.toString
-    case None    => sides.toString
+    case None    => edgesNumber.toString
   }
 
-  val alpha: Double = UnitRegularPgon.ofSides(sides).alpha
+  val alpha: Double = UnitRegularPgon.ofEdges(edgesNumber).alpha
+
+  def toTiling: Tiling =
+    Tiling.fromSides((1 to edgesNumber).toSet.map((i: Int) => Side(i, i % edgesNumber + 1, isPerimeter = Some(true))))
 
 }
 
@@ -51,19 +55,19 @@ object RegPgon extends TryUtils with ListUtils {
     Gon42
   )
 
-  val sidesToPgon: Map[Int, RegPgon] = all.map(pgon => (pgon.sides, pgon)).toMap
+  val edgesNumberToPgon: Map[Int, RegPgon] = all.map(pgon => (pgon.edgesNumber, pgon)).toMap
 
   val symbolToPgon: Map[Char, RegPgon] =
     all.filter(_.symbol.isDefined).map(pgon => (pgon.symbol.safeGet(), pgon)).toMap
 
-  def ofSides(sides: Int): Try[RegPgon] = sidesToPgon.get(sides) match {
+  def ofEdges(edgesNumber: Int): Try[RegPgon] = edgesNumberToPgon.get(edgesNumber) match {
     case Some(pgon) => Success(pgon)
-    case None       => Failure(throw new IllegalArgumentException("non-tiling sides number: " + sides))
+    case None       => Failure(throw new IllegalArgumentException("non-tiling edges number: " + edgesNumber))
   }
 
   def fromString(s: String): Try[RegPgon] = s.toList match {
     case h :: Nil if symbolToPgon.contains(h) => Success(symbolToPgon(h))
-    case _                                    => Try(s.trim.toInt).flatMap(sides => ofSides(sides))
+    case _                                    => Try(s.trim.toInt).flatMap(edgesNumber => ofEdges(edgesNumber))
   }
 
   val sups: Map[Int, Char] = Map(

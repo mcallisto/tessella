@@ -4,7 +4,7 @@ import scala.util.{Failure, Success, Try}
 
 import com.typesafe.scalalogging.Logger
 
-import vision.id.tessella.Cartesian2D.{Point2D, Points2D, Segment2D}
+import vision.id.tessella.Cartesian2D.{Point2D, Points2D, Polygon, Segment2D}
 import vision.id.tessella.Polar.{PointPolar, Polyline, UnitRegularPgon}
 import vision.id.tessella.Tau.TAU
 
@@ -145,7 +145,7 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
           // map interior angles
           val interiors: List[Double] = paths.map({
             case Nil => 0
-            case p   => UnitRegularPgon.ofSides(p.size + 2).alpha
+            case p   => UnitRegularPgon.ofEdges(p.size + 2).alpha
           })
           val (initialAngle, dir) = findAngleDir(node, nodes, nStart, t, interiors) //; logger.debug("\ninitialAngle: " + initialAngle)
           // find all neighbors angles
@@ -227,6 +227,16 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     min.distanceFrom(max)
   }
 
+  def createPoly(start: Int, end1: Int, end2: Int): Polygon = {
+    val s = m(start)
+    Polygon
+      .createRegularFrom(
+        Segment2D.fromPoint2Ds(s, m(end1)),
+        Segment2D.fromPoint2Ds(s, m(end2))
+      )
+      .safeGet
+  }
+
 }
 
 object NodesMap extends ListUtils {
@@ -241,7 +251,7 @@ object NodesMap extends ListUtils {
     */
   def firstThree(node: Int, neigh: List[(Int, List[Int])]): NodesMap = {
     val (nodes, paths) = neigh.unzip
-    val angle          = UnitRegularPgon.ofSides(paths.safeHead.size + 2).alpha
+    val angle          = UnitRegularPgon.ofEdges(paths.safeHead.size + 2).alpha
     new NodesMap(
       Map(
         node           -> Point2D.origin,

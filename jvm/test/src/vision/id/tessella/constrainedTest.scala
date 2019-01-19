@@ -9,22 +9,32 @@ import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
 
-class constrainedTest extends FlatSpec with Visualizer with Methods {
+class constrainedTest extends FlatSpec with GraphUtils with TilingUtils with Visualizer {
 
-  val oneTriangle: Tiling = Tiling.poly(3)
+  val oneTriangle: Tiling = Triangle.toTiling
 
   "A regular triangle" can "be a tessellation" in {
     assert(oneTriangle.edges.toList === List(1 ~ 2, 2 ~ 3, 3 ~ 1))
   }
 
-  given(oneTriangle.toG ++ List(3 ~ -4, -4 ~ 1)) { g =>
-    "An addition to a valid tessellation" must "be with positive nodes" in {
-      assertThrows[IllegalArgumentException](oneTriangle ++ List(3 ~ -4, -4 ~ 1))
+  "An addition to a valid tessellation" can "NOT be a single node" in {
+    assertThrows[IllegalArgumentException](oneTriangle + 4)
+  }
+
+  the[IllegalArgumentException] thrownBy oneTriangle + 4 should have message
+    "Addition refused: " +
+      "cannot add a single node"
+
+  val negative: Graph[Int, UnDiEdge] = oneTriangle.toG ++ List(3 ~ -4, -4 ~ 1)
+
+  given(negative) { g =>
+    it must "be with positive nodes" in {
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy oneTriangle ++ List(3 ~ -4, -4 ~ 1) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "added non positive edges = Vector(3~-4, -4~1)"
+        "non positive nodes = Set(-4)"
   }
 
   val disconnected: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 4 ~ 5, 5 ~ 6, 6 ~ 4))
@@ -32,10 +42,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
   given(disconnected) { g =>
     "A disconnected graph" can "NOT be a tessellation" in {
       assert(g.isConnected === false)
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "graph not connected"
   }
@@ -45,10 +55,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
   given(nodesWith1Edge) { g =>
     "A graph with 1-degree nodes" can "NOT be a tessellation" in {
       assert((g get 4).degree === 1)
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "nodes with wrong number of edges = Set(4)"
   }
@@ -59,10 +69,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
   given(nodesWith7Edges) { g =>
     "A graph with a 7-degree node" can "NOT be a tessellation" in {
       assert((g get 1).degree === 7)
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "nodes with wrong number of edges = Set(1)"
   }
@@ -71,10 +81,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(negativeTriangle) { g =>
     "A graph with nodes having negative value" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "non positive nodes = Set(-2)"
   }
@@ -83,12 +93,12 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(papillon) { g =>
     "A graph with two non adjacent p-gons sharing a vertex" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "could not build perimeter"
   }
 
   val threeAdjacentSquares: Graph[Int, UnDiEdge] =
@@ -98,10 +108,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(moreThanFullVertex) { g =>
     "A graph with three squares and a pentagon at a vertex" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }
@@ -110,10 +120,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(areaOverlap1) { g =>
     "A graph with three squares and a regular pentagon overlapped at a vertex" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }
@@ -125,10 +135,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(vertexOverlapping) { g =>
     "A graph with an overlapping vertex" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }
@@ -138,10 +148,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(areaOverlap2) { g =>
     "A graph with an overlapping area" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }
@@ -160,10 +170,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(gap) { g =>
     "A graph with a gap" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "tiling with gap"
   }
@@ -190,10 +200,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(edgeOverlap) { g =>
     "A graph with an overlapping edge" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }
@@ -202,10 +212,10 @@ class constrainedTest extends FlatSpec with Visualizer with Methods {
 
   given(areaOverlap3) { g =>
     "A graph with another overlapping area" can "NOT be a tessellation" in {
-      assertThrows[IllegalArgumentException](Tiling.fromG(g))
+      assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 
-    the[IllegalArgumentException] thrownBy Tiling.fromG(g) should have message
+    the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
         "perimeter is not a simple polygon"
   }

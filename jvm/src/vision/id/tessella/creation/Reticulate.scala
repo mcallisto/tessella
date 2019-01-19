@@ -4,16 +4,16 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.{Alias, GraphUtils, Methods}
+import vision.id.tessella.{Alias, GraphUtils, TilingUtils, Side}
 import Alias.Tiling
 
 /**
   * fast methods to create reticulate tessellations of arbitrary size
   */
-trait Reticulate extends GraphUtils with Methods {
+trait Reticulate extends GraphUtils with TilingUtils {
 
-  private def toEdges(outerNodes: IndexedSeq[(Int, Int)]): IndexedSeq[UnDiEdge[Int]] =
-    outerNodes.map({ case (node1, node2) => node1 ~ node2 })
+  private def toEdges(outerNodes: IndexedSeq[(Int, Int)]): Set[Side[Int]] =
+    outerNodes.map({ case (vertex1, vertex2) => Side(vertex1, vertex2) }).toSet
 
   /**
     * compose a rectangular reticulate of x by y squares
@@ -34,7 +34,7 @@ trait Reticulate extends GraphUtils with Methods {
       i <- 1 to (x + 1)
       j <- 0 until y
     } yield (i + (x + 1) * j, i + (x + 1) * (j + 1))
-    Tiling.fromG(Graph.from(edges = toEdges(horiz ++ vert)))
+    Tiling.fromSides(toEdges(horiz ++ vert))
   }
 
   /**
@@ -76,7 +76,7 @@ trait Reticulate extends GraphUtils with Methods {
       j <- 0 until y
       v = (x + 1) * 2; w = i * 2 - 1
     } yield (w + v * j, w - 1 + v * (j + 1))
-    Tiling.fromG(Graph.from(edges = toEdges(horiz.tail.init ++ vert)))
+    Tiling.fromSides(toEdges(horiz.tail.init ++ vert))
   }
 
   /**
@@ -94,8 +94,8 @@ trait Reticulate extends GraphUtils with Methods {
       j <- 0 to y
       if f(i, j)
     } yield i + (h + 1) * j
-    val newg    = emptyNodes.foldLeft(triangleNet(x, y))(_ - _)
-    val orphans = newg.nodes filter (_.degree == 1)
+    val newg: Graph[Int, UnDiEdge] = emptyNodes.foldLeft(triangleNet(x, y).toG)(_ - _)
+    val orphans                    = newg.nodes filter (_.degree == 1)
 
     def cutCorners(g: Graph[Int, UnDiEdge], bridges: List[Int], corners: List[Int]): Graph[Int, UnDiEdge] = {
       if (g.nodes.toList.map(_.toOuter).intersect(bridges).isEmpty)
@@ -105,12 +105,14 @@ trait Reticulate extends GraphUtils with Methods {
     }
 
     val bottomleft = List(1 + (y - 2) * (h + 1), 3 + y * (h + 1))
-    val blCorners = List(1 + (y - 1) * (h + 1), 2 + y * (h + 1), 1 + y * (h + 1))
+    val blCorners  = List(1 + (y - 1) * (h + 1), 2 + y * (h + 1), 1 + y * (h + 1))
 
-    val topright   = List(3 * (h + 1), h - 1)
+    val topright  = List(3 * (h + 1), h - 1)
     val trCorners = List(2 * (h + 1), h, h + 1)
 
-    Tiling.fromG(cutCorners(cutCorners(newg -- orphans, bottomleft, blCorners), topright, trCorners).renumber())
+    val cut: Graph[Int, UnDiEdge] =
+      cutCorners(cutCorners(newg -- orphans, bottomleft, blCorners), topright, trCorners).renumber()
+    Tiling.fromSides(cut.toSides)
   }
 
   /**
@@ -206,7 +208,7 @@ trait Reticulate extends GraphUtils with Methods {
       case ((g, centre), hex) =>
         (hex.foldLeft(g)((h, hexNode) => h + centre ~ hexNode), centre + 1)
     })
-    Tiling.fromG(newg)
+    Tiling.fromSides(newg.toSides)
   }
 
   /**

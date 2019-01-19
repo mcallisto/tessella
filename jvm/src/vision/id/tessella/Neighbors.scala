@@ -1,20 +1,19 @@
 package vision.id.tessella
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.UnDiEdge
+import vision.id.tessella.Alias.Tiling
 
 trait Neighbors extends Symmetry with ListUtils {
 
-  final implicit class NGraph(graph: Graph[Int, UnDiEdge]) {
+  final implicit class NGraph(tiling: Tiling) {
 
-    private final implicit class NNode(node: graph.NodeT) {
+    private final implicit class NNode(node: tiling.NodeT) {
 
-      def shortestWithBlocksTo(other: graph.NodeT, blocks: Set[graph.NodeT]): Option[graph.Path] =
+      def shortestWithBlocksTo(other: tiling.NodeT, blocks: Set[tiling.NodeT]): Option[tiling.Path] =
         node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo other
 
-      type nodesL = List[graph.NodeT]
+      type nodesL = List[tiling.NodeT]
 
-      type nPaths = List[(graph.NodeT, nodesL)]
+      type nPaths = List[(tiling.NodeT, nodesL)]
 
       /**
         *
@@ -23,11 +22,11 @@ trait Neighbors extends Symmetry with ListUtils {
         * @param b   nodes blocking shortest path
         * @return
         */
-      private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[graph.NodeT]): nPaths = ns match {
+      private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
         case Nil => acc
         case _ =>
           val (accNodes, _)          = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
-          val lastNode: graph.NodeT  = accNodes.safeHead
+          val lastNode: tiling.NodeT = accNodes.safeHead
           val mapPaths: nPaths       = ns.map(n => (n, n.shortestWithBlocksTo(lastNode, b).safeGet().nodes.toList))
           val (foundNode, pathNodes) = mapPaths.minBy({ case (_, path) => path.size })
           findPathPeri(
@@ -37,22 +36,22 @@ trait Neighbors extends Symmetry with ListUtils {
           )
       }
 
-      private def findPathFull(ns: nodesL, acc: nPaths, b: Set[graph.NodeT]): nPaths = ns match {
+      private def findPathFull(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
         case Nil => acc
         case _ =>
-          val (accNodes, _)          = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
-          val firstNode: graph.NodeT = accNodes.safeHead
-          val lastNode: graph.NodeT  = accNodes.safeLast
-          val blocks: Set[graph.NodeT] = b ++ (accNodes.tail match {
+          val (accNodes, _)           = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
+          val firstNode: tiling.NodeT = accNodes.safeHead
+          val lastNode: tiling.NodeT  = accNodes.safeLast
+          val blocks: Set[tiling.NodeT] = b ++ (accNodes.tail match {
             case Nil  => Nil
             case some => some.init
           })
-          val mapPaths: List[(graph.NodeT, nodesL, Boolean)] = ns.flatMap(
+          val mapPaths: List[(tiling.NodeT, nodesL, Boolean)] = ns.flatMap(
             n =>
               List((n, n.shortestWithBlocksTo(firstNode, blocks).safeGet().nodes.toList, true),
                    (n, n.shortestWithBlocksTo(lastNode, blocks).safeGet().nodes.toList, false)))
           val (foundNode, pathNodes, isFirst) = mapPaths.minBy({ case (_, path, _) => path.size })
-          val accNew: (graph.NodeT, nodesL)   = (foundNode, pathNodes)
+          val accNew: (tiling.NodeT, nodesL)  = (foundNode, pathNodes)
           findPathFull(
             ns.filterNot(_ == foundNode),
             if (isFirst) accNew +: acc else acc :+ accNew,
@@ -60,13 +59,13 @@ trait Neighbors extends Symmetry with ListUtils {
           )
       }
 
-      def perimeterHood(orderedNodes: List[graph.NodeT]): nPaths = {
+      def perimeterHood(orderedNodes: List[tiling.NodeT]): nPaths = {
 
-        def isOnPerimeter(n: graph.NodeT): Boolean = orderedNodes.contains(n)
+        def isOnPerimeter(n: tiling.NodeT): Boolean = orderedNodes.contains(n)
 
         val neighb: nodesL = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
         // find start without relying on having found all perimeter ordered nodes
-        val start: graph.NodeT = (neighb.filter(isOnPerimeter) match {
+        val start: tiling.NodeT = (neighb.filter(isOnPerimeter) match {
           case two @ _ :: _ :: Nil => two
           case more =>
             more
@@ -91,11 +90,11 @@ trait Neighbors extends Symmetry with ListUtils {
       }
 
       private def reorderFull(ps: nPaths): nPaths = {
-        val first: (graph.NodeT, nodesL)         = ps.minBy({ case (n, _) => n.toOuter })
-        val indexFirst: Int                      = ps.indexOf(first)
-        val rotated: nPaths                      = ps.rotate(-indexFirst)
-        val (next, _): (graph.NodeT, nodesL)     = rotated(1)
-        val (previous, _): (graph.NodeT, nodesL) = rotated(ps.size - 1)
+        val first: (tiling.NodeT, nodesL)         = ps.minBy({ case (n, _) => n.toOuter })
+        val indexFirst: Int                       = ps.indexOf(first)
+        val rotated: nPaths                       = ps.rotate(-indexFirst)
+        val (next, _): (tiling.NodeT, nodesL)     = rotated(1)
+        val (previous, _): (tiling.NodeT, nodesL) = rotated(ps.size - 1)
         if (next.toOuter < previous.toOuter)
           rotated
         else {
@@ -105,8 +104,8 @@ trait Neighbors extends Symmetry with ListUtils {
       }
 
       def fullHood: nPaths = {
-        val neighb: nodesL     = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
-        val start: graph.NodeT = neighb.minBy(_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + first)
+        val neighb: nodesL      = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
+        val start: tiling.NodeT = neighb.minBy(_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + first)
         val (nodes, paths): (nodesL, List[nodesL]) = findPathFull(
           neighb.filterNot(_ == start),
           List((start, List())),
@@ -126,14 +125,14 @@ trait Neighbors extends Symmetry with ListUtils {
         *
         * @return list of ordered neighbors nodes and ordered path nodes of the underlying p-gon to reach the next one
         */
-      def hood(orderedNodes: List[graph.NodeT]): nPaths =
+      def hood(orderedNodes: List[tiling.NodeT]): nPaths =
         if (orderedNodes.contains(node)) node.perimeterHood(orderedNodes)
         else node.fullHood
 
     }
 
     def outerNodeHood(node: Int, orderedNodes: List[Int]): List[(Int, List[Int])] = {
-      val (nodes, paths) = (graph get node).hood(orderedNodes.map(graph get _)).unzip
+      val (nodes, paths) = (tiling get node).hood(orderedNodes.map(tiling get _)).unzip
       nodes.map(_.toOuter).zip(paths.map(_.map(_.toOuter)))
     }
 
@@ -141,22 +140,22 @@ trait Neighbors extends Symmetry with ListUtils {
       *  try to find one node not yet mapped with at least two neighbors nodes mapped
       */
     def findAddable(mapped: List[Int]): Option[Int] =
-      graph.nodes.toList
+      tiling.nodes.toList
         .map(_.toOuter)
         .diff(mapped)
-        .find(n => (graph get n).neighbors.toList.map(_.toOuter).intersect(mapped).lengthCompare(2) >= 0)
+        .find(n => (tiling get n).neighbors.toList.map(_.toOuter).intersect(mapped).lengthCompare(2) >= 0)
 
     /**
       *  try to find one node already mapped with at least three nodes neighbors
       *  of which at least two already mapped and at least one node not yet mapped
       */
-    def findCompletable(mapped: List[Int], tm: NodesMap): Option[Int] =
+    def findCompletable(mapped: List[Int], nm: NodesMap): Option[Int] =
       mapped.find(node => {
-        val neighbors = (graph get node).neighbors.toList.map(_.toOuter)
+        val neighbors = (tiling get node).neighbors.toList.map(_.toOuter)
         val hasEnoughNeighborsMapped = neighbors.intersect(mapped) match {
           case Nil           => false
           case _ :: Nil      => false
-          case f :: s :: Nil => !tm.hasOnSameLine(f, s)
+          case f :: s :: Nil => !nm.hasOnSameLine(f, s)
           case _             => true
         }
         hasEnoughNeighborsMapped && neighbors.diff(mapped).nonEmpty

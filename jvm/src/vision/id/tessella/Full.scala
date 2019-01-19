@@ -30,7 +30,7 @@ object Full extends TryUtils {
     * @return
     */
   def fromSides(psSides: List[Int]): Try[Full] =
-    fromTryRegPgon(RegPgon.sequence(psSides.map(sides => RegPgon.ofSides(sides))))
+    fromTryRegPgon(RegPgon.sequence(psSides.map(edgesNumber => RegPgon.ofEdges(edgesNumber))))
 
   def p(psSides: List[Int]): Full = fromSides(psSides).safeGet
 

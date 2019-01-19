@@ -123,9 +123,9 @@ class polarTest extends FlatSpec with MathUtils with TryUtils {
     }
   }
 
-  val unitRegTriangle: UnitRegularPgon = UnitRegularPgon.ofSides(3)
-  val unitSquare: UnitRegularPgon      = UnitRegularPgon.ofSides(4)
-  val unitHex: UnitRegularPgon         = UnitRegularPgon.ofSides(6)
+  val unitRegTriangle: UnitRegularPgon = UnitRegularPgon.ofEdges(3)
+  val unitSquare: UnitRegularPgon      = UnitRegularPgon.ofEdges(4)
+  val unitHex: UnitRegularPgon         = UnitRegularPgon.ofEdges(6)
 
   "An equilateral triangle" should "have an internal angle of 60°" in {
     assert(unitRegTriangle.alpha ~= (TAU / 6))
@@ -174,16 +174,16 @@ class polarTest extends FlatSpec with MathUtils with TryUtils {
   }
 
   "An internal angle of 90°" can "be ascribed to a regular polygon of 4 sides" in {
-    assert(RegularPgon.sides(TAU / 4).safeGet === 4)
+    assert(RegularPgon.edgesNumberFrom(TAU / 4).safeGet === 4)
   }
 
   "An internal angle of 120°" can "be ascribed to a regular polygon of 6 sides" in {
-    assert(RegularPgon.sides(TAU / 3).safeGet === 6)
-    assert(RegularPgon.sides(2.0943951042854145).safeGet === 6)
+    assert(RegularPgon.edgesNumberFrom(TAU / 3).safeGet === 6)
+    assert(RegularPgon.edgesNumberFrom(2.0943951042854145).safeGet === 6)
   }
 
   "An internal angle of 36°" can "NOT be ascribed to any regular polygon" in {
-    assert(RegularPgon.sides(TAU / 10).isFailure)
+    assert(RegularPgon.edgesNumberFrom(TAU / 10).isFailure)
   }
 
 }

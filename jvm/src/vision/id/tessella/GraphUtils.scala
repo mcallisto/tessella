@@ -34,6 +34,8 @@ trait GraphUtils {
       ((1 until m).toList.diff(all), m)
     }
 
+    def toSides: Set[Side[Int]] = g.edges.map(_.toOuter).map(Side.fromEdge(_)).toSet
+
   }
 
   private def removeOrphans(g: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] =

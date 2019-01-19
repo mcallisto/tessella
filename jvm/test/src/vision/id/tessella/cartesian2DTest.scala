@@ -217,6 +217,6 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   "A square" must "have a barycenter of its vertices" in {
-    assert(UnitRegularPgon.ofSides(4).toPolygon().barycenter === new Point2D(-0.5, 0.5))
+    assert(UnitRegularPgon.ofEdges(4).toPolygon().barycenter === new Point2D(-0.5, 0.5))
   }
 }

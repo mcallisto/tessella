@@ -14,7 +14,7 @@ class vertexTest extends FlatSpec with MathUtils with TryUtils {
 
   it can "be created from a list of sides of reg p-gons" in {
     assert(Vertex.p(List()) === Vertex(List()))
-    assert(Vertex.fromSides(List(4, 3)).safeGet === fourThree)
+    assert(Vertex.fromEdgesNumbers(List(4, 3)).safeGet === fourThree)
     assert(Vertex.p(List(4, 3)) === fourThree)
   }
 

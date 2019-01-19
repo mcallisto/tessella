@@ -7,7 +7,7 @@ import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
 
-class outputTest extends FlatSpec with SVG {
+class outputTest extends FlatSpec with GraphUtils with SVG {
 
 //  "The images in the docs/ folder" can "be created" in {
 //    assert(docs().isInstanceOf[Unit])
@@ -98,7 +98,7 @@ class outputTest extends FlatSpec with SVG {
 
   def docs(): Unit = {
     val small = Tiling.fromVertex(Vertex.s("(5*2.10)"))
-    val big = Tiling.fromG(
+    val big = Tiling.fromSides(
       Graph(
         102 ~ 106,
         102 ~ 98,
@@ -333,7 +333,7 @@ class outputTest extends FlatSpec with SVG {
         131 ~ 132,
         110 ~ 57,
         110 ~ 42
-      ))
+      ).toSides)
     saveFilePretty(draw(big, labelStyle = 2, polys = true), "docs/" + "(▲.■.⬣.■)")
     saveFilePretty(draw(small, labelStyle = 2, polys = false, perim = false), "docs/" + "(⬟².10)_label")
     saveFilePretty(draw(small, labelStyle = 0, polys = true, perim = false), "docs/" + "(⬟².10)_filled")

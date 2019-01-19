@@ -6,7 +6,7 @@ import scalax.collection.GraphPredef._
 import vision.id.tessella.Alias.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
 
-class nodesMapTest extends FlatSpec with Methods {
+class nodesMapTest extends FlatSpec with TilingUtils {
 
   "A 3x3 square net" can "be converted in a map of nodes with coords" in {
     val t = Tiling.squareNet(3, 3)
@@ -95,9 +95,9 @@ class nodesMapTest extends FlatSpec with Methods {
       ))
   }
 
-  val vertexCaseStudy: Tiling = Tiling.poly(6) ++ List(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6)
+  val vertexCaseStudy: Tiling = Hexagon.toTiling ++ Set(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6).map(Side.fromEdge(_))
   val neigh2: List[(Int, List[Int])] =
-    vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.periNodes)
+    vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.perimeterOrderedNodes)
 
   "A mapped node" can "be completed if it has 2 or more mapped neighbors(2)" in {
     val tm = new NodesMap(

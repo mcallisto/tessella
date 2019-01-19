@@ -42,14 +42,12 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
     "(" + descriptions.mkString(".") + ")"
   }
 
-  def size: Int = ps.size
-
   /**
-    * sides of p-gons
+    * number of edges of each p-gon
     *
     * @return
     */
-  def psSides: List[Int] = ps.map(_.sides)
+  def edgesNumbers: List[Int] = ps.map(_.edgesNumber)
 
   /**
     * interior angle
@@ -57,13 +55,6 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
     * @return radians
     */
   def alpha: Double = ps.foldLeft(0.0)(_ + _.alpha)
-
-  /**
-    * exterior angle
-    *
-    * @return radians
-    */
-  def beta: Double = TAU - alpha
 
   /**
     * @return
@@ -96,13 +87,13 @@ object Vertex extends Symmetry with DistinctUtils[List[UnitRegularPgon]] with Ma
   /**
     * create vertex with p-gons of given sides
     *
-    * @param psSides numbers of sides of each pgon
+    * @param edgesNumbers numbers of sides of each pgon
     * @return
     */
-  def fromSides(psSides: List[Int]): Try[Vertex] =
-    fromTryRegPgon(RegPgon.sequence(psSides.map(n => RegPgon.ofSides(n))))
+  def fromEdgesNumbers(edgesNumbers: List[Int]): Try[Vertex] =
+    fromTryRegPgon(RegPgon.sequence(edgesNumbers.map(RegPgon.ofEdges)))
 
-  def p(psSides: List[Int]): Vertex = fromSides(psSides).safeGet
+  def p(edgesNumbers: List[Int]): Vertex = fromEdgesNumbers(edgesNumbers).safeGet
 
   def fromString(s: String): Try[Vertex] = fromTryRegPgon(RegPgon.fromStrings(s))
 
@@ -137,7 +128,7 @@ object Vertex extends Symmetry with DistinctUtils[List[UnitRegularPgon]] with Ma
           })
       }
 
-    val vs = loop(a, l.map(UnitRegularPgon.ofSides), List(List()))
+    val vs = loop(a, l.map(UnitRegularPgon.ofEdges), List(List()))
     val urps =
       if (withPermutations) vs.flatMap(_.permutations.toList.distinctBy(_.isRotationOrReflectionOf(_)))
       else vs

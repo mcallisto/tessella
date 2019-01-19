@@ -2,24 +2,24 @@ package vision.id.tessella
 
 import scala.collection.Set
 import scala.language.{higherKinds, postfixOps}
-import scala.util.{Failure, Success, Try}
+import scala.util.Success
 
-import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 import scalax.collection.constrained.PreCheckFollowUp._
 import scalax.collection.constrained._
 
-import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
-import vision.id.tessella.Tau.TAU
+import vision.id.tessella.Alias.Tiling
 
 /** Ensures that the underlying `Graph` is a valid tessellation.
   */
 class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     extends Constraint[N, E](self)
     with NodeChecks[N, E]
-    with Perimeter
-    with Neighbors
-    with GraphUtils {
+    with OptionUtils
+    with TilingUtils {
+
+  private def refusal(msg: String): Nothing =
+    throw new IllegalArgumentException("Addition refused: " + msg)
 
   /** Skips this pre-check to rely on the post-check `postAdd` except for trivial cases. */
   override def preCreate(nodes: Traversable[N], edges: Traversable[E[N]]) =
@@ -27,20 +27,26 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
   /** Adding one node can never result into a valid tessellation. */
   override def preAdd(node: N): PreCheckResult =
-    PreCheckResult(Abort)
+    refusal("cannot add a single node")
 
   /** Only in very rare cases (to be analyzed) adding one edge can result into a valid tessellation. */
   override def preAdd(edge: E[N]): PreCheckResult =
-    PreCheckResult(Abort)
+    PreCheckResult(PostCheck)
 
-  protected class Result(followUp: PreCheckFollowUp, val positiveChecked: Boolean, val gapChecked: Boolean)
+  protected class Result(followUp: PreCheckFollowUp,
+                         val positiveChecked: Boolean,
+                         val gapChecked: Boolean,
+                         val oldPerimeterEdges: List[Side[Int]])
       extends PreCheckResult(followUp)
 
   protected object Result extends PreCheckResultCompanion {
     def apply(followUp: PreCheckFollowUp) =
-      new Result(followUp, false, false)
-    def apply(followUp: PreCheckFollowUp, positiveChecked: Boolean, gapChecked: Boolean) =
-      new Result(followUp, positiveChecked, gapChecked)
+      new Result(followUp, false, false, Nil)
+    def apply(followUp: PreCheckFollowUp,
+              positiveChecked: Boolean,
+              gapChecked: Boolean,
+              oldPerimeterEdges: List[Side[Int]]) =
+      new Result(followUp, positiveChecked, gapChecked, oldPerimeterEdges)
   }
 
   /**
@@ -55,85 +61,33 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     val nodes = elems.filter(_.isNode).map(_.asInstanceOf[Int])
     if (nodes.exists(_ <= 0))
       refusal("added non positive nodes = " + nodes.filter(_ <= 0))
-    val edges = elems.filter(_.isEdge).map(_.asInstanceOf[UnDiEdge[Int]])
+    val edges = elems.filter(_.isEdge).map(_.asInstanceOf[Side[Int]])
     if (edges.exists(_.toList.exists(_ <= 0)))
       refusal("added non positive edges = " + edges.filter(_.toList.exists(_ <= 0)))
 
-    val periNodes = self.asInstanceOf[Graph[Int, UnDiEdge]].periNodes.init
+    val periNodes = self.asInstanceOf[Tiling].perimeterOrderedNodes.init
 
-    val gapChecked = pathEndPoints(edges.toSet) match {
-      case Success((e1, e2)) =>
-        periNodes.contains(e1) && periNodes.contains(e2) && (periNodes.circularNeighborsOf(e1) match {
-          case Some(ns) => ns.contains(e2)
-          case _        => false
-        })
-      case _ => false
+    val (gapChecked, oldPerimeterEdges): (Boolean, List[Side[Int]]) = pathEndPoints(edges.toSet) match {
+      // if the new edges form a path with two endpoints
+      case Success((end1, end2)) =>
+        // if attached to the perimeter
+        if (periNodes.contains(end1) && periNodes.contains(end2)) {
+          // new edges changed to perimeter true
+          edges.foreach(_.isPerimeter = Some(true))
+          // find old perimeter edges to be passed to postCheck
+          val n1 = self.nodes.find(_.toOuter == end1).safeGet()
+          val n2 = self.nodes.find(_.toOuter == end2).safeGet()
+          val oldEdges =
+            (n1.withSubgraph(edges = _.asInstanceOf[Tiling#EdgeT].isPerimeter.contains(true)) shortestPathTo n2)
+              .safeGet()
+              .edges
+          (oldEdges.size == 1, oldEdges.toList.map(_.toOuter.asInstanceOf[Side[Int]]))
+        } else (false, Nil)
+      case _ => (false, Nil)
     }
 
-    Result(PostCheck, positiveChecked = true, gapChecked)
+    Result(PostCheck, positiveChecked = true, gapChecked, oldPerimeterEdges)
   }
-
-  private implicit final class XShaped(graph: Graph[Int, UnDiEdge]) {
-
-    private implicit class XNode(node: graph.NodeT) {
-
-      def neighs: List[(Int, List[Int])] = graph.outerNodeHood(node.toOuter, periNodes)
-    }
-
-    def periNodes: List[Int] = graph.perimeterNodesEdges match { case (periNodes, _) => periNodes }
-
-    def perimeterSimplePolygon: Try[UnitSimplePgon] = Try {
-
-      val periNodes = graph.periNodes
-
-      val (_, periPaths): (List[List[Int]], List[List[List[Int]]]) =
-        periNodes.init.map(graph.outerNodeHood(_, periNodes).unzip).unzip
-
-      val vertexes: List[Vertex] = periPaths.map(paths => Vertex.p(paths.init.map(_.size + 2)))
-
-      // implies satisfying requirements of UnitSimplePgon
-      new UnitSimplePgon(vertexes.map(v => new PointPolar(1.0, TAU / 2 - v.alpha)))
-
-    }
-
-    def toTessellMap: Try[NodesMap] = {
-
-      val size = graph.nodes.size
-
-      def loop(tm: NodesMap): Try[NodesMap] = {
-
-        if (tm.m.size == size) Success(tm)
-        else {
-          val mapped: List[Int] = tm.m.keys.toList
-          val nexttm: Try[NodesMap] = graph.findCompletable(mapped, tm) match {
-            case Some(node) => tm.completeNode(node, (graph get node).neighs)
-            case None =>
-              graph.findAddable(mapped) match {
-                case Some(node) => tm.addFromNeighbors(node, (graph get node).neighs)
-                case None       => perimeterSimplePolygon.flatMap(polygon => tm.addFromPerimeter(periNodes.init, polygon.pps))
-              }
-          }
-          loop(nexttm.get)
-        }
-      }
-
-      val firstNode: graph.NodeT = graph.nodes.minBy(_.toOuter)
-      loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighs))
-    }
-
-    def hasGap: Boolean = graph.toTessellMap match {
-      case Success(tm) =>
-        graph.edges.exists(_.nodes.map(_.toOuter) match {
-          case n1 :: n2 :: Nil => !tm.m(n1).isUnitDistance(tm.m(n2))
-          case _               => throw new Error
-        })
-      case Failure(_) => true
-    }
-
-  }
-
-  private def refusal(msg: String): Nothing =
-    throw new IllegalArgumentException("Addition refused: " + msg)
 
   /** Check the whole `newGraph`. */
   override def postAdd(newGraph: Graph[N, E],
@@ -153,15 +107,24 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       refusal(
         "nodes with wrong number of edges = " +
           newGraph.nodes.filter(node => node.degree < 2 || node.degree > 6))
-    if (!newGraph.isConnected)
-      refusal("graph not connected")
-    val g = newGraph.asInstanceOf[Graph[Int, UnDiEdge]]
-    if (g.perimeterSimplePolygon.isFailure)
+    preCheck match {
+      case r: Result if r.oldPerimeterEdges.nonEmpty =>
+        newGraph.edges
+          .foreach(edge =>
+            if (r.oldPerimeterEdges.contains(edge.toOuter)) edge.asInstanceOf[Tiling#EdgeT].isPerimeter = Some(false))
+      case _ =>
+        if (!newGraph.isConnected)
+          refusal("graph not connected")
+    }
+    if (!newGraph.asInstanceOf[Tiling].hasPerimeterSet && newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
+      refusal("could not build perimeter")
+    if (newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isFailure) {
       refusal("perimeter is not a simple polygon")
+    }
     preCheck match {
       case r: Result if r.gapChecked =>
       case _ =>
-        if (g.hasGap)
+        if (newGraph.asInstanceOf[Tiling].hasGap)
           refusal("tiling with gap")
     }
     true
@@ -170,11 +133,11 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   /** Only in very rare cases (to be analyzed) subtracting one node (and related edges)
     * can result into a valid tessellation. */
   override def preSubtract(node: self.NodeT, forced: Boolean): PreCheckResult =
-    PreCheckResult(Abort)
+    PreCheckResult(PostCheck)
 
   /** Only in very rare cases (to be analyzed) subtracting one edge can result into a valid tessellation. */
   override def preSubtract(edge: self.EdgeT, simple: Boolean): PreCheckResult =
-    PreCheckResult(Abort)
+    PreCheckResult(PostCheck)
 
   /** To be analyzed, for the time being skip */
   override def preSubtract(nodes: => Set[self.NodeT], edges: => Set[self.EdgeT], simple: Boolean): PreCheckResult =

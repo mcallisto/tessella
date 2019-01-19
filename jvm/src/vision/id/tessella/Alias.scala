@@ -4,24 +4,26 @@ import scalax.collection.GraphEdge._
 import scalax.collection.constrained._
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.creation.{Growth, Net, Uni4Hex, Uni5Hex}
+import vision.id.tessella.creation.{Growth, Net, Reticulate, Uni4Hex, Uni5Hex}
 
 object Alias {
 
-  type Tiling = Graph[Int, UnDiEdge]
+  type Tiling = Graph[Int, Side]
 
   implicit val conf: Config = Shaped
 
   object Tiling
-      extends CompanionAlias[UnDiEdge](Shaped withStringPrefix "Tiling")
+      extends CompanionAlias[Side](Shaped withStringPrefix "Tiling")
       with Growth
       with Net
+      with Reticulate
       with Uni4Hex
       with Uni5Hex {
 
-    def poly(sides: Int): Tiling = Tiling.from(Nil, for (i <- 1 to sides) yield i ~ (i % sides + 1))
+    def fromSides(sides: Set[Side[Int]]): Tiling = Tiling.from(Nil, sides)
 
-    def fromG(graph: scalax.collection.Graph[Int, UnDiEdge]): Tiling = Tiling.from(graph.nodes, graph.edges)
+    def fromG(graph: scalax.collection.Graph[Int, UnDiEdge]): Tiling =
+      Tiling.from(graph.nodes, graph.edges.map(edge => Side.fromEdge(edge.toOuter)))
 
   }
 
