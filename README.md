@@ -32,7 +32,7 @@ import mill._, scalalib._
 
 object foo extends ScalaModule {
   def ivyDeps = Agg(
-    ivy"vision.id::tessella:0.1.3"
+    ivy"vision.id::tessella:0.2.0"
   )
 }
 ```
@@ -40,7 +40,7 @@ object foo extends ScalaModule {
 #### From an **[sbt](https://www.scala-sbt.org/)** project
 
 ```scala
-libraryDependencies += "vision.id" % "tessella" % "0.1.3"
+libraryDependencies += "vision.id" % "tessella" % "0.2.0"
 ```
 
 ### Draw a tessellation

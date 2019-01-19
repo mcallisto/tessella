@@ -17,7 +17,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
   def scalaVersion: T[String] = "2.12.8"
 
-  def publishVersion: T[String] = "0.1.3"
+  def publishVersion: T[String] = "0.2.0"
 
   override def artifactName: T[String] = name
 
