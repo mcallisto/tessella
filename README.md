@@ -2,7 +2,7 @@
 
 # Tilings by regular polygons
 
-This Scala library helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
+**Tessella** is a Scala library that helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
 
 > ![(▲.■.⬣.■)](docs/(▲.■.⬣.■).svg)
 > _Finite set of the (▲.■.⬣.■) Archimedean (1-uniform) tiling_
