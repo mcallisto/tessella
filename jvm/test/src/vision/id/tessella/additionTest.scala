@@ -1,10 +1,12 @@
 package vision.id.tessella
 
 import org.scalatest.FlatSpec
+
 import scalax.collection.GraphPredef._
+
 import vision.id.tessella.Alias.Tiling
 
-class additionTest extends FlatSpec with TilingUtils with OptionUtils with TryUtils {
+class additionTest extends FlatSpec with AddUtils with OptionUtils with TryUtils {
 
   val uShape: Tiling = Tiling.fromG(Tiling.squareNet(3, 2).toG - 2 ~ 3)
 

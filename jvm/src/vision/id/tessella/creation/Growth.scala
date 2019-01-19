@@ -2,13 +2,13 @@ package vision.id.tessella.creation
 
 import scala.util.Try
 
-import vision.id.tessella.{RegPgon, Side, TilingUtils, Vertex}
+import vision.id.tessella.{RegPgon, Side, AddUtils, Vertex}
 import vision.id.tessella.Alias.Tiling
 
 /**
   * slow methods to create tessellations with "organic" growth
   */
-trait Growth extends TilingUtils {
+trait Growth extends AddUtils {
 
   private def regPgonTiling(edgesNumber: Int): Try[Tiling] = RegPgon.ofEdges(edgesNumber).map(_.toTiling)
 
