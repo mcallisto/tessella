@@ -9,7 +9,7 @@ import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Alias.Tiling
 
-class constrainedTest extends FlatSpec with GraphUtils with TilingUtils with Visualizer {
+class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
   val oneTriangle: Tiling = Triangle.toTiling
 
@@ -17,18 +17,18 @@ class constrainedTest extends FlatSpec with GraphUtils with TilingUtils with Vis
     assert(oneTriangle.edges.toList === List(1 ~ 2, 2 ~ 3, 3 ~ 1))
   }
 
-  "An addition to a valid tessellation" can "NOT be a single node" in {
-    assertThrows[IllegalArgumentException](oneTriangle + 4)
+  "An empty graph" can "be a tessellation" in {
+    assert(Tiling.fromSides(Set()).edges.toList === Nil)
   }
 
-  the[IllegalArgumentException] thrownBy oneTriangle + 4 should have message
-    "Addition refused: " +
-      "cannot add a single node"
+  "A regular hendecagon (11-gon)" can "NOT be a tessellation" in {
+    assertThrows[IllegalArgumentException](Tiling.fromG(Graph(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 5, 5 ~ 6, 6 ~ 7, 7 ~ 8, 8 ~ 9, 9 ~ 10, 10 ~ 11, 11 ~ 1)))
+  }
 
   val negative: Graph[Int, UnDiEdge] = oneTriangle.toG ++ List(3 ~ -4, -4 ~ 1)
 
   given(negative) { g =>
-    it must "be with positive nodes" in {
+    "A graph with negative nodes" can "NOT be a tessellation" in {
       assertThrows[IllegalArgumentException](Tiling.fromSides(g.toSides))
     }
 

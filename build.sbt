@@ -1,8 +1,13 @@
 organization := "vision.id"
 name := "tessella"
-version := "0.2.0"
+version := "0.2.1"
 
 scalaVersion := "2.12.8"
+
+resolvers ++= Seq(
+  "NetBeans" at "http://bits.netbeans.org/nexus/content/groups/netbeans/",
+  "gephi-thirdparty" at "https://raw.github.com/gephi/gephi/mvn-thirdparty-repo/"
+)
 
 libraryDependencies ++= Seq(
   "org.scala-graph" %% "graph-core" % "1.12.5",
@@ -15,7 +20,7 @@ libraryDependencies ++= Seq(
   "vision.id" %% "graphgephi" % "0.1.1" % Test,
   "com.storm-enroute" %% "scalameter" % "0.8.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 )
 
 testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")

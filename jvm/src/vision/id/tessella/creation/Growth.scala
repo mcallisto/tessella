@@ -1,8 +1,7 @@
 package vision.id.tessella.creation
 
 import scala.util.Try
-
-import vision.id.tessella.{RegPgon, Side, AddUtils, Vertex}
+import vision.id.tessella._
 import vision.id.tessella.Alias.Tiling
 
 /**
@@ -47,4 +46,29 @@ trait Growth extends AddUtils {
     case _ => throw new Error
   }
 
+  /**
+    * grow tessell of given size by respecting only 1 pattern
+    *
+    * @param pattern  full vertex
+    * @param size     new size in p-gons
+    * @param infinite if true, it should return Failure early if an unsuitable angle for growth is spotted
+    * @return
+    */
+  def expandPattern(pattern: Full, size: Int = 100, infinite: Boolean = false): Try[Tiling] = pattern.pgonsNumber match {
+    case less if size <= less => Try(fromVertex(Vertex(pattern.ps.take(size))))
+    case n => fromVertex(pattern).expPatterns(List(pattern), size - n, infinite)
+  }
+
+  /**
+    * all tessellations from 1 to given size grown by respecting only 1 pattern
+    *
+    * @param pattern vertex
+    * @param size    new size in p-gons
+    * @return
+    */
+  def scanPattern(pattern: Full, size: Int = 100): List[Try[Tiling]] = pattern.pgonsNumber match {
+    case less if size <= less => scanVertex(Vertex(pattern.ps.take(size))).map(Try(_))
+    case n => scanVertex(Vertex(pattern.ps.take(n - 1))).map(Try(_)) ++
+      fromVertex(pattern).scanPatterns(List(pattern), size - n)
+  }
 }

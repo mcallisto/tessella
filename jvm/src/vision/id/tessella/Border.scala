@@ -15,6 +15,13 @@ trait Border extends ListUtils {
 
       def shortestWithBlocksTo(other: tiling.NodeT, blocks: Set[tiling.NodeT]): Option[tiling.Path] =
         node.withSubgraph(nodes = !blocks.contains(_)) shortestPathTo other
+
+      def shortestPerimeterPath(other: tiling.NodeT, onPerimeter: Boolean): Option[tiling.Path] =
+        node.withSubgraph(edges = _.isPerimeter.contains(onPerimeter)) shortestPathTo other
+
+      def onePolygonPerimeterPath(other: tiling.NodeT): Option[tiling.Path] =
+        node.withSubgraph(nodes = n => n == node || n == other || n.degree == 2, edges = _.isPerimeter.contains(true)) pathTo other
+
     }
 
     implicit final class XPEdge(edge: tiling.EdgeT) {
@@ -101,6 +108,20 @@ trait Border extends ListUtils {
       tiling.edges.foreach(edge => edge.isPerimeter = Some(pEdges.contains(edge.toOuter)))
 
     }
+
+    /**
+      * shortest path between two nodes, inside or outside perimeter
+      *
+      * @param node1 outer perimeter node
+      * @param node2 outer perimeter node
+      * @param onPerimeter if following perimeter or non perimeter edges
+      * @return
+      */
+    def getShortestPerimeterPath(node1: Int, node2: Int, onPerimeter: Boolean): Traversable[Side[Int]] =
+      (tiling get node1).shortestPerimeterPath(tiling get node2, onPerimeter).safeGet().edges.map(_.toOuter)
+
+    def getOnePolygonPerimeterPath(node1: Int, node2: Int): Option[Traversable[Side[Int]]] =
+      (tiling get node1).onePolygonPerimeterPath(tiling get node2).map(_.edges.map(_.toOuter))
 
   }
 

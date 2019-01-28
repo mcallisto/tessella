@@ -1,9 +1,9 @@
 package vision.id.tessella
 
-import org.scalatest.FlatSpec
+import scala.util.{Failure, Success}
 
-import scalax.collection.Graph
-import scalax.collection.GraphPredef._
+import org.scalatest.FlatSpec
+import org.scalameter._
 
 import vision.id.tessella.Alias.Tiling
 
@@ -15,6 +15,14 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
 
 //  "The images in the out/jvm/test/myAlgos/ folder" can "be created" in {
 //    assert(algos().isInstanceOf[Unit])
+//  }
+
+//  "The images in the out/jvm/test/myAlgos/growth folder" can "be created" in {
+//    assert(growth().isInstanceOf[Unit])
+//  }
+
+//  "The test images in the out/jvm/test/myTest/scan folder" can "be created" in {
+//    assert(scan().isInstanceOf[Unit])
 //  }
 
 //  "The test image in the out/jvm/test/myTest/ folder" can "be created" in {
@@ -89,257 +97,55 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
     })
   }
 
-  def test(): Unit = {
-    val wd = os.pwd / "out"
-    os.makeDir.all(wd / "jvm" / "test" / "myTest")
-    val t = Tiling.threeUniformOneOneOne8(6, 6)
-    saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/test/myTest/" + "test1")
-  }
-
   def docs(): Unit = {
     val small = Tiling.fromVertex(Vertex.s("(5*2.10)"))
-    val big = Tiling.fromSides(
-      Graph(
-        102 ~ 106,
-        102 ~ 98,
-        52 ~ 53,
-        52 ~ 127,
-        133 ~ 134,
-        2 ~ 3,
-        2 ~ 19,
-        83 ~ 84,
-        127 ~ 128,
-        127 ~ 123,
-        106 ~ 107,
-        106 ~ 103,
-        98 ~ 38,
-        77 ~ 78,
-        48 ~ 44,
-        48 ~ 51,
-        27 ~ 28,
-        27 ~ 4,
-        121 ~ 116,
-        121 ~ 122,
-        71 ~ 72,
-        42 ~ 24,
-        21 ~ 22,
-        21 ~ 49,
-        123 ~ 52,
-        94 ~ 91,
-        94 ~ 95,
-        73 ~ 69,
-        73 ~ 74,
-        44 ~ 21,
-        23 ~ 10,
-        117 ~ 115,
-        117 ~ 118,
-        88 ~ 89,
-        67 ~ 62,
-        67 ~ 68,
-        38 ~ 39,
-        38 ~ 103,
-        17 ~ 18,
-        92 ~ 36,
-        92 ~ 93,
-        92 ~ 35,
-        34 ~ 91,
-        34 ~ 35,
-        13 ~ 14,
-        5 ~ 6,
-        5 ~ 1,
-        28 ~ 29,
-        28 ~ 11,
-        109 ~ 112,
-        109 ~ 110,
-        109 ~ 105,
-        59 ~ 111,
-        59 ~ 60,
-        9 ~ 10,
-        9 ~ 1,
-        132 ~ 128,
-        103 ~ 98,
-        103 ~ 104,
-        82 ~ 79,
-        82 ~ 83,
-        74 ~ 30,
-        53 ~ 133,
-        53 ~ 54,
-        32 ~ 33,
-        32 ~ 13,
-        24 ~ 23,
-        3 ~ 1,
-        3 ~ 4,
-        126 ~ 123,
-        126 ~ 129,
-        97 ~ 93,
-        97 ~ 98,
-        76 ~ 77,
-        128 ~ 53,
-        99 ~ 97,
-        99 ~ 100,
-        78 ~ 82,
-        78 ~ 74,
-        70 ~ 67,
-        70 ~ 71,
-        49 ~ 44,
-        49 ~ 50,
-        20 ~ 25,
-        20 ~ 3,
-        93 ~ 37,
-        43 ~ 45,
-        43 ~ 44,
-        43 ~ 20,
-        124 ~ 121,
-        124 ~ 125,
-        14 ~ 15,
-        14 ~ 7,
-        118 ~ 119,
-        89 ~ 90,
-        39 ~ 16,
-        39 ~ 40,
-        120 ~ 116,
-        120 ~ 124,
-        10 ~ 2,
-        114 ~ 112,
-        85 ~ 86,
-        85 ~ 81,
-        64 ~ 65,
-        64 ~ 117,
-        35 ~ 14,
-        35 ~ 36,
-        108 ~ 105,
-        79 ~ 74,
-        79 ~ 80,
-        58 ~ 54,
-        29 ~ 73,
-        29 ~ 30,
-        8 ~ 17,
-        8 ~ 9,
-        81 ~ 33,
-        60 ~ 58,
-        31 ~ 32,
-        31 ~ 12,
-        125 ~ 126,
-        104 ~ 105,
-        104 ~ 40,
-        104 ~ 39,
-        75 ~ 73,
-        75 ~ 76,
-        54 ~ 50,
-        25 ~ 26,
-        25 ~ 61,
-        4 ~ 5,
-        4 ~ 11,
-        129 ~ 130,
-        129 ~ 127,
-        19 ~ 43,
-        19 ~ 21,
-        19 ~ 20,
-        100 ~ 101,
-        50 ~ 22,
-        65 ~ 66,
-        15 ~ 16,
-        96 ~ 93,
-        96 ~ 99,
-        46 ~ 115,
-        46 ~ 47,
-        46 ~ 63,
-        119 ~ 120,
-        111 ~ 110,
-        111 ~ 113,
-        90 ~ 86,
-        90 ~ 94,
-        69 ~ 29,
-        61 ~ 62,
-        61 ~ 45,
-        40 ~ 17,
-        40 ~ 41,
-        11 ~ 5,
-        11 ~ 12,
-        134 ~ 54,
-        113 ~ 114,
-        84 ~ 81,
-        84 ~ 87,
-        63 ~ 61,
-        63 ~ 64,
-        115 ~ 63,
-        115 ~ 116,
-        107 ~ 108,
-        86 ~ 34,
-        57 ~ 59,
-        57 ~ 42,
-        36 ~ 37,
-        36 ~ 15,
-        7 ~ 15,
-        7 ~ 8,
-        130 ~ 131,
-        80 ~ 81,
-        80 ~ 32,
-        80 ~ 31,
-        51 ~ 49,
-        51 ~ 52,
-        30 ~ 31,
-        30 ~ 79,
-        1 ~ 2,
-        105 ~ 41,
-        55 ~ 50,
-        55 ~ 58,
-        55 ~ 56,
-        47 ~ 121,
-        47 ~ 48,
-        26 ~ 67,
-        26 ~ 27,
-        122 ~ 123,
-        122 ~ 48,
-        122 ~ 51,
-        101 ~ 102,
-        72 ~ 69,
-        72 ~ 75,
-        22 ~ 23,
-        22 ~ 55,
-        116 ~ 47,
-        95 ~ 96,
-        66 ~ 62,
-        66 ~ 70,
-        45 ~ 25,
-        45 ~ 46,
-        37 ~ 38,
-        37 ~ 97,
-        16 ~ 8,
-        16 ~ 17,
-        68 ~ 28,
-        68 ~ 69,
-        68 ~ 27,
-        18 ~ 24,
-        18 ~ 10,
-        18 ~ 9,
-        112 ~ 108,
-        91 ~ 86,
-        91 ~ 92,
-        62 ~ 26,
-        41 ~ 42,
-        41 ~ 109,
-        33 ~ 85,
-        33 ~ 34,
-        12 ~ 6,
-        12 ~ 13,
-        56 ~ 57,
-        56 ~ 24,
-        56 ~ 23,
-        6 ~ 7,
-        6 ~ 13,
-        87 ~ 85,
-        87 ~ 88,
-        131 ~ 132,
-        110 ~ 57,
-        110 ~ 42
-      ).toSides)
+    val big   = Tiling.expandPattern(Full.s("(3.4.6.4)"), 100).safeGet
     saveFilePretty(draw(big, labelStyle = 2, polys = true), "docs/" + "(▲.■.⬣.■)")
     saveFilePretty(draw(small, labelStyle = 2, polys = false, perim = false), "docs/" + "(⬟².10)_label")
     saveFilePretty(draw(small, labelStyle = 0, polys = true, perim = false), "docs/" + "(⬟².10)_filled")
     saveFilePretty(draw(small, labelStyle = 0, polys = false, perim = true), "docs/" + "(⬟².10)_perimeter")
     saveFilePretty(draw(Tiling.fiveUniformTwoTwoOne(8, 8), labelStyle = 0, markStyle = 1, perim = false),
                    "docs/" + "(▲⁶;(⬣³)²;(▲².⬣²)²)")
+  }
+
+  def growth(): Unit = {
+    val wd = os.pwd / "out"
+    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "growth")
+    (Full.regularPatterns ++ Full.semiRegularPatterns).foreach(f => {
+      val time = measure {
+        saveFilePretty(draw(Tiling.expandPattern(f, 20).safeGet, labelStyle = 0),
+                       "out/jvm/test/myAlgos/growth/" + f.toString)
+      }
+      println(s"$f time: $time")
+    })
+  }
+
+  def scan(): Unit = {
+    val wd = os.pwd / "out"
+    os.makeDir.all(wd / "jvm" / "test" / "myTest" / "scan")
+    val size    = 100
+    val pattern = Full.s("(3.3.4.3.4)")
+    val scan    = Tiling.scanPattern(pattern, size)
+    scan.indices.foreach(i => {
+      val time = measure {
+        scan(i) match {
+          case Success(f) =>
+            saveFilePretty(draw(f, labelStyle = 0),
+                           "out/jvm/test/myTest/scan/" + pattern.toString + "_" + List
+                             .fill(size.toString.length - (i + 1).toString.length)("0")
+                             .mkString + (i + 1))
+          case Failure(_) =>
+        }
+      }
+      println((i + 1) + s" pgon time: $time")
+    })
+  }
+
+  def test(): Unit = {
+    val wd = os.pwd / "out"
+    os.makeDir.all(wd / "jvm" / "test" / "myTest")
+    val t = Tiling.threeUniformOneOneOne8(6, 6)
+    saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/test/myTest/" + "test1")
   }
 
 }

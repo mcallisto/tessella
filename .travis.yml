@@ -10,11 +10,7 @@ matrix:
       jdk: oraclejdk8
 
 script:
-  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.5/0.3.5 && chmod +x ~/bin/mill
-  - export PATH=~/bin/mill:$PATH
-  - git clean -xdf
-  - mill -i all jvm.test
+  - sbt clean coverage test coverageReport codacyCoverage
 
-cache:
-  directories:
-    - $HOME/.coursier
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

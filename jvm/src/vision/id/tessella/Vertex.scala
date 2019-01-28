@@ -43,6 +43,13 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
   }
 
   /**
+    * number of pgons in vertex
+    *
+    * @return
+    */
+  def pgonsNumber: Int = ps.size
+
+  /**
     * number of edges of each p-gon
     *
     * @return
@@ -55,6 +62,13 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
     * @return radians
     */
   def alpha: Double = ps.foldLeft(0.0)(_ + _.alpha)
+
+  /**
+    * exterior angle
+    *
+    * @return radians
+    */
+  def beta: Double = TAU - alpha
 
   /**
     * @return
@@ -75,6 +89,9 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
   def distinct: Vertex = Vertex(ps.distinct)
 
   def isReflectionOf(that: Vertex): Boolean = this.ps.isReflectionOf(that.ps)
+
+  def isContainedIn(full: Full): Boolean =
+    full.ps.rotaReflections.distinct.map(_.take(this.pgonsNumber)).distinct.contains(this.ps)
 
 }
 

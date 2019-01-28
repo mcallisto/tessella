@@ -32,12 +32,12 @@ trait ListUtils extends OptionUtils with Symmetry {
 
     def safeLast: T = sLast(l)
 
-    def circularNeighborsOf(elem: T): Option[List[T]] = l.indexOf(elem) match {
+    def circularNeighborsOf(elem: T): Option[(T, T)] = l.indexOf(elem) match {
       case -1                   => None
-      case 0 if l.size == 1     => Some(Nil)
-      case 0                    => Some(List(sLast(l), l(1)))
-      case i if i == l.size - 1 => Some(List(l(i - 1), sHead(l)))
-      case i                    => Some(List(l(i - 1), l(i + 1)))
+      case 0 if l.size == 1     => Some((elem, elem))
+      case 0                    => Some((sLast(l), l(1)))
+      case i if i == l.size - 1 => Some((l(i - 1), sHead(l)))
+      case i                    => Some((l(i - 1), l(i + 1)))
     }
 
   }

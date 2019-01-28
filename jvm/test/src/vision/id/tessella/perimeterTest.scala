@@ -63,4 +63,9 @@ class perimeterTest extends FlatSpec with TilingUtils {
     assert(periLx.perimeterOrderedEdges === List(2 ~ 1, 5 ~ 2, 3 ~ 5, 1 ~ 3))
   }
 
+  val fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
+
+  "A perimeter" can "be checked if two nodes belong to one pgon" in {
+    assert(fourSquares.getOnePolygonPerimeterPath(2, 4) === Some(Traversable(2 ~ 3, 3 ~ 4)))
+  }
 }

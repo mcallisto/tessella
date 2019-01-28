@@ -15,14 +15,7 @@ trait Reticulate extends GraphUtils with TilingUtils {
   private def toEdges(outerNodes: IndexedSeq[(Int, Int)]): Set[Side[Int]] =
     outerNodes.map({ case (vertex1, vertex2) => Side(vertex1, vertex2) }).toSet
 
-  /**
-    * compose a rectangular reticulate of x by y squares
-    *
-    * @param x side units
-    * @param y side units
-    * @return
-    */
-  def squareNet(x: Int, y: Int): Tiling = {
+  private def squareNetSeq(x: Int, y: Int): IndexedSeq[(Int, Int)] = {
     require(x > 0 && y > 0)
 
     val horiz = for {
@@ -34,7 +27,18 @@ trait Reticulate extends GraphUtils with TilingUtils {
       i <- 1 to (x + 1)
       j <- 0 until y
     } yield (i + (x + 1) * j, i + (x + 1) * (j + 1))
-    Tiling.fromSides(toEdges(horiz ++ vert))
+    horiz ++ vert
+  }
+
+  /**
+    * compose a rectangular reticulate of x by y squares
+    *
+    * @param x side units
+    * @param y side units
+    * @return
+    */
+  def squareNet(x: Int, y: Int): Tiling = {
+    Tiling.fromSides(toEdges(squareNetSeq(x, y)))
   }
 
   /**
@@ -53,7 +57,7 @@ trait Reticulate extends GraphUtils with TilingUtils {
       i <- 1 to h
       j <- 0 until y
     } yield (i + (h + 1) * j, i + 1 + (h + 1) * (j + 1))
-    squareNet(h, y) ++ toEdges(diag)
+    Tiling.fromSides(toEdges(squareNetSeq(h, y) ++ diag))
   }
 
   /**

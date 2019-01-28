@@ -17,7 +17,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
   def scalaVersion: T[String] = "2.12.8"
 
-  def publishVersion: T[String] = "0.2.0"
+  def publishVersion: T[String] = "0.2.1"
 
   override def artifactName: T[String] = name
 
@@ -35,7 +35,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
 }
 
-trait Testable extends ScalaModule {
+trait Testable extends ScalaModule with Packageable {
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
     MavenRepository("http://bits.netbeans.org/nexus/content/groups/netbeans/"),
@@ -48,6 +48,12 @@ trait Testable extends ScalaModule {
     ivy"vision.id::graphgephi:0.1.1"
   )
 
+  def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
+
+  def one(args: String*) = T.command {
+    super.runMain("org.scalatest.run", args.map(List(organization, name, _).mkString(".")): _*)
+  }
+
 }
 
 object jvm extends Versioned { outer ⇒
@@ -59,16 +65,11 @@ object jvm extends Versioned { outer ⇒
     ivy"com.lihaoyi::os-lib:0.2.6",
     ivy"com.storm-enroute::scalameter:0.8.2",
     ivy"ch.qos.logback:logback-classic:1.2.3",
-    ivy"com.typesafe.scala-logging::scala-logging:3.9.0"
+    ivy"com.typesafe.scala-logging::scala-logging:3.9.2"
   )
 
-  object test extends outer.Tests with Testable with Packageable {
+  object test extends outer.Tests with Testable with Packageable
 
-    def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
-
-    def one(args: String*) = T.command {
-      super.runMain("org.scalatest.run", args.map(List(organization, name, _).mkString(".")): _*)
-    }
-  }
+  object bench extends outer.Tests with Testable with Packageable
 
 }

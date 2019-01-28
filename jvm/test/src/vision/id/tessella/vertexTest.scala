@@ -22,92 +22,92 @@ class vertexTest extends FlatSpec with MathUtils with TryUtils {
     val hex = Vertex.p(List(3, 3, 3, 3, 3, 3))
     assert(Vertex.s("(■.▲)") === fourThree)
     assert(Vertex.s("(▲*6)") === hex)
-    assert(Vertex.s("(▲⁶)") === hex)
+    assert(Vertex.s("(3⁶)") === hex)
     assert(Vertex.s("()") === Vertex(List()))
   }
 
   it must "have the interior angle not larger than 360°" in {
     assertThrows[Exception] {
-      Vertex.s("(⬣⁴)")
+      Vertex.s("(6⁴)")
     }
   }
 
   it can "be equal to another vertex" in {
-    assert(Vertex.s("(■.▲)") === fourThree)
-    assert(Vertex.s("(■.▲)").equals(fourThree))
+    assert(Vertex.s("(4.3)") === fourThree)
+    assert(Vertex.s("(4.3)").equals(fourThree))
   }
 
   it can "be a reflection of another vertex" in {
-    assert(Vertex.s("(▲.■)") !== fourThree)
-    assert(Vertex.s("(▲.■)").isReflectionOf(fourThree))
+    assert(Vertex.s("(3.4)") !== fourThree)
+    assert(Vertex.s("(3.4)").isReflectionOf(fourThree))
   }
 
   it can "be checked for a full interior angle" in {
-    assert(Vertex.s("(▲⁶)").isFull)
+    assert(Vertex.s("(3⁶)").isFull)
   }
 
   it can "be listed in all different variants" in {
-    assert(Vertex.s("(⬣³)").allVersions === List(Vertex.s("(⬣³)")))
+    assert(Vertex.s("(6³)").allVersions === List(Vertex.s("(6³)")))
     assert(
-      Vertex.s("(⬣.■.▲.■)").allVersions === List(
-        Vertex.s("(⬣.■.▲.■)"),
-        Vertex.s("(■.▲.■.⬣)")
+      Vertex.s("(6.4.3.4)").allVersions === List(
+        Vertex.s("(6.4.3.4)"),
+        Vertex.s("(4.3.4.6)")
       ))
   }
 
   it can "be equivalent to another symmetric (reflected) vertex" in {
-    assert(Vertex.s("(⬣.■.▲)").isEquivalentTo(Vertex.s("(⬣.■.▲)")) === true)
-    assert(Vertex.s("(⬣.■.▲)").isEquivalentTo(Vertex.s("(▲.■.⬣)")) === true)
-    assert(Vertex.s("(⬣.■.▲)").isEquivalentTo(Vertex.s("(■.⬣.▲)")) === false)
+    assert(Vertex.s("(6.4.3)").isEquivalentTo(Vertex.s("(6.4.3)")) === true)
+    assert(Vertex.s("(6.4.3)").isEquivalentTo(Vertex.s("(3.4.6)")) === true)
+    assert(Vertex.s("(6.4.3)").isEquivalentTo(Vertex.s("(4.6.3)")) === false)
   }
 
   it can "be converted into cartesian points" in {
     assert(
-      Vertex.s("(■)").toPoint2Ds().map(_.toString) ===
+      Vertex.s("(4)").toPoint2Ds().map(_.toString) ===
         List("{1.0:0.0}", "{0.0:1.0}"))
     assert(
-      Vertex.s("(■)").toPoint2Ds(TAU / 4).map(_.toString) ===
+      Vertex.s("(4)").toPoint2Ds(TAU / 4).map(_.toString) ===
         List("{0.0:1.0}", "{-1.0:0.0}"))
     assert(
-      Vertex.s("(▲)").toPoint2Ds().map(_.toString) ===
+      Vertex.s("(3)").toPoint2Ds().map(_.toString) ===
         List("{1.0:0.0}", "{0.5:0.8660254}"))
     assert(
-      Vertex.s("(⬣³)").toPoint2Ds().map(_.toString) ===
+      Vertex.s("(6³)").toPoint2Ds().map(_.toString) ===
         List("{1.0:0.0}", "{-0.5:0.8660254}", "{-0.5:-0.8660254}"))
   }
 
   it can "be transformed into distinct" in {
-    assert(Vertex.s("(▲².■.▲²)").distinct === Vertex.s("(▲.■)"))
+    assert(Vertex.s("(3².4.3²)").distinct === Vertex.s("(3.4)"))
   }
 
   "Vertices" can "be ordered" in {
     assert(
       List(
-        Vertex.s("(⬣.■.▲.■)"),
-        Vertex.s("(■.▲.■.⬣)"),
-        Vertex.s("(■.⬣.■.▲)"),
-        Vertex.s("(▲.■.⬣.■)")
+        Vertex.s("(6.4.3.4)"),
+        Vertex.s("(4.3.4.6)"),
+        Vertex.s("(4.6.4.3)"),
+        Vertex.s("(3.4.6.4)")
       ).sorted === List(
-        Vertex.s("(▲.■.⬣.■)"),
-        Vertex.s("(■.▲.■.⬣)"),
-        Vertex.s("(■.⬣.■.▲)"),
-        Vertex.s("(⬣.■.▲.■)")
+        Vertex.s("(3.4.6.4)"),
+        Vertex.s("(4.3.4.6)"),
+        Vertex.s("(4.6.4.3)"),
+        Vertex.s("(6.4.3.4)")
       ))
     assert(
       List(
-        Vertex.s("(⬣.■.▲.■)"),
-        Vertex.s("(⬣.■.▲)")
+        Vertex.s("(6.4.3.4)"),
+        Vertex.s("(6.4.3)")
       ).sorted === List(
-        Vertex.s("(⬣.■.▲)"),
-        Vertex.s("(⬣.■.▲.■)")
+        Vertex.s("(6.4.3)"),
+        Vertex.s("(6.4.3.4)")
       ))
     assert(
       List(
-        Vertex.s("(⬣.■.▲)"),
-        Vertex.s("(⬣.■.▲.■)")
+        Vertex.s("(6.4.3)"),
+        Vertex.s("(6.4.3.4)")
       ).sorted === List(
-        Vertex.s("(⬣.■.▲)"),
-        Vertex.s("(⬣.■.▲.■)")
+        Vertex.s("(6.4.3)"),
+        Vertex.s("(6.4.3.4)")
       ))
   }
 
