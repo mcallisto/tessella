@@ -3,7 +3,7 @@ package vision.id.tessella
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 import scala.util.Try
 

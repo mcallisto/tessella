@@ -5,7 +5,7 @@ import org.scalacheck.Gen
 import org.scalatest.prop.Checkers
 import org.scalatest.FlatSpec
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class tilingCheckTest extends FlatSpec with TilingUtils with TryUtils with Checkers {
 

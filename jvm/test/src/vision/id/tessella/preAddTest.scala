@@ -5,7 +5,7 @@ import org.scalatest.Matchers._
 
 import scalax.collection.GraphEdge.UnDiEdge
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class preAddTest extends FlatSpec with AddUtils {
 

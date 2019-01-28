@@ -5,7 +5,7 @@ import scala.util.{Failure, Success}
 import org.scalatest.FlatSpec
 import org.scalameter._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class outputTest extends FlatSpec with GraphUtils with SVG {
 

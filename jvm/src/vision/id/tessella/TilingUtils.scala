@@ -6,7 +6,7 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Cartesian2D.{Label2D, Point2D, Polygon, Segment2D}
 import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
 import vision.id.tessella.Tau.TAU

@@ -1,6 +1,6 @@
 package vision.id.tessella
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 trait Neighbors extends Symmetry with ListUtils {
 

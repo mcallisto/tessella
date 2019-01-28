@@ -4,7 +4,7 @@ import org.scalatest.FlatSpec
 
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class tilingTest extends FlatSpec with TilingUtils {
 

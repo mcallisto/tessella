@@ -4,8 +4,8 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.{Alias, GraphUtils, TilingUtils, Side}
-import Alias.Tiling
+import vision.id.tessella.{Tessella, GraphUtils, TilingUtils, Side}
+import Tessella.Tiling
 
 /**
   * fast methods to create reticulate tessellations of arbitrary size

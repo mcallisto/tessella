@@ -3,7 +3,7 @@ package vision.id.tessella
 import org.scalameter._
 import org.scalatest.FlatSpec
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class pgonsMapBench extends FlatSpec with TilingUtils {
 

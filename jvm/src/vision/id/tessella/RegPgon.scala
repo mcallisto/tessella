@@ -1,10 +1,9 @@
 package vision.id.tessella
 
-import vision.id.tessella.Alias.Tiling
-
 import scala.util.{Failure, Success, Try}
+
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Polar.UnitRegularPgon
-import vision.id.tessella.Tessella.TilingM
 
 sealed abstract class RegPgon(val edgesNumber: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
 
@@ -19,9 +18,6 @@ sealed abstract class RegPgon(val edgesNumber: Int, val symbol: Option[Char]) ex
 
   def toTiling: Tiling =
     Tiling.fromSides((1 to edgesNumber).toSet.map((i: Int) => Side(i, i % edgesNumber + 1, isPerimeter = Some(true))))
-
-  def toTilingM: TilingM =
-    TilingM.fromSides((1 to edgesNumber).toSet.map((i: Int) => Side(i, i % edgesNumber + 1, isPerimeter = Some(true))))
 
 }
 

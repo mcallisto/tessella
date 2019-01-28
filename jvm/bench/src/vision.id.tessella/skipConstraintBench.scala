@@ -3,7 +3,7 @@ package vision.id.tessella
 import org.scalameter._
 import org.scalatest.FlatSpec
 import scalax.collection.GraphEdge.UnDiEdge
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class skipConstraintBench extends FlatSpec with AddUtils {
 

@@ -12,7 +12,7 @@ import scalax.collection.GraphPredef._
 import scalax.collection.constrained.PreCheckFollowUp._
 import scalax.collection.constrained._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 /** Ensures that the underlying `Graph` is a valid tessellation.
   */

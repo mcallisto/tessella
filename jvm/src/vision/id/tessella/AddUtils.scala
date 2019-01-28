@@ -1,7 +1,7 @@
 package vision.id.tessella
 
 import scalax.collection.GraphEdge.UnDiEdge
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Polar.RegularPgon
 import vision.id.tessella.Tau.TAU
 

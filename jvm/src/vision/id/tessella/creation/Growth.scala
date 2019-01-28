@@ -2,7 +2,7 @@ package vision.id.tessella.creation
 
 import scala.util.Try
 import vision.id.tessella._
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 /**
   * slow methods to create tessellations with "organic" growth

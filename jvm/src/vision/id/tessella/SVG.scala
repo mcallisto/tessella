@@ -3,7 +3,7 @@ package vision.id.tessella
 import scala.xml._
 import os.RelPath
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Cartesian2D._
 
 trait SVG extends TilingUtils {

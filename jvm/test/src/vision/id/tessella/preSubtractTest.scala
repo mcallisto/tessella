@@ -3,7 +3,7 @@ package vision.id.tessella
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class preSubtractTest extends FlatSpec with AddUtils {
 

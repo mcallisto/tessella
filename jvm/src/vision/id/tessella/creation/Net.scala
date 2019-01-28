@@ -3,7 +3,7 @@ package vision.id.tessella.creation
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 /**
   * add methods to create tessellations as repeated layers of rows

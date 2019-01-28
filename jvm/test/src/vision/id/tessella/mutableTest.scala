@@ -1,15 +1,14 @@
 package vision.id.tessella
 
 import org.scalatest.FlatSpec
-import scalax.collection.GraphPredef._
 
-import vision.id.tessella.Tessella.TilingM
+import vision.id.tessella.Tessella.Tiling
 
-class tilingMTest extends FlatSpec with TilingUtils {
+class mutableTest extends FlatSpec with TilingUtils {
 
-  val sq: TilingM = Square.toTilingM
+  val sq: Tiling = Square.toTiling
 
-  "A mutable tiling" can "be creates" in {
+  "A mutable tiling" can "be created" in {
     assert(sq.edges.toString === "EdgeSet(1-2, 2-3, 3-4, 4-1)")
   }
 
@@ -20,7 +19,7 @@ class tilingMTest extends FlatSpec with TilingUtils {
 
   it can "be reduced" in {
     sq -= Side(1, 4)
-    assert(sq === Pentagon.toTilingM)
+    assert(sq === Pentagon.toTiling)
   }
 
 }

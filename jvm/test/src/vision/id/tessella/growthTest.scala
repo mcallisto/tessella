@@ -5,7 +5,7 @@ import org.scalatest.FlatSpec
 import scalax.collection.Graph
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class growthTest extends FlatSpec with TilingUtils with TryUtils {
 
