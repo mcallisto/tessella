@@ -124,17 +124,17 @@ class tilingTest extends FlatSpec with TilingUtils {
 
   val three: Tiling = Tiling.threeUniformOneOneOne8(6, 6)
 
-  "A tessellation" can "have its pgon counted by type" in {
-    assert(
-      three.pgonsMap === Map(
-        4 -> 18,
-        3 -> 38,
-        6 -> 12
-      ))
-  }
-
-  it must "have a gonality" in {
-    assert(three.gonality === 3)
-  }
+//  "A tessellation" can "have its pgon counted by type" in {
+//    assert(
+//      three.pgonsMap === Map(
+//        4 -> 18,
+//        3 -> 38,
+//        6 -> 12
+//      ))
+//  }
+//
+//  it must "have a gonality" in {
+//    assert(three.gonality === 3)
+//  }
 
 }
