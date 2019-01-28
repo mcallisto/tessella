@@ -1,4 +1,4 @@
-[![Build Status][travis-badge]][travis-link] [![Maven Central][maven-badge]][maven-link] [![Codacy Badge][codacy-badge]][codacy-link]
+[![Build Status][travis-badge]][travis-link] [![Maven Central][maven-badge]][maven-link] [![Codacy Badge][codacy-badge]][codacy-link] [![Codecov badge][codecov-badge]][codecov-link]
 
 # Tilings by regular polygons
 
@@ -137,3 +137,5 @@ Example: `(▲.■.⬣.■)` or `(▲⁶; ▲².■.▲.■)`
 [maven-link]: https://maven-badges.herokuapp.com/maven-central/vision.id/tessella_2.12
 [codacy-badge]: https://api.codacy.com/project/badge/Grade/c9a888d7249943a3b5b82e64fdcc7a52
 [codacy-link]: https://www.codacy.com/app/mcallisto/tessella?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mcallisto/tessella&amp;utm_campaign=Badge_Grade
+[codecov-badge]: https://codecov.io/gh/mcallisto/tessella/branch/master/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/mcallisto/tessella
