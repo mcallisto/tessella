@@ -77,6 +77,10 @@ class preSubtractTest extends FlatSpec with AddUtils {
 
   // ---------------- subtracting multiple edges / nodes ----------------
 
+  "Subtracting all nodes" must "be valid" in {
+    assert((Square.toTiling --= Set(1, 2, 3, 4)).edges.toString === "EdgeSet()")
+  }
+
   "Subtracting perimeter nodes not forming a single path" can "be valid" in {
     assert((Tiling.squareNet(3, 2) --= Set(1, 4)).edges.toString === "EdgeSet(9-10, 5-9, 5-6, 2-3, 2-6, 6=7, 6=10, 3-7, 10-11, 7=11, 7-8, 11-12, 8-12)")
   }

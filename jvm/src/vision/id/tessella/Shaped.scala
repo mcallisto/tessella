@@ -292,23 +292,27 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     lazyDebug("edges " + edges.toString)
     lazyDebug("simple " + simple)
 
-    if (edges.isEmpty && nodes.forall(_.degree == 2)) {
-      val ns        = nodes.toList.map(_.toOuter.asInstanceOf[Int])
-      val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.init
-      val z         = periEdges.filter(_.toList.intersect(ns).nonEmpty)
-      pathEndPoints(z.toSet) match {
-        // if the new edges form a path with two endpoints
-        case Success((end1, end2)) =>
-          if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
-            setNewPerimeter(end1, end2)
-            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
-          } else
-            refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
-        case _ =>
+    if (self.nodes.length == nodes.size)
+      ShapedResult(Complete)
+    else {
+      if (edges.isEmpty && nodes.forall(_.degree == 2)) {
+        val ns        = nodes.toList.map(_.toOuter.asInstanceOf[Int])
+        val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.init
+        val z         = periEdges.filter(_.toList.intersect(ns).nonEmpty)
+        pathEndPoints(z.toSet) match {
+          // if the new edges form a path with two endpoints
+          case Success((end1, end2)) =>
+            if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
+              setNewPerimeter(end1, end2)
+              ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
+            } else
+              refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
+          case _ =>
+        }
       }
+      self.asInstanceOf[Tiling].cleanPerimeter
+      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, Nil)
     }
-    self.asInstanceOf[Tiling].cleanPerimeter
-    ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, Nil)
   }
 
   /** Check the whole `newGraph`. */
