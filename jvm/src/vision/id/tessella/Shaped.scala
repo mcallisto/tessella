@@ -297,9 +297,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     else {
       if (edges.isEmpty && nodes.forall(_.degree == 2)) {
         val ns        = nodes.toList.map(_.toOuter.asInstanceOf[Int])
-        val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.init
-        val z         = periEdges.filter(_.toList.intersect(ns).nonEmpty)
-        pathEndPoints(z.toSet) match {
+        val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.filter(_.toList.intersect(ns).nonEmpty)
+        pathEndPoints(periEdges.toSet) match {
           // if the new edges form a path with two endpoints
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
