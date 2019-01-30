@@ -208,11 +208,8 @@ class preSubtractTest extends FlatSpec with AddUtils {
     val t             = Tiling.squareNet(2, 2)
     val originalEdges = t.edges.toString
     val originalSize  = t.edges.length
-    setLogLevel(Level.DEBUG)
     assert(Try(t -- Set(9)).isSuccess)
     assert(t.edges.length === originalSize)
-    println("pre:  " + originalEdges)
-    println("post: " + t.edges.toString)
     assert(t.edges.toString === originalEdges)
   }
 
@@ -221,11 +218,8 @@ class preSubtractTest extends FlatSpec with AddUtils {
     val t             = Tiling.squareNet(2, 2) - 9
     val originalEdges = t.edges.toString
     val originalSize  = t.edges.length
-    setLogLevel(Level.DEBUG)
     assert(Try(t -- Set(1)).isFailure)
     assert(t.edges.length === originalSize)
-    println("pre:  " + originalEdges)
-    println("post: " + t.edges.toString)
     assert(t.edges.toString === originalEdges)
   }
 

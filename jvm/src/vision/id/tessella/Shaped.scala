@@ -85,10 +85,6 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     if (!attachedToPerimeter(end1, end2))
       refusal("endpoints of single edge " + end1 + "~" + end2 + " must be both on perimeter", isAddition)
 
-  private def setNewPerimeter(end1: Int, end2: Int): Unit =
-    selfPathEdges(end1, end2, onPerimeter = false).foreach(edge =>
-      (self.asInstanceOf[Tiling] get edge).isPerimeter = Some(true))
-
   /**
     * Single edge must be attached to perimeter
     * There is a special case where the perimeter can be calculated
@@ -242,8 +238,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           else {
             // find existing non perimeter edges and transform to perimeter
             val (end1, end2) = periNodes.circularNeighborsOf(n).safeGet()
-            setNewPerimeter(end1, end2)
-            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
+            val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
+            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges)
           }
         case _ =>
           if (RegPgon.edgesNumberToPgon.get(periNodes.length).isDefined &&
@@ -269,12 +265,15 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     checkBothOnPerimeter(end1, end2, isAddition = false)
 
     val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.init
-    if (periEdges.contains(edge.toOuter.asInstanceOf[Side[Int]])) {
-      if (edge.toList.exists(_.degree == 2))
-        refusal("perimeter edge " + edge.toString + " has node of degree 2", isAddition = false)
-      setNewPerimeter(end1, end2)
-    }
-    ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
+    val newPerimeterEdges =
+      if (periEdges.contains(edge.toOuter.asInstanceOf[Side[Int]])) {
+        if (edge.toList.exists(_.degree == 2))
+          refusal("perimeter edge " + edge.toString + " has node of degree 2", isAddition = false)
+        selfPathEdges(end1, end2, onPerimeter = false).toList
+      } else {
+        Nil
+      }
+    ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges)
   }
 
   /**
@@ -297,15 +296,15 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           // if the new edges form a path with two endpoints
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
-              setNewPerimeter(end1, end2)
-              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
+              val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
+              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges.toList)
             } else
               refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
           case _ =>
         }
       }
       lazyDebug("self2 " + self)
-//      self.asInstanceOf[Tiling].cleanPerimeter
+      // @todo use a better flag to signal to recalculate perimeter
       ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, List(Side(-1, -2)))
     }
   }
@@ -333,13 +332,26 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           refusal("graph not connected")
     }
     preCheck match {
+      case r: ShapedResult if r.oldPerimeterEdges.nonEmpty =>
+        newGraph.edges
+          .foreach(edge =>
+            if (r.oldPerimeterEdges.contains(edge.toOuter)) edge.asInstanceOf[Tiling#EdgeT].isPerimeter = Some(true))
+      case _ =>
+    }
+    preCheck match {
       case r: ShapedResult =>
-        if (r.oldPerimeterEdges.nonEmpty || !newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
+        if (r.oldPerimeterEdges == List(Side(-1, -2)) || !newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
           lazyDebug("> computing perimeter")
           if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
             refusal("could not build perimeter")
         }
       case _ =>
+    }
+
+    if (!newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
+      lazyDebug("> computing perimeter")
+      if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
+        refusal("could not build perimeter")
     }
     lazyDebug("> checking perimeter polygon")
     if (newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isFailure) {
