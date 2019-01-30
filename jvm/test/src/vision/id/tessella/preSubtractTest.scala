@@ -2,8 +2,9 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
-
 import vision.id.tessella.Tessella.Tiling
+
+import scala.util.Try
 
 class preSubtractTest extends FlatSpec with AddUtils {
 
@@ -109,4 +110,21 @@ class preSubtractTest extends FlatSpec with AddUtils {
     assertThrows[IllegalArgumentException](Tiling.squareNet(4, 2) --= Set(7, 8))
   }
 
+  // ---------------- miscellaneous ----------------
+
+  "Fail to '=-' modify subtract" must "anyway modify the mutable Tiling" in {
+    val t = Tiling.squareNet(2, 2) - 9
+    val originalEdges = t.edges.toString
+    val originalSize = t.edges.length
+    assert(Try(t -= 1).isFailure)
+    assert(t.edges.toString !== originalEdges)
+    assert(t.edges.length < originalSize)
+  }
+
+  "Fail to '-' subtract" must "NOT modify the mutable Tiling" in {
+    val t = Tiling.squareNet(2, 2) - 9
+    val originalEdges = t.edges.toString
+    assert(Try(t - 1).isFailure)
+    assert(t.edges.toString === originalEdges)
+  }
 }
