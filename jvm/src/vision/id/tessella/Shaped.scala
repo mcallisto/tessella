@@ -4,8 +4,6 @@ import scala.collection.Set
 import scala.language.{higherKinds, postfixOps}
 import scala.util.Success
 
-import ch.qos.logback.classic.Level
-import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 
 import scalax.collection.GraphPredef._
@@ -24,11 +22,6 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     with TilingUtils {
 
   // ------------- logging -------------
-
-  LoggerFactory
-    .getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-    .asInstanceOf[ch.qos.logback.classic.Logger]
-    .setLevel(Level.WARN)
 
   override lazy val logger = Logger("SHAPED")
 
@@ -236,6 +229,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   override def preSubtract(node: self.NodeT, forced: Boolean): ShapedResult = {
     lazyInfo("Starting pre-subtract node " + node.toString)
     lazyDebug("forced " + forced)
+    lazyDebug("self " + self)
 
     if (node.degree == 6) {
       ShapedResult(Complete)
@@ -291,6 +285,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     lazyDebug("nodes " + nodes.toString)
     lazyDebug("edges " + edges.toString)
     lazyDebug("simple " + simple)
+    lazyDebug("self  " + self)
 
     if (self.nodes.length == nodes.size)
       ShapedResult(Complete)
@@ -303,14 +298,15 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
               setNewPerimeter(end1, end2)
-              ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
+              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, Nil)
             } else
               refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
           case _ =>
         }
       }
-      self.asInstanceOf[Tiling].cleanPerimeter
-      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, Nil)
+      lazyDebug("self2 " + self)
+//      self.asInstanceOf[Tiling].cleanPerimeter
+      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, List(Side(-1, -2)))
     }
   }
 
@@ -336,11 +332,14 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
         if (!newGraph.isConnected)
           refusal("graph not connected")
     }
-    if (!newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
-      lazyDebug("> computing perimeter")
-
-      if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
-        refusal("could not build perimeter")
+    preCheck match {
+      case r: ShapedResult =>
+        if (r.oldPerimeterEdges.nonEmpty || !newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
+          lazyDebug("> computing perimeter")
+          if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
+            refusal("could not build perimeter")
+        }
+      case _ =>
     }
     lazyDebug("> checking perimeter polygon")
     if (newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isFailure) {
