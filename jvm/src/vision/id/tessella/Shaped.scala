@@ -36,17 +36,19 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   protected class ShapedResult(followUp: PreCheckFollowUp,
                                val positiveChecked: Boolean,
                                val gapChecked: Boolean,
+                               val periRecalc: Boolean,
                                val oldPerimeterEdges: List[Side[Int]])
       extends PreCheckResult(followUp)
 
   protected object ShapedResult extends PreCheckResultCompanion {
     def apply(followUp: PreCheckFollowUp) =
-      new ShapedResult(followUp, false, false, Nil)
+      new ShapedResult(followUp, false, false, periRecalc = false, Nil)
     def apply(followUp: PreCheckFollowUp,
               positiveChecked: Boolean,
               gapChecked: Boolean,
+              periRecalc: Boolean,
               oldPerimeterEdges: List[Side[Int]]) =
-      new ShapedResult(followUp, positiveChecked, gapChecked, oldPerimeterEdges)
+      new ShapedResult(followUp, positiveChecked, gapChecked, periRecalc, oldPerimeterEdges)
   }
 
   // ------------- checks -------------
@@ -107,7 +109,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
         selfPathEdges(end1, end2).toList
       }
 
-    ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, oldPerimeterEdges)
+    ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, periRecalc = false, oldPerimeterEdges)
   }
 
   /**
@@ -154,7 +156,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       case _ => (false, Nil)
     }
 
-    ShapedResult(PostCheck, positiveChecked = true, gapChecked, oldPerimeterEdges)
+    ShapedResult(PostCheck, positiveChecked = true, gapChecked, periRecalc = false, oldPerimeterEdges)
   }
 
   private def checkGap(newGraph: Graph[N, E], preCheck: PreCheckResult, isAddition: Boolean = true): Unit =
@@ -239,7 +241,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
             // find existing non perimeter edges and transform to perimeter
             val (end1, end2) = periNodes.circularNeighborsOf(n).safeGet()
             val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
-            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges)
+            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
           }
         case _ =>
           if (RegPgon.edgesNumberToPgon.get(periNodes.length).isDefined &&
@@ -273,7 +275,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       } else {
         Nil
       }
-    ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges)
+    ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
   }
 
   /**
@@ -297,15 +299,13 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
               val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
-              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, newPerimeterEdges.toList)
+              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
             } else
               refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
           case _ =>
         }
       }
-      lazyDebug("self2 " + self)
-      // @todo use a better flag to signal to recalculate perimeter
-      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, List(Side(-1, -2)))
+      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, periRecalc = true, Nil)
     }
   }
 
@@ -340,18 +340,12 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     }
     preCheck match {
       case r: ShapedResult =>
-        if (r.oldPerimeterEdges == List(Side(-1, -2)) || !newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
+        if (r.periRecalc || !newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
           lazyDebug("> computing perimeter")
           if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
             refusal("could not build perimeter")
         }
       case _ =>
-    }
-
-    if (!newGraph.asInstanceOf[Tiling].hasPerimeterSet) {
-      lazyDebug("> computing perimeter")
-      if (newGraph.asInstanceOf[Tiling].setPerimeter.isFailure)
-        refusal("could not build perimeter")
     }
     lazyDebug("> checking perimeter polygon")
     if (newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isFailure) {
