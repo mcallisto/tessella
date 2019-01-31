@@ -140,75 +140,75 @@ trait TilingUtils
       // clone mutable tiling
       val t = tiling.clone()
 
-      def loop(ps: List[Polygon]): List[Polygon] = {
+      def loop(ps: List[Polygon]): List[Polygon] =
         if (t.isEmpty) ps
         else {
 
-//          println("t: " + t)
-
-          def isOnPerimeter(n: t.NodeT): Boolean =
-            n.degree == 2 || n.outgoing.exists(_.isPerimeter.contains(true))
+          def isOnPerimeter(n: t.NodeT): Boolean = n.degree == 2 || n.outgoing.exists(_.isPerimeter.contains(true))
 
           val tPeriNodes = t.nodes.filter(isOnPerimeter)
-//          println(tPeriNodes)
 
-          def getPeriNeighbors(n: t.NodeT): List[Int] =
-            n.neighbors.intersect(tPeriNodes).toList.map(_.toOuter)
+          def onPeri(neighbors: Set[t.NodeT]): Set[t.NodeT] = neighbors.intersect(tPeriNodes)
 
-          def safeRemoval(n: t.NodeT, dryrun: Boolean): Boolean = {
+          def subtractableNodes(n: t.NodeT, neighbors: Set[t.NodeT]): Set[t.NodeT] =
+            onPeri(neighbors).toList.foldLeft(Set(): Set[t.NodeT])((s, adj) =>
+              n.withSubgraph(edges = _.isPerimeter.contains(true), nodes = _ != adj) pathUntil (_.degree > 2) match {
+                case None       => s ++ Set(n)
+                case Some(path) => s ++ path.nodes.init
+            })
 
-//            println("node checked: " + n)
-            val subtract: Set[t.NodeT] =
-              if (tPeriNodes.forall(_.degree == 2)) tPeriNodes.toSet
-              else
-                n.withSubgraph(edges = _.isPerimeter.contains(true)) pathUntil (_.degree > 2) match {
-                  case None       => Set(n)
-                  case Some(path) =>
-//                    println("first path " + path)
-                    val block = path.nodes.toList(1)
-//                    println("block " + block)
-                    n.withSubgraph(edges = _.isPerimeter.contains(true), nodes = _ != block) pathUntil (_.degree > 2) match {
-                      case None             => path.nodes.init.toSet
-                      case Some(other_path) =>
-//                        println("second path " + other_path)
-                        (path.nodes.init ++ other_path.nodes.init).toSet
-                    }
+          def getWorkableNode(): Option[(t.NodeT, Set[t.NodeT])] =
+            if (tPeriNodes.forall(_.degree == 2)) {
+              val n     = tPeriNodes.toList.safeHead
+              val neigh = n.neighbors
+              t --= tPeriNodes
+              Some(n, neigh)
+            } else {
+              t.nodes
+                .filter(_.degree == 2)
+                .foreach(n => {
+                  val hood                   = n.neighbors
+                  val subtract: Set[t.NodeT] = subtractableNodes(n, hood)
+                  if (Try(t -- subtract).isSuccess) {
+                    t --= subtract
+                    return Some(n, hood)
+                  }
+                })
+              None
+            }
+
+          def getWorkableNode2(): Option[(t.NodeT, Set[t.NodeT])] = {
+            t.nodes
+              .filter(n => n.degree == 3 && tPeriNodes.contains(n))
+              .foreach(n => {
+                val hood = n.neighbors
+                if (Try(t - n).isSuccess) {
+                  t -= n
+                  return Some(n, hood)
                 }
-//            println("subtract: " + subtract)
-            if (dryrun) {
-              Try(t.clone() --= subtract).isSuccess
-            } else
-              Try(t --= subtract).isSuccess
+              })
+            None
           }
 
-          def isWorkable(n: t.NodeT, degree: Int): Boolean =
-            n.degree == degree && tPeriNodes.contains(n) && safeRemoval(n, dryrun = true)
-
-          t.nodes.find(isWorkable(_, 2)) match {
-            case Some(n) =>
-//              println("n found degree2: " + n)
-              val neighbors = getPeriNeighbors(n)
-//              println("neighbors: " + neighbors)
-              val p = nm.createPoly(n.toOuter, neighbors.head, neighbors(1))
-              safeRemoval(n, dryrun = false)
+          getWorkableNode() match {
+            case Some((n, neighbors)) =>
+              val neighborsOnPeri = onPeri(neighbors).toList.map(_.toOuter)
+              val p               = nm.createPoly(n.toOuter, neighborsOnPeri.safeHead, neighborsOnPeri.safeLast)
               loop(ps :+ p)
             case None =>
-              t.nodes.find(isWorkable(_, 3)) match {
+              getWorkableNode2() match {
                 case None => throw new NoSuchElementException("found no 3-degree nodes")
-                case Some(n) =>
-                  val neighbors = n.neighbors.toList.map(_.toOuter)
-                  neighbors.diff(getPeriNeighbors(n)).headOption match {
+                case Some((n, neighbors)) =>
+                  neighbors.diff(onPeri(neighbors)).headOption match {
                     case None => throw new NoSuchElementException("found no internal node")
                     case Some(internal) =>
-                      val twoPs = for (external <- neighbors.diff(List(internal)))
-                        yield nm.createPoly(n.toOuter, internal, external)
-                      safeRemoval(n, dryrun = false)
+                      val twoPs = for (external <- neighbors - internal)
+                        yield nm.createPoly(n.toOuter, internal.toOuter, external.toOuter)
                       loop(ps ++ twoPs)
                   }
               }
           }
         }
-      }
 
       loop(Nil).distinctBy(_.barycenter == _.barycenter)
     }

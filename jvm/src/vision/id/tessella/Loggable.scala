@@ -12,5 +12,6 @@ trait Loggable {
       .setLevel(level)
 
   val WARN: Level = Level.WARN
+  val INFO: Level = Level.INFO
 
 }
