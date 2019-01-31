@@ -157,18 +157,18 @@ trait TilingUtils
                 case Some(path) => s ++ path.nodes.init
             })
 
-          def getWorkableNode(): Option[(t.NodeT, Set[t.NodeT])] =
-            if (tPeriNodes.forall(_.degree == 2)) {
+          def getSubtraction(degree: Int): Option[(t.NodeT, Set[t.NodeT])] =
+            if (degree == 2 && tPeriNodes.forall(_.degree == 2)) {
               val n     = tPeriNodes.toList.safeHead
               val neigh = n.neighbors
               t --= tPeriNodes
               Some(n, neigh)
             } else {
               t.nodes
-                .filter(_.degree == 2)
+                .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true) )
                 .foreach(n => {
                   val hood                   = n.neighbors
-                  val subtract: Set[t.NodeT] = subtractableNodes(n, hood)
+                  val subtract: Set[t.NodeT] = if (degree == 3) Set(n) else subtractableNodes(n, hood)
                   if (Try(t -- subtract).isSuccess) {
                     t --= subtract
                     return Some(n, hood)
@@ -177,26 +177,14 @@ trait TilingUtils
               None
             }
 
-          def getWorkableNode2(): Option[(t.NodeT, Set[t.NodeT])] = {
-            t.nodes
-              .filter(n => n.degree == 3 && tPeriNodes.contains(n))
-              .foreach(n => {
-                val hood = n.neighbors
-                if (Try(t - n).isSuccess) {
-                  t -= n
-                  return Some(n, hood)
-                }
-              })
-            None
-          }
-
-          getWorkableNode() match {
+          getSubtraction(2) match {
             case Some((n, neighbors)) =>
-              val neighborsOnPeri = onPeri(neighbors).toList.map(_.toOuter)
-              val p               = nm.createPoly(n.toOuter, neighborsOnPeri.safeHead, neighborsOnPeri.safeLast)
-              loop(ps :+ p)
+              onPeri(neighbors).toList.map(_.toOuter) match {
+                case f :: s :: Nil => loop(ps :+ nm.createPoly(n.toOuter, f, s))
+                case _ => throw new Error
+              }
             case None =>
-              getWorkableNode2() match {
+              getSubtraction(3) match {
                 case None => throw new NoSuchElementException("found no 3-degree nodes")
                 case Some((n, neighbors)) =>
                   neighbors.diff(onPeri(neighbors)).headOption match {
