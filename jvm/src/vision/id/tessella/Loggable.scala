@@ -5,13 +5,10 @@ import org.slf4j.LoggerFactory
 
 trait Loggable {
 
-  def setLogLevel(level: Level): Unit =
+  def setLogLevel(sArg: String): Unit =
     LoggerFactory
       .getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
       .asInstanceOf[ch.qos.logback.classic.Logger]
-      .setLevel(level)
-
-  val WARN: Level = Level.WARN
-  val INFO: Level = Level.INFO
+      .setLevel(Level.valueOf(sArg))
 
 }

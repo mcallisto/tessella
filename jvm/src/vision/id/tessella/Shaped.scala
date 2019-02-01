@@ -59,8 +59,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   /** Skips this pre-check to rely on the post-check `postAdd` except for trivial cases. */
   override def preCreate(nodes: Traversable[N], edges: Traversable[E[N]]): PreCheckResult = {
     lazyInfo("Starting pre-create")
-    lazyDebug("nodes: " + nodes.toString)
-    lazyDebug("edges" + edges.toString)
+    lazyTrace("nodes: " + nodes.toString)
+    lazyTrace("edges" + edges.toString)
 
     PreCheckResult(PostCheck)
   }
@@ -174,9 +174,9 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
                        passedEdges: Traversable[E[N]],
                        preCheck: PreCheckResult): Boolean = {
     lazyInfo("Starting post-add")
-    lazyDebug("newGraph " + newGraph)
-    lazyDebug("passedNodes " + passedNodes)
-    lazyDebug("passedEdges " + passedEdges)
+    lazyTrace("newGraph " + newGraph)
+    lazyTrace("passedNodes " + passedNodes)
+    lazyTrace("passedEdges " + passedEdges)
 
     preCheck match {
       case r: ShapedResult if r.positiveChecked =>
@@ -214,6 +214,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       refusal("perimeter is not a simple polygon")
     }
     checkGap(newGraph, preCheck)
+
+    lazyDebug("> all checks done")
     true
   }
 
@@ -239,7 +241,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
             refusal("non removable perimeter node " + node.toString, isAddition = false)
           else {
             // find existing non perimeter edges and transform to perimeter
-            val (end1, end2) = periNodes.circularNeighborsOf(n).safeGet()
+            val (end1, end2)      = periNodes.circularNeighborsOf(n).safeGet()
             val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
             ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
           }
@@ -299,7 +301,11 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
               val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
-              return ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
+              return ShapedResult(PostCheck,
+                                  positiveChecked = true,
+                                  gapChecked = true,
+                                  periRecalc = false,
+                                  newPerimeterEdges)
             } else
               refusal("perimeter nodes form a path adjacent to perimeter node of degree 2", isAddition = false)
           case _ =>
@@ -353,13 +359,9 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     }
     checkGap(newGraph, preCheck, isAddition = false)
 
+    lazyDebug("> all checks done")
     true
   }
-
-  override def onAdditionRefused(refusedNodes: Traversable[N],
-                                 refusedEdges: Traversable[E[N]],
-                                 graph: Graph[N, E]): Boolean =
-    refusal("nodes = " + refusedNodes + ", " + "edges = " + refusedEdges)
 
 }
 

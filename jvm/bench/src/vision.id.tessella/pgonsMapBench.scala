@@ -7,9 +7,9 @@ import vision.id.tessella.Tessella.Tiling
 
 class pgonsMapBench extends FlatSpec with TilingUtils with Loggable {
 
-  setLogLevel(WARN)
+  setLogLevel("WARN")
 
-  "Method pgonsMap" must "must execute in less than 2 seconds" in {
+  "Method pgonsMap" must "execute in less than 2 seconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true

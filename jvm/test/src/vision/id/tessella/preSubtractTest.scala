@@ -9,7 +9,7 @@ import vision.id.tessella.Tessella.Tiling
 
 class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
-  setLogLevel(WARN)
+  setLogLevel("WARN")
 
   // ---------------- subtracting single node ----------------
 
