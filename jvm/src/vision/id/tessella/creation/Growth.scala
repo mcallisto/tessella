@@ -85,6 +85,13 @@ trait Growth extends AddUtils {
     case n => fromVertex(pattern).expPatterns(List(pattern), size - n, infinite)
   }
 
+  def expandPattern2(pattern: Full, size: Int = 100, infinite: Boolean = false): Try[Tiling] = pattern.pgonsNumber match {
+    case less if size <= less => Try(fromVertex2(Vertex(pattern.ps.take(size))))
+    case n =>
+      val t = fromVertex2(pattern)
+      t.expPatterns2(List(pattern), size - n, infinite).map(_ => t)
+  }
+
   /**
     * all tessellations from 1 to given size grown by respecting only 1 pattern
     *
