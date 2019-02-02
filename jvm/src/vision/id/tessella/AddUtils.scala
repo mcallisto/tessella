@@ -126,6 +126,9 @@ trait AddUtils extends TilingUtils with MathUtils {
       def addPgonOfEdges(edgesNumber: Int): Try[Tiling] =
         edge.additionalEdges(edgesNumber).flatMap({ case (newPerimeterEdges, _) => Try(tiling ++ newPerimeterEdges) })
 
+      def addPgonOfEdges2(edgesNumber: Int): Try[Unit] =
+        edge.additionalEdges(edgesNumber).flatMap({ case (newPerimeterEdges, _) => Try(tiling ++= newPerimeterEdges) })
+
       def minFirstEndpoint: (tiling.NodeT, tiling.NodeT) = edge.nodes.toList match {
         case f :: s :: Nil if f < s => (f, s)
         case f :: s :: Nil          => (s, f)
@@ -135,6 +138,8 @@ trait AddUtils extends TilingUtils with MathUtils {
     }
 
     def addToEdgePgon(edge: Side[Int], edgesNumber: Int): Try[Tiling] = (tiling get edge).addPgonOfEdges(edgesNumber)
+
+    def addToEdgePgon2(edge: Side[Int], edgesNumber: Int): Try[Unit] = (tiling get edge).addPgonOfEdges2(edgesNumber)
 
     type EdgeNumbers = Int
 

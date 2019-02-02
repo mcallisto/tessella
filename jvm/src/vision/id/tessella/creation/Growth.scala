@@ -1,6 +1,6 @@
 package vision.id.tessella.creation
 
-import scala.util.Try
+import scala.util.{Success, Try}
 import vision.id.tessella._
 import vision.id.tessella.Tessella.Tiling
 
@@ -30,6 +30,18 @@ trait Growth extends AddUtils {
     case _ => throw new Error
   }
 
+  def fromVertex2(v: Vertex): Tiling = v.edgesNumbers match {
+    case edgesNumber :: numbers =>
+      val t: Tiling = regPgonTiling(edgesNumber).safeGet
+      numbers.foldLeft(edgesNumber)({
+        case (count, number) =>
+          t.addToEdgePgon2(Side(1, count), number).safeGet
+          count + number - 2
+      })
+      t
+    case _ => throw new Error
+  }
+
   /**
     * all tessellations grown from start to given vertex adding one p-gon at a time
     *
@@ -43,6 +55,20 @@ trait Growth extends AddUtils {
         .map({
           case (tiling, _) => tiling.safeGet
         })
+    case _ => throw new Error
+  }
+
+  def scanVertex2(v: Vertex): List[Tiling] = v.edgesNumbers match {
+    case edgesNumber :: numbers =>
+      val t: Tiling = regPgonTiling(edgesNumber).safeGet
+      val (ts, _) = numbers
+        .foldLeft(List(t), edgesNumber)({
+          case ((tilings, count), number) =>
+            val c = tilings.head.clone()
+            c.addToEdgePgon2(Side(1, count), number).safeGet
+            (c +: tilings, count + number - 2)
+        })
+      ts.reverse
     case _ => throw new Error
   }
 
