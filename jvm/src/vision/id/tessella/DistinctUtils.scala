@@ -1,5 +1,7 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
+
 trait DistinctUtils[T] {
 
   final implicit class Dist(l: List[T]) {
@@ -13,6 +15,7 @@ trait DistinctUtils[T] {
     def distinctBy(f: (T, T) => Boolean): List[T] = l match {
       case Nil => Nil
       case h :: t =>
+        @tailrec
         def loop(ll: List[T], acc: List[T]): List[T] = ll match {
           case Nil => acc.reverse
           case hh :: tt =>
@@ -32,6 +35,7 @@ trait DistinctUtils[T] {
     def distinctByIndexes(f: (T, T) => Boolean): List[Int] = l match {
       case Nil => Nil
       case h :: t =>
+        @tailrec
         def loop(ll: List[T], i: Int, acc: List[(Int, T)]): List[Int] =
           ll match {
             case Nil => acc.map({ case (index, _) => index }).reverse

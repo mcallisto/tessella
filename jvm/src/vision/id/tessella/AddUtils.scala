@@ -1,11 +1,13 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+
 import scalax.collection.GraphEdge.UnDiEdge
+
 import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Polar.RegularPgon
 import vision.id.tessella.Tau.TAU
-
-import scala.util.{Failure, Success, Try}
 
 trait AddUtils extends TilingUtils with MathUtils {
 
@@ -40,6 +42,7 @@ trait AddUtils extends TilingUtils with MathUtils {
       def getAttachNode(a: Double, dir: Boolean): Try[(Int, List[tiling.EdgeT])] = {
         val ns = node.startNodes(dir)
 
+        @tailrec
         def loop(vertices: List[Vertex], builder: tiling.PathBuilder, index: Int): Try[(Int, List[tiling.EdgeT])] =
           vertices match {
             case Nil => throw new IllegalArgumentException("no more sides")

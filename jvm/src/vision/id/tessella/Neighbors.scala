@@ -1,5 +1,7 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
+
 import vision.id.tessella.Tessella.Tiling
 
 trait Neighbors extends Symmetry with ListUtils {
@@ -22,6 +24,7 @@ trait Neighbors extends Symmetry with ListUtils {
         * @param b   nodes blocking shortest path
         * @return
         */
+      @tailrec
       private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
         case Nil => acc
         case _ =>
@@ -36,6 +39,7 @@ trait Neighbors extends Symmetry with ListUtils {
           )
       }
 
+      @tailrec
       private def findPathFull(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
         case Nil => acc
         case _ =>

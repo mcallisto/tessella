@@ -1,5 +1,6 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 import vision.id.tessella.Tessella.Tiling
@@ -108,6 +109,7 @@ object RegPgon extends TryUtils with ListUtils {
     case _ => Failure(throw new IllegalArgumentException("must start with ("))
   }
 
+  @tailrec
   def listCompare(a: List[RegPgon], b: List[RegPgon]): Int = b match {
     case Nil if a.isEmpty => 0
     case Nil              => 1

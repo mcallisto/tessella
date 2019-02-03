@@ -1,5 +1,6 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 import scalax.collection.Graph
@@ -57,6 +58,7 @@ trait GraphUtils {
     if (g.exists({ case (_, v) => v.size > 2 }))
       throw new IllegalArgumentException("3 or more degrees node")
 
+    @tailrec
     def loop(es: Set[UnDiEdge[Int]], acc: Int): Int = {
       if (es.isEmpty) acc
       else

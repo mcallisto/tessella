@@ -1,5 +1,7 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
+
 trait ListUtils extends OptionUtils with Symmetry {
 
   final implicit class Util[T](l: List[T]) {
@@ -12,6 +14,7 @@ trait ListUtils extends OptionUtils with Symmetry {
 
     def indexesOf(elem: T, from: Int = 0): List[Int] = {
 
+      @tailrec
       def loop(f: Int, acc: List[Int]): List[Int] = l.indexOf(elem, f) match {
         case -1 => acc
         case i  => loop(i + 1, i +: acc)
@@ -46,6 +49,7 @@ trait ListUtils extends OptionUtils with Symmetry {
 
     def headLastConcat: List[List[T]] = {
 
+      @tailrec
       def loop(ts: List[List[T]], acc: List[List[T]]): List[List[T]] = ts match {
         case Nil    => acc
         case h :: t => loop(t, if (sHead(h) == sLast(sHead(acc))) h +: acc else h.reverse +: acc)

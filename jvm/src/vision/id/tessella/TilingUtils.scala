@@ -1,5 +1,6 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 import scalax.collection.Graph
@@ -58,6 +59,7 @@ trait TilingUtils
 
       val size = tiling.nodes.size
 
+      @tailrec
       def loop(nm: NodesMap): NodesMap = {
 
         if (nm.m.size == size) nm
@@ -140,6 +142,7 @@ trait TilingUtils
       // clone mutable tiling
       val t = tiling.clone()
 
+      @tailrec
       def loop(ps: List[Polygon]): List[Polygon] =
         if (t.isEmpty) ps
         else {

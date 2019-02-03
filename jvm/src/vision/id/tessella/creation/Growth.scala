@@ -1,6 +1,7 @@
 package vision.id.tessella.creation
 
-import scala.util.{Success, Try}
+import scala.util.Try
+
 import vision.id.tessella._
 import vision.id.tessella.Tessella.Tiling
 
