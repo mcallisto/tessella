@@ -362,56 +362,9 @@ trait AddUtils extends TilingUtils with MathUtils {
       })
 
     def addPatterns(patterns: List[Full],
-                    infinite: Boolean = false,
-                    failed: List[Fail] = Nil,
-                    mandatory: Boolean = false): Try[(Tiling, List[Fail])] = {
-
-      val dpatterns = Full.distinct(patterns)
-
-      val candidates: List[EdgeAttr2] = nextCandidates(dpatterns, infinite, mandatory)
-
-      val actualFailed = actualFails(failed)
-
-      val nexts: List[(tiling.EdgeT, Int)] = candidates
-        .map({ case (edge, (edgeNumbers, _), _) => (edge, edgeNumbers) })
-        .diff(actualFailed)
-
-      for (i <- nexts.indices) {
-        val (edge, edgeNumbers) = nexts(i)
-        edge.additionalEdges(edgeNumbers) match {
-          case Success((edges, _)) =>
-            Try(tiling ++ edges) match {
-              case Success(newt) =>
-                def compatibleWithPatternsAtNode(nO: Int, patterns: List[Full]): Boolean =
-                  patterns.exists(p => newt.vertexes(newt.perimeterOrderedNodes.indexOf(nO)).isContainedIn(p))
-
-                pathEndPoints(edges.map(_.asInstanceOf[UnDiEdge[Int]]).toSet) match {
-                  case Success((end1, end2)) =>
-                    // check if the vertex formed at each endpoint is compatible with pattern
-                    val isCompatible = List(end1, end2).forall(n => compatibleWithPatternsAtNode(n, dpatterns))
-                    if (isCompatible) {
-//                      if (!mandatory && dpatterns.lengthCompare(2) == 0 && newt.uniformity() != 2)
-//                        logger.debug("\nfailed not symmetric candidate: " + nexts(i) + newt.graph)
-//                      else
-                      return Success((newt, (actualFailed ++ nexts.take(i)).map({
-                        case (e, edgeNumbers) => (e.toOuter, edgeNumbers)
-                      })))
-                    } //else logger.debug("\nfailed not compatible candidate: " + nexts(i))
-                  case _ => throw new Error
-                }
-              case Failure(e) => //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
-            }
-          case Failure(e) => //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
-        }
-      }
-
-      Failure(new Throwable("cannot find suitable candidate"))
-    }
-
-    def addPatterns2(patterns: List[Full],
-                    infinite: Boolean = false,
-                    failed: List[Fail] = Nil,
-                    mandatory: Boolean = false): Try[List[Fail]] = {
+                     infinite: Boolean = false,
+                     failed: List[Fail] = Nil,
+                     mandatory: Boolean = false): Try[List[Fail]] = {
 
       val dpatterns = Full.distinct(patterns)
 
@@ -456,55 +409,35 @@ trait AddUtils extends TilingUtils with MathUtils {
       Failure(new Throwable("cannot find suitable candidate"))
     }
 
-    /**
-      * function adding one or more patterns
-      *
-      * @param patterns full vertexes
-      * @param infinite if true, it should return Failure early if an unsuitable angle for growth is spotted
-      * @return
-      */
-    def addTry(patterns: List[Full],
-               infinite: Boolean = false,
-               mandatory: Boolean = false): (Try[(Tiling, List[Fail])], Any) => Try[(Tiling, List[Fail])] =
-      (acc, _) => acc.flatMap({ case (t, f) => t.addPatterns(patterns, infinite, failed = f, mandatory) })
-
-    def addTry2(patterns: List[Full],
-               infinite: Boolean = false,
-               mandatory: Boolean = false): (Try[List[Fail]], Any) => Try[List[Fail]] =
-      (acc, _) => acc.flatMap(f => tiling.addPatterns2(patterns, infinite, failed = f, mandatory))
-
-    private def expStart: Try[(Tiling, List[Fail])] = Try(tiling, Nil)
-
-    private def expStart2: Try[List[Fail]] = Try(Nil)
+    private def expStart: Try[List[Fail]] = Try(Nil)
 
     def expPatterns(patterns: List[Full],
-                    steps: Int,
-                    infinite: Boolean = false,
-                    mandatory: Boolean = false): Try[Tiling] = {
+                     steps: Int,
+                     infinite: Boolean = false,
+                     mandatory: Boolean = false): Try[Unit] = {
       (0 until steps)
-        .foldLeft(expStart)(addTry(patterns, infinite, mandatory))
-        .flatMap({ case (t, _) => Success(t) })
-    }
-
-    def expPatterns2(patterns: List[Full],
-                    steps: Int,
-                    infinite: Boolean = false,
-                    mandatory: Boolean = false): Try[Unit] = {
-      (0 until steps)
-        .foldLeft(expStart2)(addTry2(patterns, infinite, mandatory))
+        .foldLeft(expStart)((acc, _) =>
+          acc.flatMap(f => tiling.addPatterns(patterns, infinite, failed = f, mandatory)))
         .flatMap({ case _ => Success(()) })
     }
 
-
     def scanPatterns(patterns: List[Full],
-                     steps: Int,
-                     infinite: Boolean = false,
-                     mandatory: Boolean = false): List[Try[Tiling]] = {
-      (0 until steps)
-        .scanLeft(expStart)(addTry(patterns, infinite, mandatory))
-        .map(_.flatMap({ case (t, _) => Success(t) }))
-        .toList
+                      steps: Int,
+                      infinite: Boolean = false,
+                      mandatory: Boolean = false): List[Try[Tiling]] = {
+      val (_, ts) = (0 until steps)
+        .foldLeft((expStart, List(Try(tiling))))({
+          case ((failed, tilings), _) =>
+            failed match {
+              case Failure(_) => (failed, tilings)
+              case Success(f) =>
+                val c = tilings.head.safeGet.clone()
+                (c.addPatterns(patterns, infinite, failed = f, mandatory), Try(c) +: tilings)
+            }
+        })
+      ts.reverse
     }
+
   }
 
 }

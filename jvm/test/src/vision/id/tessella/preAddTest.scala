@@ -33,7 +33,7 @@ class preAddTest extends FlatSpec with AddUtils {
 
   "Adding a single edge linking two perimeter nodes" can "divide an existing p-gon in a valid way" in {
     assert(
-      (Tiling.fromVertex(Vertex.s("(4*3)")) += Side(1, 3)).edges.toString === "EdgeSet(1-2, 1=3, 5-6, 2-3, 6-7, 6=1, 3-4, 7-8, 4=1, 4-5, 8-1)")
+      (Tiling.fromVertex(Vertex.s("(4*3)")) += Side(1, 3)).edges.toString === "EdgeSet(1-2, 1=3, 5-6, 2-3, 6=1, 6-7, 3-4, 7-8, 4=1, 4-5, 8-1)")
   }
 
   it can "also divide an existing p-gon in NON valid way" in {
