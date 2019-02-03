@@ -5,7 +5,9 @@ import org.scalatest.Matchers._
 
 import vision.id.tessella.Tessella.Tiling
 
-class preAddTest extends FlatSpec with AddUtils {
+class preAddTest extends FlatSpec with AddUtils with Loggable {
+
+  setLogLevel("WARN")
 
   // ---------------- adding single node ----------------
 
