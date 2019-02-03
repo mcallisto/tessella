@@ -42,7 +42,7 @@ trait Growth extends AddUtils {
       val (ts, _) = numbers
         .foldLeft(List(t), edgesNumber)({
           case ((tilings, count), number) =>
-            val c = tilings.head.clone()
+            val c = tilings.safeHead.clone()
             c.addToEdgePgon2(Side(1, count), number).safeGet
             (c +: tilings, count + number - 2)
         })

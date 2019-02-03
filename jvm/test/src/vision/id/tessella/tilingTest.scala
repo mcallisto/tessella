@@ -6,9 +6,11 @@ import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Tessella.Tiling
 
-class tilingTest extends FlatSpec with TilingUtils {
+class tilingTest extends FlatSpec with TilingUtils with Loggable {
 
-//  val oneTriangle: Tessell = TessellGraph.poly(3)
+  setLogLevel("WARN")
+
+  //  val oneTriangle: Tessell = TessellGraph.poly(3)
 //
 //  "A regular triangle" can "be a tessellation" in {
 //    assert(oneTriangle.graph === Graph(1 ~ 2, 2 ~ 3, 3 ~ 1))

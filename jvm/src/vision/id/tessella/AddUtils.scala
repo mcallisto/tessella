@@ -431,7 +431,7 @@ trait AddUtils extends TilingUtils with MathUtils {
             failed match {
               case Failure(_) => (failed, tilings)
               case Success(f) =>
-                val c = tilings.head.safeGet.clone()
+                val c = tilings.safeHead.safeGet.clone()
                 (c.addPatterns(patterns, infinite, failed = f, mandatory), Try(c) +: tilings)
             }
         })
