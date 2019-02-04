@@ -362,9 +362,9 @@ trait AddUtils extends TilingUtils with MathUtils {
       })
 
     def addPatterns(patterns: List[Full],
-                     infinite: Boolean = false,
-                     failed: List[Fail] = Nil,
-                     mandatory: Boolean = false): Try[List[Fail]] = {
+                    infinite: Boolean = false,
+                    failed: List[Fail] = Nil,
+                    mandatory: Boolean = false): Try[List[Fail]] = {
 
       val dpatterns = Full.distinct(patterns)
 
@@ -376,7 +376,7 @@ trait AddUtils extends TilingUtils with MathUtils {
         .map({ case (edge, (edgeNumbers, _), _) => (edge, edgeNumbers) })
         .diff(actualFailed)
 
-      for (i <- nexts.indices) {
+      nexts.indices.find(i => {
         val (edge, edgeNumbers) = nexts(i)
         edge.additionalEdges(edgeNumbers) match {
           case Success((edges, _)) =>
@@ -394,37 +394,38 @@ trait AddUtils extends TilingUtils with MathUtils {
                       //                        logger.debug("\nfailed not symmetric candidate: " + nexts(i) + newt.graph)
                       //                      else
                       tiling ++= edges
-                      return Success((actualFailed ++ nexts.take(i)).map({
-                        case (e, numbers) => (e.toOuter, numbers)
-                      }))
-                    } //else logger.debug("\nfailed not compatible candidate: " + nexts(i))
-                  case _ => throw new Error
+                      true
+                    } else false //else logger.debug("\nfailed not compatible candidate: " + nexts(i))
+                  case _ => false
                 }
-              case Failure(e) => //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
+              case Failure(e) => false //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
             }
-          case Failure(e) => //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
+          case Failure(e) => false //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
         }
+      }) match {
+        case Some(index) =>
+          Success((actualFailed ++ nexts.take(index)).map({
+            case (e, numbers) => (e.toOuter, numbers)
+          }))
+        case None => Failure(new Throwable("cannot find suitable candidate"))
       }
-
-      Failure(new Throwable("cannot find suitable candidate"))
     }
 
     private def expStart: Try[List[Fail]] = Try(Nil)
 
     def expPatterns(patterns: List[Full],
-                     steps: Int,
-                     infinite: Boolean = false,
-                     mandatory: Boolean = false): Try[Unit] = {
+                    steps: Int,
+                    infinite: Boolean = false,
+                    mandatory: Boolean = false): Try[Unit] = {
       (0 until steps)
-        .foldLeft(expStart)((acc, _) =>
-          acc.flatMap(f => tiling.addPatterns(patterns, infinite, failed = f, mandatory)))
+        .foldLeft(expStart)((acc, _) => acc.flatMap(f => tiling.addPatterns(patterns, infinite, failed = f, mandatory)))
         .flatMap({ case _ => Success(()) })
     }
 
     def scanPatterns(patterns: List[Full],
-                      steps: Int,
-                      infinite: Boolean = false,
-                      mandatory: Boolean = false): List[Try[Tiling]] = {
+                     steps: Int,
+                     infinite: Boolean = false,
+                     mandatory: Boolean = false): List[Try[Tiling]] = {
       val (_, ts) = (0 until steps)
         .foldLeft((expStart, List(Try(tiling))))({
           case ((failed, tilings), _) =>
