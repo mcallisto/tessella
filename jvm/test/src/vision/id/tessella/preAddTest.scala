@@ -19,7 +19,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (oneTriangle += 4) should have message
     "Addition refused: " +
-      "cannot add single node 4"
+      "nodes = Set(4), edges = Set()"
 
   // ---------------- adding single edge ----------------
 
@@ -31,7 +31,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares += Side(1, 3)) should have message
     "Addition refused: " +
-      "endpoints of single edge 1~3 must be both on perimeter"
+      "nodes = Set(), edges = Set(1~3)"
 
   "Adding a single edge linking two perimeter nodes" can "divide an existing p-gon in a valid way" in {
     assert(
@@ -62,7 +62,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (oneTriangle ++= Set(Side(3, -4), Side(-4, 1))) should have message
     "Addition refused: " +
-      "added non positive edges = Vector(3~-4, -4~1)"
+      "nodes = Set(), edges = Set(3~-4, -4~1)"
 
   "Adding edges not forming a single path" can "be valid" in {
     assert(
@@ -80,7 +80,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares ++= Set(Side(1, 10), Side(10, 3))) should have message
     "Addition refused: " +
-      "endpoints of edges path must be both on perimeter Vector(1~10, 10~3)"
+      "nodes = Set(), edges = Set(1~10, 10~3)"
 
   "Adding edges forming a single path linking two perimeter nodes 'from the inside'" must "NOT be valid" in {
     assertThrows[IllegalArgumentException](fourSquares ++= Set(Side(2, 10), Side(10, 11), Side(11, 4)))
@@ -88,7 +88,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares ++= Set(Side(2, 10), Side(10, 11), Side(11, 4))) should have message
     "Addition refused: " +
-      "endpoints of edges connecting 'from the inside' of the perimeter Vector(2~10, 10~11, 11~4)"
+      "nodes = Set(), edges = Set(2~10, 10~11, 11~4)"
 
   "Adding edges forming a single path linking two perimeter adjacent nodes" can "be valid" in {
     assert((oneTriangle ++= Set(Side(3, 4), Side(4, 1))).edges.toString === "EdgeSet(1-2, 2-3, 3=1, 3-4, 4-1)")

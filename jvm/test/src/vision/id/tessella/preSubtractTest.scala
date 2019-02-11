@@ -30,7 +30,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= 1) should have message
     "Subtraction refused: " +
-      "non removable non perimeter node 1"
+      "nodes = Set(1), edges = Set()"
 
   "Subtracting a perimeter node adjacent to another 2-degree node" must "NOT be valid" in {
     assertThrows[IllegalArgumentException](octagonFull -= 2)
@@ -38,7 +38,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= 2) should have message
     "Subtraction refused: " +
-      "non removable perimeter node 2"
+      "nodes = Set(2), edges = Set()"
 
   def fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
 
@@ -58,7 +58,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= Side(1, 2)) should have message
     "Subtraction refused: " +
-      "endpoints of single edge 1~2 must be both on perimeter"
+      "nodes = Set(), edges = Set(1~2)"
 
   "Subtracting an non perimeter edge whose endpoints are on the perimeter" can "be valid" in {
     assert((Tiling.fromVertex(Vertex.s("(3*2)")) -= Side(1, 3)) === Square.toTiling)
@@ -74,7 +74,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares -= Side(2, 3)) should have message
     "Subtraction refused: " +
-      "perimeter edge 2~3 has node of degree 2"
+      "nodes = Set(), edges = Set(2~3)"
 
   "Subtracting a perimeter edge with > 2-degree nodes" must "be valid" in {
     assert(
@@ -103,7 +103,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull --= Set(5, 6)) should have message
     "Subtraction refused: " +
-      "perimeter nodes form a path adjacent to perimeter node of degree 2"
+      "nodes = Set(5, 6), edges = Set()"
 
   "Subtracting perimeter 2-degree nodes forming a single path not adjacent only to > 2-degree nodes" must "be valid" in {
     assert(
