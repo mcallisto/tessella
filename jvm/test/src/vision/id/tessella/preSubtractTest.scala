@@ -5,6 +5,8 @@ import scala.util.Try
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
+import scalax.collection.GraphPredef.Param
+
 import vision.id.tessella.Tessella.Tiling
 
 class preSubtractTest extends FlatSpec with AddUtils with Loggable {
@@ -143,6 +145,12 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   "Failure of '-=' subtract" must "anyway modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ -= 1
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
+  }
+
+  "Equivalent" must "anyway modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ --= List[Param[Int, Side]](1, Side(1, 2), Side(1, 4))
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === true)
   }

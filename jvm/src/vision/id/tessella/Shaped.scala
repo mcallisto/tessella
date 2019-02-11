@@ -185,9 +185,14 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
                        passedEdges: Traversable[E[N]],
                        preCheck: PreCheckResult): Boolean = {
     lazyInfo("Starting post-add")
-    lazyTrace("newGraph " + newGraph)
-    lazyTrace("passedNodes " + passedNodes)
-    lazyTrace("passedEdges " + passedEdges)
+    lazyDebug("newGraph: " + newGraph)
+    lazyDebug("passedNodes: " + passedNodes)
+    lazyDebug("passedEdges: " + passedEdges)
+    lazyTrace("preCheck: " + (preCheck match {
+      case r: ShapedResult =>
+        r.positiveChecked + " " + r.gapChecked + " " + r.periRecalc + " " + r.oldPerimeterEdges
+      case _ => ""
+    }))
 
     def positiveCheck: Boolean =
       preCheck match {
@@ -319,10 +324,10 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     * */
   override def preSubtract(nodes: => Set[self.NodeT], edges: => Set[self.EdgeT], simple: Boolean): ShapedResult = {
     lazyInfo("Starting pre-subtract nodes and edges")
-    lazyDebug("nodes " + nodes.toString)
-    lazyDebug("edges " + edges.toString)
-    lazyDebug("simple " + simple)
-    lazyDebug("self  " + self)
+    lazyDebug("nodes: " + nodes.toString)
+    lazyDebug("edges: " + edges.toString)
+    lazyDebug("simple: " + simple)
+    lazyTrace("self: " + self)
 
     if (self.nodes.length == nodes.size)
       ShapedResult(Complete)
@@ -354,11 +359,25 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
                             passedEdges: Traversable[E[N]],
                             preCheck: PreCheckResult): Boolean = {
     lazyInfo("Starting post-subtract")
-    lazyDebug("newGraph " + newGraph)
-    lazyDebug("passedNodes " + passedNodes)
-    lazyDebug("passedEdges " + passedEdges)
+    lazyDebug("newGraph: " + newGraph)
+    lazyDebug("passedNodes: " + passedNodes)
+    lazyDebug("passedEdges: " + passedEdges)
+    lazyTrace("preCheck: " + (preCheck match {
+      case r: ShapedResult =>
+        r.positiveChecked + " " + r.gapChecked + " " + r.periRecalc + " " + r.oldPerimeterEdges
+      case _ => ""
+    }))
 
     lazyDebug("> checking nodes' degree")
+
+    def setEdges(isPerimeter: Option[Boolean] = Some(true)): Unit =
+      preCheck match {
+        case r: ShapedResult if r.oldPerimeterEdges.nonEmpty =>
+      newGraph.edges
+        .foreach(edge =>
+          if (r.oldPerimeterEdges.contains(edge.toOuter)) edge.asInstanceOf[Tiling#EdgeT].isPerimeter = isPerimeter)
+        case _ =>
+      }
 
     def isConnected: Boolean =
       preCheck match {
@@ -369,13 +388,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       }
 
     def hasPerimeter: Boolean = {
-      preCheck match {
-        case r: ShapedResult if r.oldPerimeterEdges.nonEmpty =>
-          newGraph.edges
-            .foreach(edge =>
-              if (r.oldPerimeterEdges.contains(edge.toOuter)) edge.asInstanceOf[Tiling#EdgeT].isPerimeter = Some(true))
-        case _ =>
-      }
+      setEdges()
       preCheck match {
         case r: ShapedResult if r.periRecalc || !newGraph.asInstanceOf[Tiling].hasPerimeterSet =>
           lazyDebug("> computing perimeter")
@@ -389,7 +402,9 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isSuccess
     }
 
-    newGraph.hasRegularNodes && isConnected && hasPerimeter && polygonOk && hasNoGaps(newGraph, preCheck)
+    val isValid = newGraph.hasRegularNodes && isConnected && hasPerimeter && polygonOk && hasNoGaps(newGraph, preCheck)
+    if (!isValid) setEdges(isPerimeter = Some(false))
+    isValid
   }
 
   override def onSubtractionRefused(refusedNodes: Traversable[Graph[N, E]#NodeT],
