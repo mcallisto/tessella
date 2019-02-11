@@ -121,72 +121,66 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   // ---------------- miscellaneous ----------------
 
+  def fourSquaresNet: Tiling = Tiling.squareNet(2, 2)
+
+  def threeSquares: Tiling = fourSquaresNet - 9
+
+  def isModificationSuccessful(t: Tiling, f: Tiling => Tiling): Boolean =
+    Try(f(t)).isSuccess
+
+  def isModified(t: Tiling, f: Tiling => Tiling): Boolean = {
+    val c = t.clone()
+    Try(f(t)) match {
+      case _ => t !== c
+    }
+  }
+
   "Success of '-=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -= 9).isSuccess)
-    assert(t.edges.toString !== originalEdges)
-    assert(t.edges.length < originalSize)
+    val f: Tiling => Tiling = _ -= 9
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === true)
   }
 
   "Failure of '-=' subtract" must "anyway modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -= 1).isFailure)
-    assert(t.edges.toString !== originalEdges)
-    assert(t.edges.length < originalSize)
+    val f: Tiling => Tiling = _ -= 1
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
   }
 
   "Success of '-' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    assert(Try(t - 9).isSuccess)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ - 9
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '-' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    assert(Try(t - 1).isFailure)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ - 1
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === false)
   }
 
   "Success of '--=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t --= Set(9)).isSuccess)
-    assert(t.edges.length < originalSize)
-    assert(t.edges.toString !== originalEdges)
+    val f: Tiling => Tiling = _ --= Set(9)
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === true)
   }
 
   "Failure of '--=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t --= Set(1)).isFailure)
-    assert(t.edges.length < originalSize)
-    assert(t.edges.toString !== originalEdges)
+    val f: Tiling => Tiling = _ --= Set(1)
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
   }
 
   "Success of '--' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -- Set(9)).isSuccess)
-    assert(t.edges.length === originalSize)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ -- Set(9)
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '--' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -- Set(1)).isFailure)
-    assert(t.edges.length === originalSize)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ -- Set(1)
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === false)
   }
 
 }
