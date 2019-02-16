@@ -93,18 +93,23 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
     os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "6-uniform")
     m.foreach({
       case (name, t) =>
-        saveFilePretty(draw(t, labelStyle = 0, markStyle = 1), "out/jvm/test/myAlgos/" + name)
+        saveFilePretty(draw(t, labelStyle = LabelStyle.NONE, markStyle = MarkStyle.GONALITY),
+                       "out/jvm/test/myAlgos/" + name)
     })
   }
 
   def docs(): Unit = {
     val small = Tiling.fromVertex(Vertex.s("(5*2.10)"))
     val big   = Tiling.expandPattern(Full.s("(3.4.6.4)"), 100).safeGet
-    saveFilePretty(draw(big, labelStyle = 2, polys = true), "docs/" + "(▲.■.⬣.■)")
-    saveFilePretty(draw(small, labelStyle = 2, polys = false, perim = false), "docs/" + "(⬟².10)_label")
-    saveFilePretty(draw(small, labelStyle = 0, polys = true, perim = false), "docs/" + "(⬟².10)_filled")
-    saveFilePretty(draw(small, labelStyle = 0, polys = false, perim = true), "docs/" + "(⬟².10)_perimeter")
-    saveFilePretty(draw(Tiling.fiveUniformTwoTwoOne(8, 8), labelStyle = 0, markStyle = 1, perim = false),
+    saveFilePretty(draw(big, labelStyle = LabelStyle.ALL, polys = true), "docs/" + "(▲.■.⬣.■)")
+    saveFilePretty(draw(small, labelStyle = LabelStyle.ALL, polys = false, perim = false), "docs/" + "(⬟².10)_label")
+    saveFilePretty(draw(small, labelStyle = LabelStyle.NONE, polys = true, perim = false), "docs/" + "(⬟².10)_filled")
+    saveFilePretty(draw(small, labelStyle = LabelStyle.NONE, polys = false, perim = true),
+                   "docs/" + "(⬟².10)_perimeter")
+    saveFilePretty(draw(Tiling.fiveUniformTwoTwoOne(8, 8),
+                        labelStyle = LabelStyle.NONE,
+                        markStyle = MarkStyle.GONALITY,
+                        perim = false),
                    "docs/" + "(▲⁶;(⬣³)²;(▲².⬣²)²)")
   }
 
@@ -113,7 +118,7 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
     os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "growth")
     (Full.regularPatterns ++ Full.semiRegularPatterns).foreach(f => {
       val time = measure {
-        saveFilePretty(draw(Tiling.expandPattern(f, 20).safeGet, labelStyle = 0),
+        saveFilePretty(draw(Tiling.expandPattern(f, 20).safeGet, labelStyle = LabelStyle.NONE),
                        "out/jvm/test/myAlgos/growth/" + f.toString)
       }
       println(s"$f time: $time")
@@ -130,10 +135,12 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
       val time = measure {
         scan(i) match {
           case Success(f) =>
-            saveFilePretty(draw(f, labelStyle = 0),
-                           "out/jvm/test/myTest/scan/" + pattern.toString + "_" + List
-                             .fill(size.toString.length - (i + 1).toString.length)("0")
-                             .mkString + (i + 1))
+            saveFilePretty(
+              draw(f, labelStyle = LabelStyle.NONE),
+              "out/jvm/test/myTest/scan/" + pattern.toString + "_" + List
+                .fill(size.toString.length - (i + 1).toString.length)("0")
+                .mkString + (i + 1)
+            )
           case Failure(_) =>
         }
       }
@@ -145,7 +152,7 @@ class outputTest extends FlatSpec with GraphUtils with SVG {
     val wd = os.pwd / "out"
     os.makeDir.all(wd / "jvm" / "test" / "myTest")
     val t = Tiling.threeUniformOneOneOne8(6, 6)
-    saveFilePretty(draw(t, labelStyle = 2, polys = true), "out/jvm/test/myTest/" + "test1")
+    saveFilePretty(draw(t, labelStyle = LabelStyle.ALL, polys = true), "out/jvm/test/myTest/" + "test1")
   }
 
 }

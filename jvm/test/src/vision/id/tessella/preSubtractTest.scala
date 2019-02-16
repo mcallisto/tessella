@@ -5,6 +5,8 @@ import scala.util.Try
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
+import scalax.collection.GraphPredef.Param
+
 import vision.id.tessella.Tessella.Tiling
 
 class preSubtractTest extends FlatSpec with AddUtils with Loggable {
@@ -30,7 +32,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= 1) should have message
     "Subtraction refused: " +
-      "non removable non perimeter node 1"
+      "nodes = Set(1), edges = Set()"
 
   "Subtracting a perimeter node adjacent to another 2-degree node" must "NOT be valid" in {
     assertThrows[IllegalArgumentException](octagonFull -= 2)
@@ -38,12 +40,12 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= 2) should have message
     "Subtraction refused: " +
-      "non removable perimeter node 2"
+      "nodes = Set(2), edges = Set()"
 
   def fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
 
   "Subtracting a perimeter node adjacent only to > 2-degree nodes" can "be valid" in {
-    assert((fourSquares -= 9).edges.toString === "EdgeSet(1-2, 5-6, 2-3, 6-7, 6=1, 3-4, 7-8, 4=1, 4-5, 8-1)")
+    assert((fourSquares -= 9).edges.toString === "EdgeSet(1-2, 5-6, 2-3, 6=1, 6-7, 3-4, 7-8, 4=1, 4-5, 8-1)")
   }
 
   it can "be NOT valid" in {
@@ -58,7 +60,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull -= Side(1, 2)) should have message
     "Subtraction refused: " +
-      "endpoints of single edge 1~2 must be both on perimeter"
+      "nodes = Set(), edges = Set(1~2)"
 
   "Subtracting an non perimeter edge whose endpoints are on the perimeter" can "be valid" in {
     assert((Tiling.fromVertex(Vertex.s("(3*2)")) -= Side(1, 3)) === Square.toTiling)
@@ -74,11 +76,11 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares -= Side(2, 3)) should have message
     "Subtraction refused: " +
-      "perimeter edge 2~3 has node of degree 2"
+      "nodes = Set(), edges = Set(2~3)"
 
   "Subtracting a perimeter edge with > 2-degree nodes" must "be valid" in {
     assert(
-      (Tiling.fromVertex(Full.s("(3*3.4*2)")) -= Side(3, 4)).edges.toString === "EdgeSet(1=2, 5-6, 5=1, 2-3, 6-7, 3-1, 7=1, 7-8, 4-1, 4-5, 8-2)")
+      (Tiling.fromVertex(Full.s("(3*3.4*2)")) -= Side(3, 4)).edges.toString === "EdgeSet(1=2, 5=1, 5-6, 2-3, 6-7, 3-1, 7=1, 7-8, 4-1, 4-5, 8-2)")
   }
 
   // ---------------- subtracting multiple edges / nodes ----------------
@@ -103,11 +105,11 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (octagonFull --= Set(5, 6)) should have message
     "Subtraction refused: " +
-      "perimeter nodes form a path adjacent to perimeter node of degree 2"
+      "nodes = Set(5, 6), edges = Set()"
 
   "Subtracting perimeter 2-degree nodes forming a single path not adjacent only to > 2-degree nodes" must "be valid" in {
     assert(
-      (octagonFull --= Set(5, 6, 7, 8, 9)).edges.toString === "EdgeSet(15-2, 1=2, 2-3, 3-4, 10-11, 10-1, 4-1, 11-12, 12-13, 13-14, 14-15)")
+      (octagonFull --= Set(5, 6, 7, 8, 9)).edges.toString === "EdgeSet(15-2, 1=2, 2-3, 3-4, 10-1, 10-11, 4-1, 11-12, 12-13, 13-14, 14-15)")
   }
 
   "Subtracting non perimeter nodes" can "be valid" in {
@@ -121,72 +123,72 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   // ---------------- miscellaneous ----------------
 
+  def fourSquaresNet: Tiling = Tiling.squareNet(2, 2)
+
+  def threeSquares: Tiling = fourSquaresNet - 9
+
+  def isModificationSuccessful(t: Tiling, f: Tiling => Tiling): Boolean =
+    Try(f(t)).isSuccess
+
+  def isModified(t: Tiling, f: Tiling => Tiling): Boolean = {
+    val c = t.clone()
+    Try(f(t)) match {
+      case _ => t !== c
+    }
+  }
+
   "Success of '-=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -= 9).isSuccess)
-    assert(t.edges.toString !== originalEdges)
-    assert(t.edges.length < originalSize)
+    val f: Tiling => Tiling = _ -= 9
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === true)
   }
 
   "Failure of '-=' subtract" must "anyway modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -= 1).isFailure)
-    assert(t.edges.toString !== originalEdges)
-    assert(t.edges.length < originalSize)
+    val f: Tiling => Tiling = _ -= 1
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
+  }
+
+  "Equivalent" must "anyway modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ --= List[Param[Int, Side]](1, Side(1, 2), Side(1, 4))
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
   }
 
   "Success of '-' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    assert(Try(t - 9).isSuccess)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ - 9
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '-' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    assert(Try(t - 1).isFailure)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ - 1
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === false)
   }
 
   "Success of '--=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t --= Set(9)).isSuccess)
-    assert(t.edges.length < originalSize)
-    assert(t.edges.toString !== originalEdges)
+    val f: Tiling => Tiling = _ --= Set(9)
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === true)
   }
 
   "Failure of '--=' subtract" must "modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t --= Set(1)).isFailure)
-    assert(t.edges.length < originalSize)
-    assert(t.edges.toString !== originalEdges)
+    val f: Tiling => Tiling = _ --= Set(1)
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === true)
   }
 
   "Success of '--' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2)
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -- Set(9)).isSuccess)
-    assert(t.edges.length === originalSize)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ -- Set(9)
+    assert(isModificationSuccessful(fourSquaresNet, f) === true)
+    assert(isModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '--' subtract" must "NOT modify the mutable Tiling" in {
-    val t             = Tiling.squareNet(2, 2) - 9
-    val originalEdges = t.edges.toString
-    val originalSize  = t.edges.length
-    assert(Try(t -- Set(1)).isFailure)
-    assert(t.edges.length === originalSize)
-    assert(t.edges.toString === originalEdges)
+    val f: Tiling => Tiling = _ -- Set(1)
+    assert(isModificationSuccessful(threeSquares, f) === false)
+    assert(isModified(threeSquares, f) === false)
   }
 
 }

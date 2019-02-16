@@ -1,5 +1,6 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 import scalax.collection.Graph
@@ -58,6 +59,7 @@ trait TilingUtils
 
       val size = tiling.nodes.size
 
+      @tailrec
       def loop(nm: NodesMap): NodesMap = {
 
         if (nm.m.size == size) nm
@@ -140,6 +142,7 @@ trait TilingUtils
       // clone mutable tiling
       val t = tiling.clone()
 
+      @tailrec
       def loop(ps: List[Polygon]): List[Polygon] =
         if (t.isEmpty) ps
         else {
@@ -165,7 +168,7 @@ trait TilingUtils
               Some(n, neigh)
             } else {
               t.nodes
-                .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true) )
+                .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true))
                 .foreach(n => {
                   val hood                   = n.neighbors
                   val subtract: Set[t.NodeT] = if (degree == 3) Set(n) else subtractableNodes(n, hood)
@@ -181,7 +184,7 @@ trait TilingUtils
             case Some((n, neighbors)) =>
               onPeri(neighbors).toList.map(_.toOuter) match {
                 case f :: s :: Nil => loop(ps :+ nm.createPoly(n.toOuter, f, s))
-                case _ => throw new Error
+                case _             => throw new NoSuchElementException("perimeter neighbors must be two")
               }
             case None =>
               getSubtraction(3) match {

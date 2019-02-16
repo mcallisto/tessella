@@ -34,7 +34,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "non positive nodes = Set(-4)"
+        "nodes = List(), edges = Set(-4~1, 2~3, 3~1, 1~2, 3~-4)"
   }
 
   val disconnected: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 4 ~ 5, 5 ~ 6, 6 ~ 4))
@@ -47,7 +47,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "graph not connected"
+        "nodes = List(), edges = Set(2~3, 4~5, 6~4, 3~1, 1~2, 5~6)"
   }
 
   val nodesWith1Edge: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 3 ~ 4))
@@ -60,7 +60,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "nodes with wrong number of edges = Set(4)"
+        "nodes = List(), edges = Set(1~2, 2~3, 3~1, 3~4)"
   }
 
   val nodesWith7Edges: Graph[Int, UnDiEdge] = Graph.from(
@@ -74,7 +74,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "nodes with wrong number of edges = Set(1)"
+        "nodes = List(), edges = Set(1~4, 8~2, 2~3, 6~7, 4~5, 1~7, 1~8, 1~3, 1~6, 3~4, 1~2, 5~6, 1~5, 7~8)"
   }
 
   val negativeTriangle: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ -2, -2 ~ 3, 3 ~ 1))
@@ -86,7 +86,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "non positive nodes = Set(-2)"
+        "nodes = List(), edges = Set(1~-2, -2~3, 3~1)"
   }
 
   val papillon: Graph[Int, UnDiEdge] = Graph.from(edges = List(1 ~ 2, 2 ~ 3, 3 ~ 1, 2 ~ 4, 4 ~ 5, 5 ~ 2))
@@ -98,7 +98,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "could not build perimeter"
+        "nodes = List(), edges = Set(2~3, 4~5, 2~4, 3~1, 5~2, 1~2)"
   }
 
   val threeAdjacentSquares: Graph[Int, UnDiEdge] =
@@ -113,7 +113,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(6~3, 4~1, 2~3, 8~9, 10~6, 2~5, 3~4, 9~10, 1~2, 5~6, 4~7, 8~3, 7~8)"
   }
 
   val areaOverlap1: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(8 ~ 9, 9 ~ 10, 10 ~ 11, 11 ~ 3)
@@ -125,7 +125,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(6~3, 4~1, 2~3, 10~11, 8~9, 2~5, 3~4, 9~10, 1~2, 5~6, 4~7, 8~3, 11~3, 7~8)"
   }
 
   val sixSquares: Graph[Int, UnDiEdge] =
@@ -140,7 +140,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(4~1, 6~3, 7~9, 2~3, 10~11, 11~13, 10~8, 14~12, 2~5, 3~4, 11~12, 9~10, 1~2, 4~7, 12~15, 13~14, 5~6, 15~16, 8~3, 16~14, 12~8, 7~8)"
   }
 
   val areaOverlap2: Graph[Int, UnDiEdge] =
@@ -153,7 +153,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(4~1, 6~3, 7~9, 16~17, 2~3, 18~19, 10~11, 11~13, 10~8, 14~12, 2~5, 3~4, 11~12, 19~20, 9~10, 1~2, 17~18, 4~7, 12~15, 13~14, 5~6, 15~16, 8~3, 20~14, 12~8, 7~8)"
   }
 
   val gap: Graph[Int, UnDiEdge] = sixSquares ++ List(6 ~ 15,
@@ -175,7 +175,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "tiling with gap"
+        "nodes = List(), edges = Set(4~1, 6~3, 7~9, 15~14, 2~3, 10~11, 19~18, 11~13, 17~13, 18~14, 19~15, 5~16, 6~15, 10~8, 14~12, 2~5, 3~4, 11~12, 20~19, 9~10, 1~2, 18~17, 4~7, 13~14, 5~6, 16~15, 8~3, 16~20, 12~8, 7~8)"
   }
 
   val preOverlap: Graph[Int, UnDiEdge] = threeAdjacentSquares ++ List(7 ~ 9,
@@ -205,7 +205,7 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(4~1, 6~3, 7~9, 16~13, 2~3, 10~11, 12~13, 18~20, 21~19, 14~8, 17~13, 16~18, 10~8, 19~17, 20~22, 21~23, 2~5, 3~4, 11~12, 20~19, 9~10, 1~2, 18~17, 4~7, 12~15, 13~14, 5~6, 22~21, 15~16, 24~19, 8~3, 7~8, 23~24)"
   }
 
   val areaOverlap3: Graph[Int, UnDiEdge] = preOverlap ++ List(19 ~ 21, 21 ~ 22, 22 ~ 17)
@@ -217,6 +217,6 @@ class constrainedTest extends FlatSpec with TilingUtils with Visualizer {
 
     the[IllegalArgumentException] thrownBy Tiling.fromSides(g.toSides) should have message
       "Addition refused: " +
-        "perimeter is not a simple polygon"
+        "nodes = List(), edges = Set(4~1, 6~3, 7~9, 16~13, 2~3, 10~11, 12~13, 18~20, 19~21, 14~8, 17~13, 16~18, 10~8, 19~17, 2~5, 3~4, 11~12, 20~19, 22~17, 9~10, 1~2, 18~17, 4~7, 12~15, 13~14, 5~6, 21~22, 15~16, 8~3, 7~8)"
   }
 }
