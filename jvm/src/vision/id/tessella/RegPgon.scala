@@ -1,8 +1,9 @@
 package vision.id.tessella
 
-import vision.id.tessella.Alias.Tiling
-
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
+
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Polar.UnitRegularPgon
 
 sealed abstract class RegPgon(val edgesNumber: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
@@ -108,6 +109,7 @@ object RegPgon extends TryUtils with ListUtils {
     case _ => Failure(throw new IllegalArgumentException("must start with ("))
   }
 
+  @tailrec
   def listCompare(a: List[RegPgon], b: List[RegPgon]): Int = b match {
     case Nil if a.isEmpty => 0
     case Nil              => 1

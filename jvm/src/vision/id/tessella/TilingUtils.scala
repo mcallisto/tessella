@@ -1,12 +1,13 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Cartesian2D.{Label2D, Point2D, Polygon, Segment2D}
 import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
 import vision.id.tessella.Tau.TAU
@@ -58,6 +59,7 @@ trait TilingUtils
 
       val size = tiling.nodes.size
 
+      @tailrec
       def loop(nm: NodesMap): NodesMap = {
 
         if (nm.m.size == size) nm
@@ -137,56 +139,69 @@ trait TilingUtils
 
     def toPolygons(nm: NodesMap): List[Polygon] = {
 
-      def loop(g: Graph[Int, UnDiEdge], ps: List[Polygon]): List[Polygon] = {
-        if (g.isEmpty) ps
+      // clone mutable tiling
+      val t = tiling.clone()
+
+      @tailrec
+      def loop(ps: List[Polygon]): List[Polygon] =
+        if (t.isEmpty) ps
         else {
-          val t = Tiling.fromG(g)
 
-          def getPeriNeighbors(no: Int): List[Int] = {
-            val all = t.perimeterOrderedNodes.tail
-            val i   = all.indexOf(no)
-            val s   = all.size
-            if (i == 0) List(all(1), all(s - 1))
-            else List(all(i - 1), all((i + 1) % s))
-          }
+          def isOnPerimeter(n: t.NodeT): Boolean = n.degree == 2 || n.outgoing.exists(_.isPerimeter.contains(true))
 
-          def isWorkable(n: t.NodeT, degree: Int): Boolean = {
+          val tPeriNodes = t.nodes.filter(isOnPerimeter)
 
-            def isOnPerimeter: Boolean = degree == 2 || t.perimeterOrderedNodes.contains(n.toOuter)
+          def onPeri(neighbors: Set[t.NodeT]): Set[t.NodeT] = neighbors.intersect(tPeriNodes)
 
-            def safeRemoval: Boolean = {
-              val newg = (t.toG - n.toOuter).withoutOrphans
-              newg.isEmpty || Try(Tiling.fromG(newg)).isSuccess
+          def subtractableNodes(n: t.NodeT, neighbors: Set[t.NodeT]): Set[t.NodeT] =
+            onPeri(neighbors).toList.foldLeft(Set(): Set[t.NodeT])((s, adj) =>
+              n.withSubgraph(edges = _.isPerimeter.contains(true), nodes = _ != adj) pathUntil (_.degree > 2) match {
+                case None       => s ++ Set(n)
+                case Some(path) => s ++ path.nodes.init
+            })
+
+          def getSubtraction(degree: Int): Option[(t.NodeT, Set[t.NodeT])] =
+            if (degree == 2 && tPeriNodes.forall(_.degree == 2)) {
+              val n     = tPeriNodes.toList.safeHead
+              val neigh = n.neighbors
+              t --= tPeriNodes
+              Some(n, neigh)
+            } else {
+              t.nodes
+                .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true))
+                .foreach(n => {
+                  val hood                   = n.neighbors
+                  val subtract: Set[t.NodeT] = if (degree == 3) Set(n) else subtractableNodes(n, hood)
+                  Try(t --= subtract) match {
+                    case Success(_) => return Some(n, hood)
+                    case Failure(_) => if (!t.hasPerimeterSet) t.setPerimeter
+                  }
+                })
+              None
             }
 
-            n.degree == degree && isOnPerimeter && safeRemoval
-          }
-
-          t.nodes.find(isWorkable(_, 2)) match {
-            case Some(n) =>
-              val no        = n.toOuter
-              val neighbors = getPeriNeighbors(no)
-              val p         = nm.createPoly(no, neighbors.head, neighbors(1))
-              loop((t.toG - no).withoutOrphans, ps :+ p)
+          getSubtraction(2) match {
+            case Some((n, neighbors)) =>
+              onPeri(neighbors).toList.map(_.toOuter) match {
+                case f :: s :: Nil => loop(ps :+ nm.createPoly(n.toOuter, f, s))
+                case _             => throw new NoSuchElementException("perimeter neighbors must be two")
+              }
             case None =>
-              t.nodes.find(isWorkable(_, 3)) match {
+              getSubtraction(3) match {
                 case None => throw new NoSuchElementException("found no 3-degree nodes")
-                case Some(n) =>
-                  val no        = n.toOuter
-                  val neighbors = t.get(no).neighbors.toList.map(_.toOuter)
-                  neighbors.diff(getPeriNeighbors(no)).headOption match {
+                case Some((n, neighbors)) =>
+                  neighbors.diff(onPeri(neighbors)).headOption match {
                     case None => throw new NoSuchElementException("found no internal node")
                     case Some(internal) =>
-                      val twoPs = for (external <- neighbors.diff(List(internal)))
-                        yield nm.createPoly(no, internal, external)
-                      loop((t.toG - no).withoutOrphans, ps ++ twoPs)
+                      val twoPs = for (external <- neighbors - internal)
+                        yield nm.createPoly(n.toOuter, internal.toOuter, external.toOuter)
+                      loop(ps ++ twoPs)
                   }
               }
           }
         }
-      }
 
-      loop(graphFrom(tiling), Nil).distinctBy(_.barycenter == _.barycenter)
+      loop(Nil).distinctBy(_.barycenter == _.barycenter)
     }
 
     // ----------------- other stuff -------------------

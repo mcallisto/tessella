@@ -1,11 +1,14 @@
 package vision.id.tessella
 
+import scala.annotation.tailrec
+import scala.util.Try
+
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
-import vision.id.tessella.Alias.Tiling
 
-import scala.util.Try
+import vision.id.tessella.Tessella.Tiling
+
 
 trait Border extends ListUtils {
 
@@ -46,6 +49,7 @@ trait Border extends ListUtils {
       * @param same if true other endpoint same outdegree, if false +1
       * @return
       */
+    @tailrec
     private def progLooseEdges(out: Int, same: Boolean): Iterable[tiling.EdgeT] = {
       val perimeterEdges = tiling.edges.filter(_.isPerimeterLooseProg(out, same))
       if (perimeterEdges.isEmpty) {
@@ -62,6 +66,7 @@ trait Border extends ListUtils {
       val periGraph: Graph[Int, UnDiEdge] = {
 
         // adding edges to perimeter until is completed
+        @tailrec
         def loop(p: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] = {
           if (p.isConnected && p.isCyclic) p
           else {

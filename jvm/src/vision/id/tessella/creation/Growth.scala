@@ -1,8 +1,9 @@
 package vision.id.tessella.creation
 
 import scala.util.Try
+
 import vision.id.tessella._
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 /**
   * slow methods to create tessellations with "organic" growth
@@ -10,11 +11,6 @@ import vision.id.tessella.Alias.Tiling
 trait Growth extends AddUtils {
 
   private def regPgonTiling(edgesNumber: Int): Try[Tiling] = RegPgon.ofEdges(edgesNumber).map(_.toTiling)
-
-  private def fAddVertexToEdge: ((Try[Tiling], Int), Int) => (Try[Tiling], Int) = {
-    case ((tiling, count), edgesNumber) =>
-      (tiling.flatMap(_.addToEdgePgon(Side(1, count), edgesNumber)), count + edgesNumber - 2)
-  }
 
   /**
     * grow tessellation from vertex
@@ -24,9 +20,13 @@ trait Growth extends AddUtils {
     */
   def fromVertex(v: Vertex): Tiling = v.edgesNumbers match {
     case edgesNumber :: numbers =>
-      numbers.foldLeft((regPgonTiling(edgesNumber), edgesNumber))(fAddVertexToEdge) match {
-        case (tiling, _) => tiling.safeGet
-      }
+      val t: Tiling = regPgonTiling(edgesNumber).safeGet
+      numbers.foldLeft(edgesNumber)({
+        case (count, number) =>
+          t.addToEdgePgon2(Side(1, count), number).safeGet
+          count + number - 2
+      })
+      t
     case _ => throw new Error
   }
 
@@ -38,11 +38,15 @@ trait Growth extends AddUtils {
     */
   def scanVertex(v: Vertex): List[Tiling] = v.edgesNumbers match {
     case edgesNumber :: numbers =>
-      numbers
-        .scanLeft((regPgonTiling(edgesNumber), edgesNumber))(fAddVertexToEdge)
-        .map({
-          case (tiling, _) => tiling.safeGet
+      val t: Tiling = regPgonTiling(edgesNumber).safeGet
+      val (ts, _) = numbers
+        .foldLeft(List(t), edgesNumber)({
+          case ((tilings, count), number) =>
+            val c = tilings.safeHead.clone()
+            c.addToEdgePgon2(Side(1, count), number).safeGet
+            (c +: tilings, count + number - 2)
         })
+      ts.reverse
     case _ => throw new Error
   }
 
@@ -54,10 +58,13 @@ trait Growth extends AddUtils {
     * @param infinite if true, it should return Failure early if an unsuitable angle for growth is spotted
     * @return
     */
-  def expandPattern(pattern: Full, size: Int = 100, infinite: Boolean = false): Try[Tiling] = pattern.pgonsNumber match {
-    case less if size <= less => Try(fromVertex(Vertex(pattern.ps.take(size))))
-    case n => fromVertex(pattern).expPatterns(List(pattern), size - n, infinite)
-  }
+  def expandPattern(pattern: Full, size: Int = 100, infinite: Boolean = false): Try[Tiling] =
+    pattern.pgonsNumber match {
+      case less if size <= less => Try(fromVertex(Vertex(pattern.ps.take(size))))
+      case n =>
+        val t = fromVertex(pattern)
+        t.expPatterns(List(pattern), size - n, infinite).map(_ => t)
+    }
 
   /**
     * all tessellations from 1 to given size grown by respecting only 1 pattern
@@ -68,7 +75,8 @@ trait Growth extends AddUtils {
     */
   def scanPattern(pattern: Full, size: Int = 100): List[Try[Tiling]] = pattern.pgonsNumber match {
     case less if size <= less => scanVertex(Vertex(pattern.ps.take(size))).map(Try(_))
-    case n => scanVertex(Vertex(pattern.ps.take(n - 1))).map(Try(_)) ++
-      fromVertex(pattern).scanPatterns(List(pattern), size - n)
+    case n =>
+      scanVertex(Vertex(pattern.ps.take(n - 1))).map(Try(_)) ++
+        fromVertex(pattern).scanPatterns(List(pattern), size - n)
   }
 }

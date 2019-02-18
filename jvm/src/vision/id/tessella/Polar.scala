@@ -150,11 +150,11 @@ object Polar {
     def isSelfIntersecting: Boolean = {
       val ss = simplify.toSegments2D()
       val s  = ss.size
-      for {
+      (for {
         i <- 0 until s
         j <- i until s
-      } if (i != j && ss(i).isNotJoiningButIntersecting(ss(j))) return true
-      false
+        if i != j
+      } yield (i, j)).exists({ case(i, j) => ss(i).isNotJoiningButIntersecting(ss(j)) })
     }
 
     /**
@@ -224,11 +224,11 @@ object Polar {
     def isTouching: Boolean = {
       val ps = toPoint2Ds().map(_.c)
       val s  = ps.size
-      for {
+      (for {
         i <- 0 until s
         j <- i until s
-      } if (i != j && equal(ps(i), ps(j))) return true
-      false
+        if i != j
+      } yield (i, j)).exists({ case (i, j) => equal(ps(i), ps(j)) })
     }
 
     def touches: List[Coords2D] = {

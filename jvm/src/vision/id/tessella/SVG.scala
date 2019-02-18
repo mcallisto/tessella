@@ -3,8 +3,10 @@ package vision.id.tessella
 import scala.xml._
 import os.RelPath
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Cartesian2D._
+import vision.id.tessella.LabelStyle.LabelStyle
+import vision.id.tessella.MarkStyle.MarkStyle
 
 trait SVG extends TilingUtils {
 
@@ -87,8 +89,8 @@ trait SVG extends TilingUtils {
   def draw(t: Tiling,
            perim: Boolean = true,
            polys: Boolean = false,
-           labelStyle: Int = 1,
-           markStyle: Int = 0): NodeBuffer = {
+           labelStyle: LabelStyle = LabelStyle.PERIMETER_ONLY,
+           markStyle: MarkStyle = MarkStyle.NONE): NodeBuffer = {
     val tm   = t.toNodesMap
     val p    = t.toPerimeterPolygon(tm)
     val diff = getDiff(p)
@@ -100,13 +102,13 @@ trait SVG extends TilingUtils {
       if (polys) new NodeBuffer() &+ getPolygons(t.toPolygons(tm), diff)
       else new NodeBuffer()
     val labels: NodeBuffer = labelStyle match {
-      case 1 => new NodeBuffer() &+ getLabels(t.toPerimeterLabels2D(tm), diff)
-      case 2 => new NodeBuffer() &+ getLabels(t.toLabels2D(tm), diff)
-      case _ => new NodeBuffer()
+      case LabelStyle.PERIMETER_ONLY => new NodeBuffer() &+ getLabels(t.toPerimeterLabels2D(tm), diff)
+      case LabelStyle.ALL            => new NodeBuffer() &+ getLabels(t.toLabels2D(tm), diff)
+      case _                         => new NodeBuffer()
     }
     val marks: Any = markStyle match {
-      case 1 => new NodeBuffer() &+ getGonalMarks(t.toGonals(tm), diff)
-      case _ => new NodeBuffer()
+      case MarkStyle.GONALITY => new NodeBuffer() &+ getGonalMarks(t.toGonals(tm), diff)
+      case _                  => new NodeBuffer()
     }
     new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ marks &+ labels
   }

@@ -1,6 +1,6 @@
 package vision.id.tessella.creation
 
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 /**
   * fast methods to create reticulate tessellations of arbitrary size

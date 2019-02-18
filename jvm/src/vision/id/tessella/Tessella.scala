@@ -1,12 +1,12 @@
 package vision.id.tessella
 
 import scalax.collection.GraphEdge._
-import scalax.collection.constrained._
-import scalax.collection.GraphPredef._
+import scalax.collection.constrained.mutable._
+import scalax.collection.constrained.Config
 
 import vision.id.tessella.creation.{Growth, Net, Reticulate, Uni4Hex, Uni5Hex}
 
-object Alias {
+object Tessella {
 
   type Tiling = Graph[Int, Side]
 
@@ -20,11 +20,10 @@ object Alias {
       with Uni4Hex
       with Uni5Hex {
 
-    def fromSides(sides: Set[Side[Int]]): Tiling = Tiling.from(Nil, sides)
+    def fromSides(sides: Set[Side[Int]]): Tiling = from(Nil, sides).asInstanceOf[Tiling]
 
     def fromG(graph: scalax.collection.Graph[Int, UnDiEdge]): Tiling =
-      Tiling.from(graph.nodes, graph.edges.map(edge => Side.fromEdge(edge.toOuter)))
-
+      from(graph.nodes.map(_.toOuter), graph.edges.map(edge => Side.fromEdge(edge.toOuter))).asInstanceOf[Tiling]
   }
 
 }

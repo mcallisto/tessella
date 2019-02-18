@@ -17,7 +17,7 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 
   def scalaVersion: T[String] = "2.12.8"
 
-  def publishVersion: T[String] = "0.2.1"
+  def publishVersion: T[String] = "0.3.0"
 
   override def artifactName: T[String] = name
 
@@ -60,7 +60,7 @@ object jvm extends Versioned { outer ⇒
 
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scala-graph::graph-core:1.12.5",
-    ivy"org.scala-graph::graph-constrained:1.12.5",
+    ivy"org.scala-graph::graph-constrained:1.12.6",
     ivy"org.scala-lang.modules::scala-xml:1.1.1",
     ivy"com.lihaoyi::os-lib:0.2.6",
     ivy"com.storm-enroute::scalameter:0.8.2",

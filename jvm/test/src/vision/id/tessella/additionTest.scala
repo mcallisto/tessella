@@ -2,13 +2,11 @@ package vision.id.tessella
 
 import org.scalatest.FlatSpec
 
-import scalax.collection.GraphPredef._
-
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 
 class additionTest extends FlatSpec with AddUtils with OptionUtils with TryUtils {
 
-  val uShape: Tiling = Tiling.fromG(Tiling.squareNet(3, 2).toG - 2 ~ 3)
+  val uShape: Tiling = Tiling.squareNet(3, 2) -= Side(2, 3)
 
   "A tessellation" can "have a polygon added replacing three perimeter edges" in {
     val attachEdge = uShape.edges.find(_.toOuter.toList.sorted == List(6, 7)).safeGet().toOuter

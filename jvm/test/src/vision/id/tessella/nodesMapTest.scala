@@ -3,7 +3,7 @@ package vision.id.tessella
 import org.scalatest.FlatSpec
 
 import scalax.collection.GraphPredef._
-import vision.id.tessella.Alias.Tiling
+import vision.id.tessella.Tessella.Tiling
 import vision.id.tessella.Cartesian2D.Point2D
 
 class nodesMapTest extends FlatSpec with TilingUtils {
