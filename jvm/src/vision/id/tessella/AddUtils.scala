@@ -375,26 +375,35 @@ trait AddUtils extends TilingUtils with MathUtils {
         val (edge, edgeNumbers) = nexts(i)
         edge.additionalEdges(edgeNumbers) match {
           case Success((edges, _)) =>
-            Try(tiling ++ edges) match {
-              case Success(newt) =>
-                def compatibleWithPatternsAtNode(nO: Int, patterns: List[Full]): Boolean =
-                  patterns.exists(p => newt.vertexes(newt.perimeterOrderedNodes.indexOf(nO)).isContainedIn(p))
+            pathEndPoints(edges.map(_.asInstanceOf[UnDiEdge[Int]]).toSet) match {
+              case Success((end1, end2)) =>
+                Try(tiling ++= edges) match {
+                  case Success(_) =>
+                    def compatibleWithPatternsAtNode(nO: Int, patterns: List[Full]): Boolean =
+                      patterns.exists(p => tiling.vertexes(tiling.perimeterOrderedNodes.indexOf(nO)).isContainedIn(p))
 
-                pathEndPoints(edges.map(_.asInstanceOf[UnDiEdge[Int]]).toSet) match {
-                  case Success((end1, end2)) =>
                     // check if the vertex formed at each endpoint is compatible with pattern
                     val isCompatible = List(end1, end2).forall(n => compatibleWithPatternsAtNode(n, dpatterns))
                     if (isCompatible) {
                       //                      if (!mandatory && dpatterns.lengthCompare(2) == 0 && newt.uniformity() != 2)
                       //                        logger.debug("\nfailed not symmetric candidate: " + nexts(i) + newt.graph)
                       //                      else
-                      tiling ++= edges
                       true
-                    } else false //else logger.debug("\nfailed not compatible candidate: " + nexts(i))
-                  case _ => false
+                    } else {
+                      edges match {
+                        case single :: Nil => tiling -= single
+                        case _ =>
+                          val pathNodes: List[Int] = edges.flatMap(_.nodeSeq).groupBy(identity).mapValues(_.size).filter({ case (_, v) => v == 2}).keys.toList
+                          tiling --= pathNodes
+                      }
+                      false
+                    } //else logger.debug("\nfailed not compatible candidate: " + nexts(i))
+                  case Failure(e) => false //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
                 }
-              case Failure(e) => false //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
+
+              case _ => false
             }
+
           case Failure(e) => false //logger.debug("\nfailed candidate: " + nexts(i) + " " + e.getMessage)
         }
       }) match {
@@ -414,7 +423,7 @@ trait AddUtils extends TilingUtils with MathUtils {
                     mandatory: Boolean = false): Try[Unit] = {
       (0 until steps)
         .foldLeft(expStart)((acc, _) => acc.flatMap(f => tiling.addPatterns(patterns, infinite, failed = f, mandatory)))
-        .flatMap({ case _ => Success(()) })
+        .flatMap(_ => Success(()))
     }
 
     def scanPatterns(patterns: List[Full],
