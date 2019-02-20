@@ -33,15 +33,15 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     * @param neigh neighbors data
     * @return
     */
-  def addFromNeighbors(node: Int, neigh: List[(Int, List[Int])]): Try[NodesMap] = m.get(node) match {
+  def addFromNeighbors(node: Int, neigh: (List[Int], List[List[Int]])): Try[NodesMap] = m.get(node) match {
     case Some(_) =>
       Try(throw new IllegalArgumentException("node already mapped"))
     case None =>
       //logger.debug("\nnode: " + node)
-      if (neigh.lengthCompare(2) < 0)
+      val (nodes, _) = neigh
+      if (nodes.lengthCompare(2) < 0)
         Try(throw new IllegalArgumentException("not enough neighbors"))
       else {
-        val (nodes, _) = neigh.unzip
         nodes.filter(m.get(_).isDefined) match {
           case n_start :: n_end :: Nil =>
             val point = m(n_start).unitContacts(m(n_end)).safeGet match {
@@ -109,12 +109,12 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     * @param neigh neighbors data
     * @return
     */
-  def completeNode(node: Int, neigh: List[(Int, List[Int])]): Try[NodesMap] = Try(
+  def completeNode(node: Int, neigh: (List[Int], List[List[Int]])): Try[NodesMap] = Try(
     if (m.get(node).isEmpty)
       throw new IllegalArgumentException("node not mapped")
     else {
 
-      val (nodes, paths) = neigh.unzip //; logger.debug("\n\npaths: " + paths)
+      val (nodes, paths) = neigh //; logger.debug("\n\npaths: " + paths)
       nodes.filter(m.get(_).isDefined) match {
         case Nil =>
           throw new IllegalArgumentException("No neighbors mapped")
@@ -249,8 +249,8 @@ object NodesMap extends ListUtils {
     * @param neigh neighbors info
     * @return
     */
-  def firstThree(node: Int, neigh: List[(Int, List[Int])]): NodesMap = {
-    val (nodes, paths) = neigh.unzip
+  def firstThree(node: Int, neigh: (List[Int], List[List[Int]])): NodesMap = {
+    val (nodes, paths) = neigh
     val angle          = UnitRegularPgon.ofEdges(paths.safeHead.size + 2).alpha
     new NodesMap(
       Map(

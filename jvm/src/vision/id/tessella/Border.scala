@@ -3,12 +3,7 @@ package vision.id.tessella
 import scala.annotation.tailrec
 import scala.util.Try
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.UnDiEdge
-import scalax.collection.GraphPredef._
-
 import vision.id.tessella.Tessella.Tiling
-
 
 trait Border extends ListUtils {
 
@@ -23,7 +18,7 @@ trait Border extends ListUtils {
         node.withSubgraph(edges = _.isPerimeter.contains(onPerimeter)) shortestPathTo other
 
       def onePolygonPerimeterPath(other: tiling.NodeT): Option[tiling.Path] =
-        node.withSubgraph(nodes = n => n == node || n == other || n.degree == 2, edges = _.isPerimeter.contains(true)) pathTo other
+        node.withSubgraph(nodes = n => n == node || n == other || n.degree == 2, edges = _.isPerimeterFlagged) pathTo other
 
     }
 
@@ -40,6 +35,8 @@ trait Border extends ListUtils {
       def isPerimeterLooseProg(out: Int, same: Boolean = true): Boolean =
         if (same) edge.nodes.forall(_.degree == out)
         else edge.nodes.map(_.degree).sum == out * 2 + 1
+
+      def isPerimeterFlagged: Boolean = edge.isPerimeter.contains(true)
     }
 
     /**
@@ -61,58 +58,46 @@ trait Border extends ListUtils {
         perimeterEdges
     }
 
-    def perimeterEdges: Set[UnDiEdge[Int]] = {
+    def setPerimeter: Try[Unit] = Try {
 
-      val periGraph: Graph[Int, UnDiEdge] = {
+      tiling.edges.foreach(_.isPerimeter = Some(false))
 
-        // adding edges to perimeter until is completed
-        @tailrec
-        def loop(p: Graph[Int, UnDiEdge]): Graph[Int, UnDiEdge] = {
-          if (p.isConnected && p.isCyclic) p
-          else {
-            // find an edge with endpoint
-            val e: p.EdgeT = p.edges.find(_.nodes.exists(_.degree == 1)).safeGet()
-            // n1 node of the endpoint
-            val (n1, n2): (tiling.NodeT, tiling.NodeT) = {
-              val nodes = (tiling get e._n(0), tiling get e._n(1))
-              if (e._n(0).degree == 1) nodes else nodes.swap
-            }
-            // nodes potentially on the perimeter
-            val candidates: Set[tiling.NodeT] = n1.diSuccessors.filterNot(_ == n2)
-            // next is the farthest from n2 not passing through n1
-            val next: tiling.NodeT = candidates.maxBy(_.shortestWithBlocksTo(n2, Set(n1)).safeGet().size)
-            loop(p + n1.toOuter ~ next.toOuter)
-          }
-        }
+      // start with loose (easy to find) edges
+      val es: Iterable[tiling.EdgeT] = tiling.edges.filter(_.isPerimeterLoose) match {
+        case none if none.isEmpty => progLooseEdges(3, same = true) // if nothing progressively explore higher degrees
+        case some                 => some
+      }
+      es.foreach(_.isPerimeter = Some(true))
 
-        // start with loose (easy to find) edges
-        val es: Iterable[UnDiEdge[Int]] = (tiling.edges.filter(_.isPerimeterLoose) match {
-          case none if none.isEmpty => progLooseEdges(3, same = true) // if nothing progressively explore higher degrees
-          case some                 => some
-        }).map(_.toOuter)
+      val perimeterNode: tiling.NodeT = es.toList.safeHead.nodes.toList.safeHead
 
-        loop(Graph.from(edges = es))
+      def setNextPerimeterEdge(endpoint: tiling.NodeT, other: tiling.NodeT): Unit = {
+        // nodes potentially on the perimeter
+        val candidates: Set[tiling.NodeT] = endpoint.neighbors.filterNot(_ == other)
+        // next is the farthest from other not passing through endpoint
+        val next: tiling.NodeT          = candidates.maxBy(_.shortestWithBlocksTo(other, Set(endpoint)).safeGet().size)
+        val perimeterEdge: tiling.EdgeT = tiling.get(Side(endpoint.toOuter, next.toOuter))
+        perimeterEdge.isPerimeter = Some(true)
       }
 
-      require(periGraph.isCyclic, "perimeter not cyclic")
+      def findNextPerimeterEdge: Unit =
+        perimeterNode
+          .withSubgraph(edges = _.isPerimeterFlagged)
+          .pathUntil(_.edges.count(_.isPerimeterFlagged) < 2) match {
+          case None => throw new Error
+          case Some(path) =>
+            val two = path.nodes.toList.takeRight(2)
+            setNextPerimeterEdge(two.safeLast, two.safeHead)
+        }
 
-      require(periGraph.nodes.forall(_.degree == 2), "perimeter not simple: " + periGraph)
-
-      periGraph.edges.map(_.toOuter).toSet
+      while (perimeterNode.withSubgraph(edges = _.isPerimeterFlagged).findCycle.isEmpty) {
+        findNextPerimeterEdge
+      }
     }
 
     def cleanPerimeter: Unit = tiling.edges.foreach(_.isPerimeter = None)
 
     def hasPerimeterSet: Boolean = tiling.edges.forall(_.isPerimeter.isDefined)
-
-    // inefficient, using old method
-    def setPerimeter: Try[Unit] = Try {
-
-      val pEdges = perimeterEdges
-
-      tiling.edges.foreach(edge => edge.isPerimeter = Some(pEdges.contains(edge.toOuter)))
-
-    }
 
     /**
       * shortest path between two nodes, inside or outside perimeter

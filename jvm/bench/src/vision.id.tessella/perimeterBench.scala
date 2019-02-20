@@ -10,7 +10,7 @@ class perimeterBench extends FlatSpec with TilingUtils with Loggable {
 
   val t: Tiling = Tiling.threeUniformOneOneOne8(10, 10)
 
-  "Method getPerimeter" must "execute in less than 40 milliseconds" in {
+  "Method setPerimeter" must "execute in less than 25 milliseconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true
@@ -20,13 +20,13 @@ class perimeterBench extends FlatSpec with TilingUtils with Loggable {
       //    } withMeasurer {
       //      new Measurer.IgnoringGC
     } measure {
-      t.perimeterEdges
+      t.setPerimeter
     }
-    assert(time.value < 40.0)
+    assert(time.value < 25.0)
 
   }
 
-  "Method toNodesMap" must "execute in less than 250 milliseconds" in {
+  "Method toNodesMap" must "execute in less than 200 milliseconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true
@@ -38,13 +38,13 @@ class perimeterBench extends FlatSpec with TilingUtils with Loggable {
     } measure {
       t.toNodesMap
     }
-    assert(time.value < 250.0)
+    assert(time.value < 200.0)
 
   }
 
   val nm: NodesMap = t.toNodesMap
 
-  "Method toPolygons" must "execute in less than 11 seconds" in {
+  "Method toPolygons" must "execute in less than 5 seconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true
@@ -56,7 +56,7 @@ class perimeterBench extends FlatSpec with TilingUtils with Loggable {
     } measure {
       t.toPolygons(nm)
     }
-    assert(time.value < 11000.0)
+    assert(time.value < 5000.0)
 
   }
 

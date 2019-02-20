@@ -5,7 +5,9 @@ import org.scalatest.FlatSpec
 import scalax.collection.GraphEdge.UnDiEdge
 import vision.id.tessella.Tessella.Tiling
 
-class skipConstraintBench extends FlatSpec with AddUtils {
+class skipConstraintBench extends FlatSpec with AddUtils with Loggable {
+
+  setLogLevel("WARN")
 
   val t1: Tiling = Tiling.fromG(Tiling.hexagonNet(10, 10).toG - 4)
 
@@ -27,11 +29,11 @@ class skipConstraintBench extends FlatSpec with AddUtils {
     ) measure {
       t1 ++ Set(Side(3, 4), Side(4, 5))
     }
-    assert(time.value < 400.0)
+    assert(time.value < 300.0)
 
   }
 
-  "Adding edges not forming a single path" must "must execute in less than 400 ms" in {
+  "Adding edges not forming a single path" must "must execute in less than 300 ms" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true

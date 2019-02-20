@@ -27,7 +27,14 @@ trait TilingUtils
 
       def isPerimeter: Boolean = perimeterOrderedNodes.contains(node.toOuter)
 
-      def neighs: List[(Int, List[Int])] = tiling.outerNodeHood(node.toOuter, perimeterOrderedNodes)
+      def perimeterIndex: Int = perimeterOrderedNodes.indexOf(node.toOuter)
+
+      def neighs: (List[Int], List[List[Int]]) = tiling.outerNodeHood(node.toOuter, perimeterOrderedNodes)
+
+      def neighsSmart: (List[Int], List[List[Int]]) = perimeterIndex match {
+        case -1 => neighs
+        case i  => perimeterHoods(i)
+      }
 
     }
 
@@ -45,11 +52,11 @@ trait TilingUtils
 
     lazy val perimeterOrderedEdges: List[Side[Int]] = perimeterCycle.edges.map(_.toOuter).toList
 
-    lazy val perimeterHoods: (List[List[Int]], List[List[List[Int]]]) =
-      perimeterOrderedNodes.init.map(tiling.outerNodeHood(_, perimeterOrderedNodes).unzip).unzip
+    lazy val perimeterHoods: List[(List[Int], List[List[Int]])] =
+      perimeterOrderedNodes.init.map(tiling.outerNodeHood(_, perimeterOrderedNodes))
 
     lazy val vertexes: List[Vertex] =
-      perimeterHoods match { case (_, paths) => paths.map(path => Vertex.p(path.init.map(_.size + 2))) }
+      perimeterHoods.unzip match { case (_, paths) => paths.map(path => Vertex.p(path.init.map(_.size + 2))) }
 
     // implies satisfying requirements of UnitSimplePgon
     lazy val toPerimeterSimplePolygon: Try[UnitSimplePgon] =
@@ -66,10 +73,10 @@ trait TilingUtils
         else {
           val mapped: List[Int] = nm.m.keys.toList
           val nexttm: Try[NodesMap] = tiling.findCompletable(mapped, nm) match {
-            case Some(node) => nm.completeNode(node, (tiling get node).neighs)
+            case Some(node) => nm.completeNode(node, (tiling get node).neighsSmart)
             case None =>
               tiling.findAddable(mapped) match {
-                case Some(node) => nm.addFromNeighbors(node, (tiling get node).neighs)
+                case Some(node) => nm.addFromNeighbors(node, (tiling get node).neighsSmart)
                 case None       => nm.addFromPerimeter(perimeterOrderedNodes.init, toPerimeterSimplePolygon.safeGet.pps)
               }
           }
@@ -78,7 +85,7 @@ trait TilingUtils
       }
 
       val firstNode: tiling.NodeT = tiling.nodes.minBy(_.toOuter)
-      loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighs))
+      loop(NodesMap.firstThree(firstNode.toOuter, firstNode.neighsSmart))
     }
 
     def hasGap: Boolean = Try(toNodesMap) match {
@@ -100,7 +107,7 @@ trait TilingUtils
         .filterNot(_.isPerimeter)
         .toList
         .map(n =>
-          n.neighs.unzip match {
+          n.neighs match {
             case (_, paths) => (Full.p(paths.map(_.size + 2)).minor, n)
         })
         .groupBy({ case (vertices, _) => vertices })

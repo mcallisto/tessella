@@ -15,23 +15,19 @@ class neighborsTest extends FlatSpec with TilingUtils with Symmetry {
     val vertexOtherCase =
       Tiling.fromSides(Set(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 1, 5 ~ 4, 5 ~ 1, 6 ~ 5, 6 ~ 1, 7 ~ 2, 7 ~ 1).map(Side.fromEdge(_)))
     assert(
-      vertexOtherCase.outerNodeHood(vertexOtherCase get 1, vertexOtherCase.perimeterOrderedNodes) === List(
-        (6, List(5)),
-        (5, List(4)),
-        (4, List(3, 2)),
-        (2, List(7)),
-        (7, List())
-      ))
+      vertexOtherCase.outerNodeHood(vertexOtherCase get 1, vertexOtherCase.perimeterOrderedNodes) === (List(
+        6,
+        5,
+        4,
+        2,
+        7), List(List(5), List(4), List(3, 2), List(7), List())))
 
     val neighsPeri =
       vertexFortyTwo.outerNodeHood(vertexFortyTwo get 10, vertexFortyTwo.perimeterOrderedNodes)
     assert(
-      neighsPeri === List(
-        (9,
-         List(8, 7, 6, 5, 4, 3, 2, 1, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23,
-           22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11)),
-        (11, List())
-      ))
+      neighsPeri === (List(9, 11), List(List(8, 7, 6, 5, 4, 3, 2, 1, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30,
+                                          29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11),
+                                        List())))
 
   }
 
@@ -40,32 +36,25 @@ class neighborsTest extends FlatSpec with TilingUtils with Symmetry {
     val vertexCaseStudy: Tiling =
       Hexagon.toTiling ++ Set(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6).map(Side.fromEdge(_))
     assert(
-      vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.perimeterOrderedNodes) === List(
-        (2, List(3, 4, 5, 6)),
-        (6, List(10, 9)),
-        (9, List(7)),
-        (7, List(8, 2))
-      ))
+      vertexCaseStudy
+        .outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.perimeterOrderedNodes) === (List(2, 6, 9, 7), List(
+        List(3, 4, 5, 6),
+        List(10, 9),
+        List(7),
+        List(8, 2))))
 
     val neighsFull1 =
       vertexFortyTwo.outerNodeHood(vertexFortyTwo get 2, vertexFortyTwo.perimeterOrderedNodes)
     assert(
-      neighsFull1 === List(
-        (1,
-         List(42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-           16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3)),
-        (3, List(44, 45, 46, 47, 43)),
-        (43, List(1))
-      ))
+      neighsFull1 === (List(1, 3, 43), List(List(42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25,
+                                              24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+                                              4, 3),
+                                            List(44, 45, 46, 47, 43),
+                                            List(1))))
 
     val hex         = Tiling.hexagonNet(2, 3)
     val neighsFull2 = hex.outerNodeHood(hex get 15, hex.perimeterOrderedNodes)
-    assert(
-      neighsFull2 === List(
-        (14, List(9, 10, 11, 16)),
-        (16, List(17, 22, 21, 20)),
-        (20, List(19, 18, 13, 14))
-      ))
+    assert(neighsFull2 === (List(14, 16, 20), List(List(9, 10, 11, 16), List(17, 22, 21, 20), List(19, 18, 13, 14))))
 
   }
 
@@ -109,12 +98,10 @@ class neighborsTest extends FlatSpec with TilingUtils with Symmetry {
       ).map(Side.fromEdge(_)))
     val neighsFull = edgeCase.outerNodeHood(edgeCase get 3, edgeCase.perimeterOrderedNodes)
     assert(
-      neighsFull === List(
-        (1, List(2)),
-        (2, List(9, 10)),
-        (10, List(19, 18, 17, 16, 15, 14, 13, 12, 11, 4)),
-        (4, List(1))
-      ))
+      neighsFull === (List(1, 2, 10, 4), List(List(2),
+                                              List(9, 10),
+                                              List(19, 18, 17, 16, 15, 14, 13, 12, 11, 4),
+                                              List(1))))
   }
 
 }

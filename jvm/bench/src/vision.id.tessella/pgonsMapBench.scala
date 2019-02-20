@@ -9,7 +9,7 @@ class pgonsMapBench extends FlatSpec with TilingUtils with Loggable {
 
   setLogLevel("WARN")
 
-  "Method pgonsMap" must "execute in less than 1.5 seconds" in {
+  "Method pgonsMap" must "execute in less than 1 second" in {
     val time = config(
       Key.exec.benchRuns -> 10,
       Key.verbose        -> true
@@ -21,7 +21,7 @@ class pgonsMapBench extends FlatSpec with TilingUtils with Loggable {
     } measure {
       Tiling.threeUniformOneOneOne8(6, 6).pgonsMap
     }
-    assert(time.value < 1500.0)
+    assert(time.value < 1000.0)
 
   }
 

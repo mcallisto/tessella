@@ -17,6 +17,8 @@ trait Neighbors extends Symmetry with ListUtils {
 
       type nPaths = List[(tiling.NodeT, nodesL)]
 
+      type nodesPaths = (nodesL, List[nodesL])
+
       /**
         *
         * @param ns  nodes yet to be added to path
@@ -25,8 +27,8 @@ trait Neighbors extends Symmetry with ListUtils {
         * @return
         */
       @tailrec
-      private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
-        case Nil => acc
+      private def findPathPeri(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nodesPaths = ns match {
+        case Nil => acc.reverse.unzip
         case _ =>
           val (accNodes, _)          = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
           val lastNode: tiling.NodeT = accNodes.safeHead
@@ -40,8 +42,8 @@ trait Neighbors extends Symmetry with ListUtils {
       }
 
       @tailrec
-      private def findPathFull(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nPaths = ns match {
-        case Nil => acc
+      private def findPathFull(ns: nodesL, acc: nPaths, b: Set[tiling.NodeT]): nodesPaths = ns match {
+        case Nil => acc.unzip
         case _ =>
           val (accNodes, _)           = acc.unzip //; logger.debug("\nNeighbors ordered so far: " + acc_nodes)
           val firstNode: tiling.NodeT = accNodes.safeHead
@@ -63,7 +65,7 @@ trait Neighbors extends Symmetry with ListUtils {
           )
       }
 
-      def perimeterHood(orderedNodes: List[tiling.NodeT]): nPaths = {
+      def perimeterHood(orderedNodes: nodesL): nodesPaths = {
 
         def isOnPerimeter(n: tiling.NodeT): Boolean = orderedNodes.contains(n)
 
@@ -79,48 +81,47 @@ trait Neighbors extends Symmetry with ListUtils {
                 case _           => throw new Error
               })
         }) minBy (_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + start)
-        val (nodes, paths): (nodesL, List[nodesL]) = findPathPeri(
+        val (nodes, paths): nodesPaths = findPathPeri(
           neighb.filterNot(_ == start),
           List((start, List())),
           Set(node)
-        ).reverse.unzip
-        nodes.zip(
-          paths
-            .rotate(-1)
-            .map({
-              case Nil => Nil
-              case p   => p.reverse.tail
-            }))
+        )
+        (nodes,
+         paths
+           .rotate(-1)
+           .map({
+             case Nil => Nil
+             case p   => p.reverse.tail
+           }))
       }
 
-      private def reorderFull(ps: nPaths): nPaths = {
-        val first: (tiling.NodeT, nodesL)         = ps.minBy({ case (n, _) => n.toOuter })
-        val indexFirst: Int                       = ps.indexOf(first)
-        val rotated: nPaths                       = ps.rotate(-indexFirst)
-        val (next, _): (tiling.NodeT, nodesL)     = rotated(1)
-        val (previous, _): (tiling.NodeT, nodesL) = rotated(ps.size - 1)
+      private def reorderFull(nps: nodesPaths): nodesPaths = {
+        val (ns, ps)                   = nps
+        val indexFirst: Int            = ns.indexOf(ns.minBy(_.toOuter))
+        val rotatedNodes: nodesL       = ns.rotate(-indexFirst)
+        val rotatedPaths: List[nodesL] = ps.rotate(-indexFirst)
+        val next: tiling.NodeT         = rotatedNodes(1)
+        val previous: tiling.NodeT     = rotatedNodes(ns.size - 1)
         if (next.toOuter < previous.toOuter)
-          rotated
-        else {
-          val (nodes, paths) = rotated.contraRotate().unzip
-          nodes.zip(paths.rotate(-1).map(_.reverse))
-        }
+          (rotatedNodes, rotatedPaths.map(_.tail))
+        else
+          (rotatedNodes.contraRotate(), rotatedPaths.contraRotate().rotate(-1).map(_.reverse.tail))
       }
 
-      def fullHood: nPaths = {
+      def fullHood: nodesPaths = {
         val neighb: nodesL      = node.neighbors.toList //; logger.debug("\nNeighbor nodes found: " + neighb)
         val start: tiling.NodeT = neighb.minBy(_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + first)
         val (nodes, paths): (nodesL, List[nodesL]) = findPathFull(
           neighb.filterNot(_ == start),
           List((start, List())),
           Set(node)
-        ).unzip //; logger.debug("\nnodes: " + nodes); logger.debug("\npaths: " + paths)
+        ) //; logger.debug("\nnodes: " + nodes); logger.debug("\npaths: " + paths)
         val first                = nodes.safeHead
         val last                 = nodes.safeLast
         val block                = paths.flatten.toSet ++ nodes.init.tail.flatMap(_.neighbors) - first - last
         val lastPath: nodesL     = first.shortestWithBlocksTo(last, block).safeGet().nodes.toList
         val paths2: List[nodesL] = paths.filterNot(_.isEmpty) :+ lastPath //; logger.debug("\npaths2: " + paths2)
-        reorderFull(nodes.zip(paths2.headLastConcat)).map({ case (n, path) => (n, path.tail) })
+        reorderFull((nodes, paths2.headLastConcat))
       }
 
       /**
@@ -129,15 +130,15 @@ trait Neighbors extends Symmetry with ListUtils {
         *
         * @return list of ordered neighbors nodes and ordered path nodes of the underlying p-gon to reach the next one
         */
-      def hood(orderedNodes: List[tiling.NodeT]): nPaths =
+      def hood(orderedNodes: nodesL): nodesPaths =
         if (orderedNodes.contains(node)) node.perimeterHood(orderedNodes)
         else node.fullHood
 
     }
 
-    def outerNodeHood(node: Int, orderedNodes: List[Int]): List[(Int, List[Int])] = {
-      val (nodes, paths) = (tiling get node).hood(orderedNodes.map(tiling get _)).unzip
-      nodes.map(_.toOuter).zip(paths.map(_.map(_.toOuter)))
+    def outerNodeHood(node: Int, orderedNodes: List[Int]): (List[Int], List[List[Int]]) = {
+      val (nodes, paths) = (tiling get node).hood(orderedNodes.map(tiling get _))
+      (nodes.map(_.toOuter), paths.map(_.map(_.toOuter)))
     }
 
     /**

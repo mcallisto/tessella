@@ -4,9 +4,11 @@ import org.scalameter._
 import org.scalatest.FlatSpec
 import vision.id.tessella.Tessella.Tiling
 
-class validationBench extends FlatSpec with TilingUtils {
+class validationBench extends FlatSpec with TilingUtils with Loggable {
 
-  "Creating a Tiling" must "must execute in less than 10 seconds" in {
+  setLogLevel("WARN")
+
+  "Creating a Tiling" must "must execute in less than 7 seconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true
@@ -18,7 +20,7 @@ class validationBench extends FlatSpec with TilingUtils {
     } measure {
       Tiling.squareNet(30, 30)
     }
-    assert(time.value < 10000.0)
+    assert(time.value < 7000.0)
 
   }
 

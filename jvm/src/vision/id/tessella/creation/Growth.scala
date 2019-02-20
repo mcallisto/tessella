@@ -23,7 +23,7 @@ trait Growth extends AddUtils {
       val t: Tiling = regPgonTiling(edgesNumber).safeGet
       numbers.foldLeft(edgesNumber)({
         case (count, number) =>
-          t.addToEdgePgon2(Side(1, count), number).safeGet
+          t.addToEdgePgon(Side(1, count), number).safeGet
           count + number - 2
       })
       t
@@ -43,7 +43,7 @@ trait Growth extends AddUtils {
         .foldLeft(List(t), edgesNumber)({
           case ((tilings, count), number) =>
             val c = tilings.safeHead.clone()
-            c.addToEdgePgon2(Side(1, count), number).safeGet
+            c.addToEdgePgon(Side(1, count), number).safeGet
             (c +: tilings, count + number - 2)
         })
       ts.reverse

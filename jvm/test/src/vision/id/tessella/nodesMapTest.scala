@@ -96,7 +96,7 @@ class nodesMapTest extends FlatSpec with TilingUtils {
   }
 
   val vertexCaseStudy: Tiling = Hexagon.toTiling ++ Set(1 ~ 7, 7 ~ 8, 8 ~ 2, 7 ~ 9, 9 ~ 1, 9 ~ 10, 10 ~ 6).map(Side.fromEdge(_))
-  val neigh2: List[(Int, List[Int])] =
+  val neigh2: (List[Int], List[List[Int]]) =
     vertexCaseStudy.outerNodeHood(vertexCaseStudy get 1, vertexCaseStudy.perimeterOrderedNodes)
 
   "A mapped node" can "be completed if it has 2 or more mapped neighbors(2)" in {
