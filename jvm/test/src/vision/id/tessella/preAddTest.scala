@@ -1,5 +1,7 @@
 package vision.id.tessella
 
+import scala.util.Try
+
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
@@ -106,6 +108,54 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   it can "also be NOT valid" in {
     assertThrows[IllegalArgumentException](uShape ++= Set(Side(2, 17), Side(17, 3)))
+  }
+
+  // ---------------- miscellaneous ----------------
+
+  def isModificationSuccessful(t: Tiling, f: Tiling => Tiling): Boolean =
+    Try(f(t)).isSuccess
+
+  def isModified(t: Tiling, f: Tiling => Tiling): Boolean = {
+    val c = t.clone()
+    Try(f(t)) match {
+      case _ => t !== c
+    }
+  }
+
+  def isPerimeterModified(t: Tiling, f: Tiling => Tiling): Boolean = {
+
+    def s(ti: Tiling): String = ti.edges.filter(_.isPerimeter.contains(true)).toString
+
+    val c = t.clone()
+    Try(f(t)) match {
+      case _ => s(t) !== s(c)
+    }
+  }
+
+  "Success of '+=' subtract" must "modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ += Side(1, 3)
+    assert(isModificationSuccessful(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
+    assert(isModified(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
+  }
+
+  "Failure of '+=' subtract" must "NOT modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ += Side(1, 3)
+    assert(isModificationSuccessful(fourSquares, f) === false)
+    assert(isModified(fourSquares, f) === false)
+    assert(isPerimeterModified(fourSquares, f) === false)
+  }
+
+  "Success of '++=' subtract" must "modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ ++= Set(Side(3, 4), Side(4, 1), Side(4, 5), Side(5, 3))
+    assert(isModificationSuccessful(oneTriangle, f) === true)
+    assert(isModified(oneTriangle, f) === true)
+  }
+
+  "Failure of '++=' subtract" must "NOT modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ ++= Set(Side(1, 10), Side(10, 3))
+    assert(isModificationSuccessful(fourSquares, f) === false)
+    assert(isModified(fourSquares, f) === false)
+    assert(isPerimeterModified(fourSquares, f) === false)
   }
 
 }

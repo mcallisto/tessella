@@ -137,6 +137,16 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
     }
   }
 
+  def isPerimeterModified(t: Tiling, f: Tiling => Tiling): Boolean = {
+
+    def s(ti: Tiling): String = ti.edges.filter(_.isPerimeter.contains(true)).toString
+
+    val c = t.clone()
+    Try(f(t)) match {
+      case _ => s(t) !== s(c)
+    }
+  }
+
   "Success of '-=' subtract" must "modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ -= 9
     assert(isModificationSuccessful(fourSquaresNet, f) === true)
@@ -147,24 +157,29 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
     val f: Tiling => Tiling = _ -= 1
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === false)
+    assert(isPerimeterModified(threeSquares, f) === false)
   }
 
-  "Equivalent" must "NOT modify the mutable Tiling" in {
+  // @todo this can be fixed only at Graph for Scala level
+  "Equivalent '--='" must "NOT modify the mutable Tiling, apart from perimeter flags" in {
     val f: Tiling => Tiling = _ --= List[Param[Int, Side]](1, Side(1, 2), Side(1, 4))
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === false)
+    assert(isPerimeterModified(threeSquares, f) === true)
   }
 
   "Success of '-' subtract" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ - 9
     assert(isModificationSuccessful(fourSquaresNet, f) === true)
     assert(isModified(fourSquaresNet, f) === false)
+    assert(isPerimeterModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '-' subtract" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ - 1
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === false)
+    assert(isPerimeterModified(threeSquares, f) === false)
   }
 
   "Success of '--=' subtract" must "modify the mutable Tiling" in {
@@ -177,18 +192,21 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
     val f: Tiling => Tiling = _ --= Set(1)
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === false)
+    assert(isPerimeterModified(threeSquares, f) === false)
   }
 
   "Success of '--' subtract" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ -- Set(9)
     assert(isModificationSuccessful(fourSquaresNet, f) === true)
     assert(isModified(fourSquaresNet, f) === false)
+    assert(isPerimeterModified(fourSquaresNet, f) === false)
   }
 
   "Failure of '--' subtract" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ -- Set(1)
     assert(isModificationSuccessful(threeSquares, f) === false)
     assert(isModified(threeSquares, f) === false)
+    assert(isPerimeterModified(threeSquares, f) === false)
   }
 
 }
