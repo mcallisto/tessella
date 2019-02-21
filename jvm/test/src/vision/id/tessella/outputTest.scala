@@ -7,7 +7,9 @@ import org.scalameter._
 
 import vision.id.tessella.Tessella.Tiling
 
-class outputTest extends FlatSpec with GraphUtils with SVG {
+class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
+
+  setLogLevel("WARN")
 
 //  "The images in the docs/ folder" can "be created" in {
 //    assert(docs().isInstanceOf[Unit])

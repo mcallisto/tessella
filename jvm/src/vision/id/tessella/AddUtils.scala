@@ -393,7 +393,13 @@ trait AddUtils extends TilingUtils with MathUtils {
                       edges match {
                         case single :: Nil => tiling -= single
                         case _ =>
-                          val pathNodes: List[Int] = edges.flatMap(_.nodeSeq).groupBy(identity).mapValues(_.size).filter({ case (_, v) => v == 2}).keys.toList
+                          val pathNodes: List[Int] = edges
+                            .flatMap(_.toList)
+                            .groupBy(identity)
+                            .mapValues(_.size)
+                            .filter({ case (_, v) => v == 2 })
+                            .keys
+                            .toList
                           tiling --= pathNodes
                       }
                       false

@@ -132,26 +132,26 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
     }
   }
 
-  "Success of '+=' subtract" must "modify the mutable Tiling" in {
+  "Success of '+=' add" must "modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ += Side(1, 3)
     assert(isModificationSuccessful(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
     assert(isModified(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
   }
 
-  "Failure of '+=' subtract" must "NOT modify the mutable Tiling" in {
+  "Failure of '+=' add" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ += Side(1, 3)
     assert(isModificationSuccessful(fourSquares, f) === false)
     assert(isModified(fourSquares, f) === false)
     assert(isPerimeterModified(fourSquares, f) === false)
   }
 
-  "Success of '++=' subtract" must "modify the mutable Tiling" in {
+  "Success of '++=' add" must "modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ ++= Set(Side(3, 4), Side(4, 1), Side(4, 5), Side(5, 3))
     assert(isModificationSuccessful(oneTriangle, f) === true)
     assert(isModified(oneTriangle, f) === true)
   }
 
-  "Failure of '++=' subtract" must "NOT modify the mutable Tiling" in {
+  "Failure of '++=' add" must "NOT modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ ++= Set(Side(1, 10), Side(10, 3))
     assert(isModificationSuccessful(fourSquares, f) === false)
     assert(isModified(fourSquares, f) === false)

@@ -67,10 +67,6 @@ class perimeterTest extends FlatSpec with TilingUtils with Loggable {
 
   val fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
 
-  "A perimeter" can "be checked if two nodes belong to one pgon" in {
-    assert(fourSquares.getOnePolygonPerimeterPath(2, 4) === Some(Traversable(2 ~ 3, 3 ~ 4)))
-  }
-
   "Several difficult perimeter cases" can "be identified" in {
     val case1: Tiling = Square.toTiling ++ Set(
       2 ~ 5,

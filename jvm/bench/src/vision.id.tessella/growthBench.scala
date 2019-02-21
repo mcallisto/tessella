@@ -9,7 +9,7 @@ class growthBench extends FlatSpec with TilingUtils with Loggable {
 
   setLogLevel("WARN")
 
-  "Method expandPattern" must "execute in less than 7 seconds" in {
+  "Method expandPattern" must "execute in less than 6 seconds" in {
     val time = config(
       Key.exec.benchRuns -> 5,
       Key.verbose        -> true
@@ -21,7 +21,7 @@ class growthBench extends FlatSpec with TilingUtils with Loggable {
     } measure {
       Tiling.expandPattern(Full.s("(3.4.6.4)"), 40)
     }
-    assert(time.value < 7000.0)
+    assert(time.value < 6000.0)
 
   }
 
