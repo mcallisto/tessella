@@ -279,6 +279,13 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
   // ------------- subtraction -------------
 
+  def checkNewPerimeter(end1: Int, end2: Int): ShapedResult =
+    ShapedResult(PostCheck,
+                 positiveChecked = true,
+                 gapChecked = true,
+                 periRecalc = false,
+                 selfPathEdges(end1, end2, onPerimeter = false).toList)
+
   /**
     * Ok if the node is at the center of an hexagon by 6 triangles
     * or at the center of a valid perimeter p-gon
@@ -305,9 +312,8 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           } else {
             // find existing non perimeter edges and transform to perimeter
             lazyDebug("> found existing edges")
-            val (end1, end2)      = periNodes.circularNeighborsOf(n).safeGet()
-            val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
-            ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, newPerimeterEdges)
+            val (end1, end2) = periNodes.circularNeighborsOf(n).safeGet()
+            checkNewPerimeter(end1, end2)
           }
         case _ =>
           if (RegPgon.edgesNumberToPgon.get(periNodes.length).isDefined &&
@@ -342,11 +348,7 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           lazyDebug("> perimeter edge " + edge.toString + " has node of degree 2")
           ShapedResult(Abort)
         } else
-          ShapedResult(PostCheck,
-                       positiveChecked = true,
-                       gapChecked = true,
-                       periRecalc = false,
-                       selfPathEdges(end1, end2, onPerimeter = false).toList)
+          checkNewPerimeter(end1, end2)
       } else {
         ShapedResult(PostCheck, positiveChecked = true, gapChecked = true, periRecalc = false, Nil)
       }
@@ -363,27 +365,26 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     lazyDebug("simple: " + simple)
     lazyTrace("self: " + self)
 
-    if (self.nodes.length == nodes.size)
-      ShapedResult(Complete)
-    else {
-      if (edges.isEmpty && nodes.forall(_.degree == 2)) {
+    def checkRecalc: ShapedResult =
+      ShapedResult(PostCheck, positiveChecked = true, gapChecked = false, periRecalc = true, Nil)
+
+    nodes match {
+      case all if all.size == self.nodes.length => ShapedResult(Complete)
+      case peri if edges.isEmpty && peri.forall(_.degree == 2) =>
         val ns        = nodes.toList.map(_.toOuter.asInstanceOf[Int])
         val periEdges = self.asInstanceOf[Tiling].perimeterOrderedEdges.filter(_.toList.intersect(ns).nonEmpty)
         pathEndPoints(periEdges.toSet) match {
           // if the new edges form a path with two endpoints
           case Success((end1, end2)) =>
             if (self.asInstanceOf[Tiling].get(end1).degree > 2 && self.asInstanceOf[Tiling].get(end2).degree > 2) {
-              val newPerimeterEdges = selfPathEdges(end1, end2, onPerimeter = false).toList
-              ShapedResult(PostCheck, positiveChecked = true, true, false, newPerimeterEdges)
+              checkNewPerimeter(end1, end2)
             } else {
               lazyDebug("> perimeter nodes form a path adjacent to perimeter node of degree 2")
               ShapedResult(Abort)
             }
-          case _ =>
-            ShapedResult(PostCheck, positiveChecked = true, false, true, Nil)
+          case _ => checkRecalc
         }
-      } else
-        ShapedResult(PostCheck, positiveChecked = true, false, true, Nil)
+      case _ => checkRecalc
     }
   }
 
