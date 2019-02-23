@@ -42,9 +42,10 @@ trait TilingUtils
 
     private def perimeterCycle: tiling.Cycle = {
       val lowestPerimeterNode = tiling.edges.filter(_.isPerimeter.contains(true)).flatMap(_.toList).min(nodeOrdering)
-      (lowestPerimeterNode
+      lowestPerimeterNode
         .withOrdering(nodeOrdering)
-        .withSubgraph(edges = _.isPerimeter.contains(true)) findCycle)
+        .withSubgraph(edges = _.isPerimeter.contains(true))
+        .findCycle
         .safeGet()
     }
 
@@ -99,19 +100,22 @@ trait TilingUtils
 
     // ----------------- gonality -------------------
 
+    private def fullNodesMap: Map[tiling.NodeT, Full] =
+      tiling.nodes
+        .filterNot(_.isPerimeter)
+        .map(n =>
+          n.neighs match {
+            case (_, paths) => n -> Full.p(paths.map(_.size + 2)).minor
+        })
+        .toMap
+
+    def distinctFullVertices: List[Full] = fullNodesMap.values.toList.distinct
+
     /**
       * @return map of different type of vertices and nodes where they are found
       */
     def mapGonals: Map[Full, List[Int]] =
-      tiling.nodes
-        .filterNot(_.isPerimeter)
-        .toList
-        .map(n =>
-          n.neighs match {
-            case (_, paths) => (Full.p(paths.map(_.size + 2)).minor, n)
-        })
-        .groupBy({ case (vertices, _) => vertices })
-        .map({ case (vertices, sidesNodes) => vertices -> sidesNodes.map({ case (_, node) => node.toOuter }) })
+      fullNodesMap.groupBy({ case (_, vertex) => vertex }).mapValues(_.keys.toList.map(_.toOuter))
 
     /**
       * @return number of different type of vertices
