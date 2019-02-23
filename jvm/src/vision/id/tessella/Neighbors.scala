@@ -105,7 +105,7 @@ trait Neighbors extends Symmetry with ListUtils {
         if (next.toOuter < previous.toOuter)
           (rotatedNodes, rotatedPaths.map(_.tail))
         else
-          (rotatedNodes.contraRotate(), rotatedPaths.contraRotate().rotate(-1).map(_.reverse.tail))
+          (rotatedNodes.contraRotate(), rotatedPaths.reverse.map(_.reverse.tail))
       }
 
       def fullHood: nodesPaths = {
