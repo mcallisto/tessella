@@ -86,13 +86,7 @@ trait Neighbors extends Symmetry with ListUtils {
           List((start, List())),
           Set(node)
         )
-        (nodes,
-         paths
-           .rotate(-1)
-           .map({
-             case Nil => Nil
-             case p   => p.reverse.tail
-           }))
+        (nodes, paths.rotate(-1).map(_.reverse.tail))
       }
 
       private def reorderFull(nps: nodesPaths): nodesPaths = {
