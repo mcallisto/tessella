@@ -10,10 +10,10 @@ object Tessella {
 
   type Tiling = Graph[Int, Side]
 
-  implicit val conf: Config = Shaped
+  implicit val conf: Config = ByRegularPgons
 
   object Tiling
-      extends CompanionAlias[Side](Shaped withStringPrefix "Tiling")
+      extends CompanionAlias[Side](ByRegularPgons withStringPrefix "Tiling")
       with Growth
       with Net
       with Reticulate

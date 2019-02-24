@@ -16,7 +16,7 @@ import vision.id.tessella.Tessella.Tiling
 
 /** Ensures that the underlying `Graph` is a valid tessellation.
   */
-class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
+class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     extends Constraint[N, E](self)
     with NodeChecks[N, E]
     with OptionUtils
@@ -438,6 +438,6 @@ class Shaped[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   }
 }
 
-object Shaped extends ConstraintCompanion[Shaped] {
-  def apply[N, E[X] <: EdgeLikeIn[X]](self: Graph[N, E]): Shaped[N, E] = new Shaped[N, E](self)
+object ByRegularPgons extends ConstraintCompanion[ByRegularPgons] {
+  def apply[N, E[X] <: EdgeLikeIn[X]](self: Graph[N, E]): ByRegularPgons[N, E] = new ByRegularPgons[N, E](self)
 }
