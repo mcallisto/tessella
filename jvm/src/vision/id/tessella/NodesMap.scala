@@ -3,8 +3,7 @@ package vision.id.tessella
 import scala.util.{Failure, Success, Try}
 
 import com.typesafe.scalalogging.Logger
-
-import vision.id.tessella.Cartesian2D.{Point2D, Points2D, Polygon, Segment2D}
+import vision.id.tessella.Cartesian2D._
 import vision.id.tessella.Polar.{PointPolar, Polyline, UnitRegularPgon}
 import vision.id.tessella.Tau.TAU
 
@@ -63,7 +62,7 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
       }
   }
 
-  def hasOnSameLine(f: Int, s: Int): Boolean = Segment2D.fromPoint2Ds(m(f), m(s)).length ~= 2.0
+  def hasOnSameLine(f: Int, s: Int): Boolean = new Segment2D(m(f), m(s)).length ~= 2.0
 
   implicit final class OuterNode(node: Int) {
 
@@ -90,8 +89,8 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     val start = nodes.indexOf(nStart)
     val end   = nodes.indexOf(nEnd)
     // find angle between start and end based on coords
-    val s1          = Segment2D.fromPoint2Ds(m(node), m(nStart)).angle
-    val s2          = Segment2D.fromPoint2Ds(m(node), m(nEnd)).angle
+    val s1          = new Segment2D(m(node), m(nStart)).angle
+    val s2          = new Segment2D(m(node), m(nEnd)).angle
     val angleCoords = mod(s2 - s1, TAU) //; logger.debug("\nangleCoords: " + angleCoords)
     // find angle between start and end based on ordered perimeter
     val angPerim = (start until end).foldLeft(0.0)((acc, i) => acc + interiors(i)) //; logger.debug("\nangPerim: " + angPerim)
@@ -172,7 +171,7 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     else {
       //logger.debug("\npon: " + pon)
       // pairs of consecutive nodes
-      val cs: List[(Int, Int)] = pon.circularSliding(2).toList.map(c => (c.safeHead, c(1)))
+      val cs: List[(Int, Int)] = pon.circularSliding(2).toList.map(_.onlyTwoElements((_, _)))
       cs.find({ case (first, second) => mapped.contains(first) && mapped.contains(second) }) match {
         case None                  => throw new IllegalArgumentException("no consecutive mapped nodes on perimeter")
         case Some((first, second)) => // found couple both mapped
@@ -182,7 +181,7 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
           val poly  = new Polyline(polars.rotate(i).tail.init)
           val nodes = pon.rotate(i).tail.init
           // coords moved to second node and pointing in the right direction
-          val angle        = Segment2D.fromPoint2Ds(m(first), m(second)).angle
+          val angle        = new Segment2D(m(first), m(second)).angle
           val points       = poly.toPoint2Ds(angle).map(_.sum(m(second))) //; logger.debug("\ncoords: " + points)
           val periUnmapped = nodes.zip(points).filter({ case (node, _) => !mapped.contains(node) }).toMap
           //logger.debug("\nadd: " + periUnmapped)
@@ -223,7 +222,7 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
   }
 
   def diagonal: Double = {
-    val (min, max) = new Points2D(m.values.toList.map(_.c)).getMinMax
+    val (min, max) = new Polyline2D(m.values.toList).getMinMax
     min.distanceFrom(max)
   }
 
@@ -231,8 +230,8 @@ class NodesMap(val m: Map[Int, Point2D]) extends ListUtils with MathUtils with T
     val s = m(start)
     Polygon
       .createRegularFrom(
-        Segment2D.fromPoint2Ds(s, m(end1)),
-        Segment2D.fromPoint2Ds(s, m(end2))
+        side = new Segment2D(s, m(end1)),
+        adjacent = new Segment2D(s, m(end2))
       )
       .safeGet
   }

@@ -2,7 +2,7 @@ package vision.id.tessella
 
 import java.lang.Math.{abs, pow}
 
-trait MathUtils {
+trait MathUtils extends ListUtils {
 
   val decimalPrecision: Int = 8
 
@@ -23,6 +23,21 @@ trait MathUtils {
 
     def <~=(other: Double, precision: Double = stdPrecision): Boolean =
       d < other || (d ~= (other, precision))
+
+    def >~=(other: Double, precision: Double = stdPrecision): Boolean =
+      d > other || (d ~= (other, precision))
+
+    def <<(other: Double, precision: Double = stdPrecision): Boolean =
+      ! >~=(other, precision)
+
+    def >>(other: Double, precision: Double = stdPrecision): Boolean =
+      ! <~=(other, precision)
+
+    def isInSortedRange(low: Double, high: Double): Boolean =
+      (d >> low) && (d << high)
+
+    def isInRange(end1: Double, end2: Double): Boolean =
+      List(end1, end2).sorted.onlyTwoElements(isInSortedRange)
 
     def roundAt(precision: Int = decimalPrecision): Double =
       BigDecimal(d).setScale(precision, BigDecimal.RoundingMode.HALF_UP).toDouble

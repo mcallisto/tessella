@@ -8,7 +8,7 @@ import scalax.collection.GraphEdge.UnDiEdge
 import scalax.collection.GraphPredef._
 
 import vision.id.tessella.Tessella.Tiling
-import vision.id.tessella.Cartesian2D.{Label2D, Point2D, Polygon, Segment2D}
+import vision.id.tessella.Cartesian2D._
 import vision.id.tessella.Polar.{PointPolar, UnitSimplePgon}
 import vision.id.tessella.Tau.TAU
 
@@ -17,6 +17,7 @@ trait TilingUtils
     with Neighbors
     with OptionUtils
     with GraphUtils
+    with MathUtils
     with TryUtils
     with DistinctUtils[Polygon]
     with Symmetry {
@@ -49,19 +50,35 @@ trait TilingUtils
         .safeGet()
     }
 
-    lazy val perimeterOrderedNodes: List[Int] = perimeterCycle.nodes.map(_.toOuter).toList
+    lazy val perimeterOrderedNodes: List[Int] = perimeterCycle.nodes.toList.map(_.toOuter)
 
     lazy val perimeterOrderedEdges: List[Side[Int]] = perimeterCycle.edges.map(_.toOuter).toList
+
+    def perimeterEdgesByMin: List[Side[Int]] =
+      perimeterOrderedEdges.sortWith((a, b) => {
+        val nodesA = a.toList
+        val nodesB = b.toList
+        if (nodesA.min == nodesB.min) nodesA.sum < nodesB.sum else nodesA.min < nodesB.min
+      })
+
+    def perimeterMinEdge: Side[Int] = perimeterEdgesByMin.safeHead
 
     lazy val perimeterHoods: List[(List[Int], List[List[Int]])] =
       perimeterOrderedNodes.init.map(tiling.outerNodeHood(_, perimeterOrderedNodes))
 
-    lazy val vertexes: List[Vertex] =
-      perimeterHoods.unzip match { case (_, paths) => paths.map(path => Vertex.p(path.init.map(_.size + 2))) }
+    private def pathToVertex(path: List[List[Int]]): Vertex = Vertex.p(path.init.map(_.size + 2))
+
+    lazy val vertexes: List[Vertex] = perimeterHoods.unzip match { case (_, paths) => paths.map(pathToVertex) }
 
     // implies satisfying requirements of UnitSimplePgon
     lazy val toPerimeterSimplePolygon: Try[UnitSimplePgon] =
       Try(new UnitSimplePgon(vertexes.map(v => new PointPolar(1.0, TAU / 2 - v.alpha))))
+
+    def polygon: UnitSimplePgon = toPerimeterSimplePolygon.safeGet
+
+    def isPolygonSymmetricTo(that: Tiling): Boolean = this.polygon.points.isRotationOrReflectionOf(that.polygon.points)
+
+    def perimeterAngles: List[Double] = polygon.points.map(_.phi - TAU / 2)
 
     def toNodesMap: NodesMap = {
 
@@ -73,15 +90,15 @@ trait TilingUtils
         if (nm.m.size == size) nm
         else {
           val mapped: List[Int] = nm.m.keys.toList
-          val nexttm: Try[NodesMap] = tiling.findCompletable(mapped, nm) match {
+          val newNm: Try[NodesMap] = tiling.findCompletable(mapped, nm) match {
             case Some(node) => nm.completeNode(node, (tiling get node).neighsSmart)
             case None =>
               tiling.findAddable(mapped) match {
                 case Some(node) => nm.addFromNeighbors(node, (tiling get node).neighsSmart)
-                case None       => nm.addFromPerimeter(perimeterOrderedNodes.init, toPerimeterSimplePolygon.safeGet.pps)
+                case None       => nm.addFromPerimeter(perimeterOrderedNodes.init, toPerimeterSimplePolygon.safeGet.points)
               }
           }
-          loop(nexttm.get)
+          loop(newNm.safeGet)
         }
       }
 
@@ -91,55 +108,20 @@ trait TilingUtils
 
     def hasGap: Boolean = Try(toNodesMap) match {
       case Success(nm) =>
-        tiling.edges.exists(_.nodes.map(_.toOuter) match {
-          case n1 :: n2 :: Nil => !nm.m(n1).isUnitDistance(nm.m(n2))
-          case _               => throw new Error
-        })
+        tiling.edges.exists(
+          _.nodes.map(_.toOuter).toList.onlyTwoElements((f, s) => !nm.m(f).isUnitDistance(nm.m(s))))
       case Failure(_) => true
     }
 
-    // ----------------- gonality -------------------
-
-    private def fullNodesMap: Map[tiling.NodeT, Full] =
-      tiling.nodes
-        .filterNot(_.isPerimeter)
-        .map(n =>
-          n.neighs match {
-            case (_, paths) => n -> Full.p(paths.map(_.size + 2)).minor
-        })
-        .toMap
-
-    def distinctFullVertices: List[Full] = fullNodesMap.values.toList.distinct
-
-    /**
-      * @return map of different type of vertices and nodes where they are found
-      */
-    def mapGonals: Map[Full, List[Int]] =
-      fullNodesMap.groupBy({ case (_, vertex) => vertex }).mapValues(_.keys.toList.map(_.toOuter))
-
-    /**
-      * @return number of different type of vertices
-      */
-    def gonality: Int = mapGonals.size
-
     // ----------------- to cartesian coords -------------------
 
-    def labelize: (Int, Point2D) => Label2D = { case (node, point) => new Label2D(point.c, node.toString) }
+    def labelize: (Int, Point2D) => Label2D = { case (node, point) => new Label2D(point, node.toString) }
 
     def toLabels2D(nm: NodesMap): List[Label2D] = nm.m.map({ case (node, point) => labelize(node, point) }).toList
 
-    def toGonals(nm: NodesMap): List[List[Point2D]] =
-      mapGonals.map({ case (_, nodes) => nodes.map(nm.m(_)) }).toList
-
-    def toSegments2D(nm: NodesMap): List[Segment2D] =
-      tiling.edges.toList.map(_.nodes.map(_.toOuter) match {
-        case n1 :: n2 :: Nil => Segment2D.fromPoint2Ds(nm.m(n1), nm.m(n2))
-        case _               => throw new Error
-      })
-
     def perimeterCoords(nm: NodesMap): List[Point2D] = perimeterOrderedNodes.init.map(nm.m(_))
 
-    def toPerimeterPolygon(nm: NodesMap): Polygon = new Polygon(perimeterCoords(nm).map(_.c))
+    def toPerimeterPolygon(nm: NodesMap): Polygon = new Polygon(perimeterCoords(nm))
 
     def toPerimeterLabels2D(nm: NodesMap): List[Label2D] =
       perimeterOrderedNodes.init
@@ -171,6 +153,9 @@ trait TilingUtils
                 case Some(path) => s ++ path.nodes.init
             })
 
+          def isTriangle(n: t.NodeT): Int =
+            n.neighbors.toList.onlyTwoElements((f, s) => if (f.neighbors.contains(s)) 1 else 0)
+
           def getSubtraction(degree: Int): Option[(t.NodeT, Set[t.NodeT])] =
             if (degree == 2 && tPeriNodes.forall(_.degree == 2)) {
               val n     = tPeriNodes.toList.safeHead
@@ -178,16 +163,18 @@ trait TilingUtils
               t --= tPeriNodes
               Some(n, neigh)
             } else {
-              t.nodes
-                .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true))
-                .foreach(n => {
-                  val hood                   = n.neighbors
-                  val subtract: Set[t.NodeT] = if (degree == 3) Set(n) else subtractableNodes(n, hood)
-                  Try(t --= subtract) match {
-                    case Success(_) => return Some(n, hood)
-                    case Failure(_) => if (!t.hasPerimeterSet) t.setPerimeter
-                  }
-                })
+              val filtered =
+                t.nodes
+                  .filter(n => n.degree == degree && (if (degree == 3) tPeriNodes.contains(n) else true))
+              val sorted = if (degree == 2) filtered.toList.sortWith(isTriangle(_) > isTriangle(_)) else filtered
+              sorted.foreach(n => {
+                val hood                   = n.neighbors
+                val subtract: Set[t.NodeT] = if (degree == 3) Set(n) else subtractableNodes(n, hood)
+                Try(t --= subtract) match {
+                  case Success(_) => return Some(n, hood)
+                  case Failure(_) => if (!t.hasPerimeterSet) t.setPerimeter
+                }
+              })
               None
             }
 
@@ -217,16 +204,13 @@ trait TilingUtils
 
     // ----------------- other stuff -------------------
 
-    def pgonsMap: Map[Int, Int] = toPolygons(toNodesMap).groupBy(_.cs.size).map({ case (k, ps) => (k, ps.size) })
+    def pgonsMap: Map[Int, Int] = toPolygons(toNodesMap).groupBy(_.points.size).map({ case (k, ps) => (k, ps.size) })
 
     def toG: Graph[Int, UnDiEdge] = graphFrom(tiling)
 
   }
 
   private def graphFrom(tiling: Tiling): Graph[Int, UnDiEdge] =
-    Graph.from(Nil, tiling.edges.toOuter.map(_.toList match {
-      case vertex1 :: vertex2 :: Nil => vertex1 ~ vertex2
-      case _                         => throw new Error
-    }))
+    Graph.from(Nil, tiling.edges.toOuter.map(_.toList.onlyTwoElements(_ ~ _)))
 
 }

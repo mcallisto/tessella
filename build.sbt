@@ -11,7 +11,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scala-graph" %% "graph-core" % "1.12.5",
-  "org.scala-graph" %% "graph-constrained" % "1.12.6",
+  "org.scala-graph" %% "graph-constrained" % "1.12.7",
   "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
   "com.lihaoyi" %% "os-lib" % "0.2.6",
   "org.scalatest" %% "scalatest" % "3.0.5" % Test,

@@ -103,4 +103,14 @@ class mathCheckTest extends FlatSpec with Checkers with CoordGenerators {
 
   }
 
+  "A double" can "be checked if included in a range" in {
+    assert((4.0 isInRange(2.0, 5.0)) === true)
+    assert((4.0 isInRange(5.0, 2.0)) === true)
+    assert((4.0 isInRange(4.0, 4.0)) === false)
+    assert((3.0 isInRange(4.0, 4.0)) === false)
+    assert((3.0 isInRange(3.0, 4.0)) === false)
+    assert((4.0 isInRange(3.0, 4.0)) === false)
+    assert((-4.0 isInRange(1.0, -5.0)) === true)
+  }
+
 }

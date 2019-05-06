@@ -22,11 +22,9 @@ case class Side[+N](vertex1: N, vertex2: N, var isPerimeter: Option[Boolean] = N
 
 }
 
-object Side {
+object Side extends ListUtils {
 
-  def fromEdge[A](edge: UnDiEdge[A], isPerimeter: Option[Boolean] = None): Side[A] = edge.toList match {
-    case vertex1 :: vertex2 :: Nil => new Side[A](vertex1, vertex2, isPerimeter)
-    case _                         => throw new Error
-  }
+  def fromEdge[A](edge: UnDiEdge[A], isPerimeter: Option[Boolean] = None): Side[A] =
+    edge.toList.onlyTwoElements(new Side[A](_, _, isPerimeter))
 
 }

@@ -43,7 +43,7 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   it can "be converted into a segment starting from origin" in {
-    assert(pol.toSegment2D === Segment2D.fromPoint2Ds(Point2D.origin, cart))
+    assert(pol.toSegment2D === new Segment2D(Point2D.origin, cart))
   }
 
   "A point" can "be converted into polar coords from origin" in {
@@ -96,9 +96,9 @@ class cartesian2DTest extends FlatSpec with TryUtils {
     assert(b.perp(p) === -1.0)
   }
 
-  val horizontal: Segment2D = new Segment2D((1.0, 2.0), (-3.0, 2.0))
-  val vertical: Segment2D   = new Segment2D((1.0, -4.0), (1.0, 5.0))
-  val diagonal: Segment2D   = new Segment2D((-1.0, 2.0), (1.0, 0.0))
+  val horizontal: Segment2D = Segment2D.fromCoords2D((1.0, 2.0), (-3.0, 2.0))
+  val vertical: Segment2D   = Segment2D.fromCoords2D((1.0, -4.0), (1.0, 5.0))
+  val diagonal: Segment2D   = Segment2D.fromCoords2D((-1.0, 2.0), (1.0, 0.0))
 
   "A segment" can "be moved as starting from origin" in {
     val h = horizontal.fromOrigin
@@ -109,19 +109,19 @@ class cartesian2DTest extends FlatSpec with TryUtils {
     assert(d === new Point2D(2.0, -2.0))
   }
 
-  the[IllegalArgumentException] thrownBy new Segment2D((1.0, 1.0), (1.0, 1.0)) should have message
-    "requirement failed: endpoints must be different"
+  the[IllegalArgumentException] thrownBy Segment2D.fromCoords2D((1.0, 1.0), (1.0, 1.0)) should have message
+    "requirement failed: endpoints must be different: {1.0:1.0} and {1.0:1.0}"
 
   it can "be moved" in {
-    assert(horizontal.move(1.0, 1.0) === new Segment2D((2.0, 3.0), (-2.0, 3.0)))
+    assert(horizontal.move(1.0, 1.0) === Segment2D.fromCoords2D((2.0, 3.0), (-2.0, 3.0)))
   }
   it can "be converted into polar coords from origin" in {
-    val s = Segment2D.fromPoint2Ds(Point2D.origin, cart)
+    val s = new Segment2D(Point2D.origin, cart)
     assert(s.toPolar === pol)
   }
 
-  val hin  = new Segment2D((-4.0, 2.0), (0.0, 2.0))
-  val hout = new Segment2D((4.0, 2.0), (10.0, 2.0))
+  val hin: Segment2D  = Segment2D.fromCoords2D((-4.0, 2.0), (0.0, 2.0))
+  val hout: Segment2D = Segment2D.fromCoords2D((4.0, 2.0), (10.0, 2.0))
 
   it must "have a x and y length" in {
     val d1 = hin.diff
@@ -131,27 +131,62 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   it can "be flipped horizontally around a vertical line" in {
-    val s = new Segment2D((3.0, 2.0), (0.0, -5.0))
-    assert(s.flipH(1.0) === new Segment2D((-1.0, 2.0), (2.0, -5.0)))
+    val s = Segment2D.fromCoords2D((3.0, 2.0), (0.0, -5.0))
+    assert(s.flipH(1.0) === Segment2D.fromCoords2D((-1.0, 2.0), (2.0, -5.0)))
     assert(s.flipH(2.0).flipH(2.0) === s)
   }
 
   it can "be rotated of a given angle around a centre" in {
-    val s = new Segment2D((3.0, 2.0), (0.0, -5.0))
-    assert(s.rotate(TAU / 4, new Point2D(3.0, 3.0)) === new Segment2D((4.0, 3.0), (11.0, 0.0)))
-    assert(s.rotate(TAU / 2, new Point2D(3.0, 3.0)) === new Segment2D((3.0, 4.0), (6.0, 11.0)))
+    val s = Segment2D.fromCoords2D((3.0, 2.0), (0.0, -5.0))
+    assert(s.rotate(TAU / 4, new Point2D(3.0, 3.0)) === Segment2D.fromCoords2D((4.0, 3.0), (11.0, 0.0)))
+    assert(s.rotate(TAU / 2, new Point2D(3.0, 3.0)) === Segment2D.fromCoords2D((3.0, 4.0), (6.0, 11.0)))
+  }
+
+  "An ordered segment" must "have the first endpoint lower than the second" in {
+    val p0 = new Point2D((1.0, 1.0))
+    val p1 = new Point2D((1.0, 2.0))
+    val o  = OrderedUnitSegment2D.fromPoint2Ds(p1, p0)
+    assert(o.s === p0)
+    assert(o.e === p1)
+  }
+
+  the[IllegalArgumentException] thrownBy OrderedUnitSegment2D(new Point2D(1.0, 2.0), new Point2D(1.0, 1.0)) should have message
+    "requirement failed: endpoints must be ordered"
+
+  the[IllegalArgumentException] thrownBy OrderedUnitSegment2D(new Point2D(1.0, 1.0), new Point2D(1.0, 3.0)) should have message
+    "requirement failed: length is not ~= 1.0"
+
+  "Two ordered segments" must "be ordered for start and then for end" in {
+    val s0 = OrderedUnitSegment2D(new Point2D(0.0, 1.0), new Point2D(1.0, 1.0))
+    val s1 = OrderedUnitSegment2D(new Point2D(0.0, 1.0), new Point2D(0.0, 2.0))
+    assert(List(s0, s1).sorted === List(s1, s0))
+    assert(List(s1, s0).sorted === List(s1, s0))
+  }
+
+  they must "be ordered for start and then for end (starts can be approx equal)" in {
+    val s0 = OrderedUnitSegment2D(new Point2D(0.0, 1.0), new Point2D(1.0, 1.0))
+    val s1 = OrderedUnitSegment2D(new Point2D(0.000000001, 1.0), new Point2D(0.0, 2.0))
+    assert(List(s0, s1).sorted === List(s1, s0))
+    assert(List(s1, s0).sorted === List(s1, s0))
+  }
+
+  they must "be ordered as they are, if equal coordinates)" in {
+    val s0 = OrderedUnitSegment2D(new Point2D(0.0, 1.0), new Point2D(1.00000001, 1.0))
+    val s1 = OrderedUnitSegment2D(new Point2D(0.000000001, 1.0), new Point2D(1.0, 1.0))
+    assert(List(s0, s1).sorted === List(s0, s1))
+    assert(List(s1, s0).sorted === List(s1, s0))
   }
 
   "A label" can "be moved" in {
-    val l = new Label2D((-0.5, 1.0), "x")
+    val l = new Label2D(new Point2D((-0.5, 1.0)), "x")
     val n = l.sum(new Point2D(1.0, 1.0))
-    assert(n.x === 0.5)
-    assert(n.y === 2.0)
+    assert(n.point.x === 0.5)
+    assert(n.point.y === 2.0)
   }
 
   "A regular triangle" can "be created from two adjacent sides" in {
-    val side1 = new Segment2D((-2.5, -0.8660254), (-2.0, 0.0))
-    val side2 = new Segment2D((-2.5, -0.8660254), (-3.0, 0.0))
+    val side1 = Segment2D.fromCoords2D((-2.5, -0.8660254), (-2.0, 0.0))
+    val side2 = Segment2D.fromCoords2D((-2.5, -0.8660254), (-3.0, 0.0))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List("[{-2.0:0.0}|{-3.0:0.0}]",
@@ -160,8 +195,8 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   it can "be created from another two adjacent sides" in {
-    val side1 = new Segment2D((-1.0, 0.0), (0.0, 0.0))
-    val side2 = new Segment2D((-1.0, 0.0), (-0.5, 0.8660254))
+    val side1 = Segment2D.fromCoords2D((-1.0, 0.0), (0.0, 0.0))
+    val side2 = Segment2D.fromCoords2D((-1.0, 0.0), (-0.5, 0.8660254))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List("[{0.0:0.0}|{-0.5:0.8660254}]",
@@ -170,8 +205,8 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   it can "be created from another two adjacent sides swapped" in {
-    val side1 = new Segment2D((-1.0, 0.0), (-0.5, 0.8660254))
-    val side2 = new Segment2D((-1.0, 0.0), (0.0, 0.0))
+    val side1 = Segment2D.fromCoords2D((-1.0, 0.0), (-0.5, 0.8660254))
+    val side2 = Segment2D.fromCoords2D((-1.0, 0.0), (0.0, 0.0))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List("[{-0.5:0.8660254}|{-1.0:0.0}]",
@@ -180,8 +215,8 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   "A square" can "be created from two adjacent sides" in {
-    val side1 = new Segment2D((3.0, -1.0), (1.0, -2.5))
-    val side2 = new Segment2D((3.0, -1.0), (1.5, 1.0))
+    val side1 = Segment2D.fromCoords2D((3.0, -1.0), (1.0, -2.5))
+    val side2 = Segment2D.fromCoords2D((3.0, -1.0), (1.5, 1.0))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List("[{1.0:-2.5}|{3.0:-1.0}]",
@@ -191,8 +226,8 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   it can "be created from the same two adjacent sides swapped" in {
-    val side1 = new Segment2D((3.0, -1.0), (1.5, 1.0))
-    val side2 = new Segment2D((3.0, -1.0), (1.0, -2.5))
+    val side1 = Segment2D.fromCoords2D((3.0, -1.0), (1.5, 1.0))
+    val side2 = Segment2D.fromCoords2D((3.0, -1.0), (1.0, -2.5))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List("[{1.5:1.0}|{-0.5:-0.5}]",
@@ -202,8 +237,8 @@ class cartesian2DTest extends FlatSpec with TryUtils {
   }
 
   "An hexagon" can "be created from two adjacent sides" in {
-    val side1 = new Segment2D((-0.5, 0.8660254), (0.0, 0.0))
-    val side2 = new Segment2D((-0.5, 0.8660254), (-1.5, 0.8660254))
+    val side1 = Segment2D.fromCoords2D((-0.5, 0.8660254), (0.0, 0.0))
+    val side2 = Segment2D.fromCoords2D((-0.5, 0.8660254), (-1.5, 0.8660254))
     val p     = Polygon.createRegularFrom(side1, side2).safeGet
     assert(
       p.toSegments2D.map(_.toString) === List(

@@ -5,9 +5,10 @@ import scala.util.{Failure, Success}
 import org.scalatest.FlatSpec
 import org.scalameter._
 
+import vision.id.tessella.Others.Mono
 import vision.id.tessella.Tessella.Tiling
 
-class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
+class outputTest extends FlatSpec with GraphUtils with SVG with AddUtils with Loggable {
 
   setLogLevel("WARN")
 
@@ -19,12 +20,12 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
 //    assert(algos().isInstanceOf[Unit])
 //  }
 
-//  "The images in the out/jvm/test/myAlgos/growth folder" can "be created" in {
-//    assert(growth().isInstanceOf[Unit])
-//  }
-
 //  "The test images in the out/jvm/test/myTest/scan folder" can "be created" in {
 //    assert(scan().isInstanceOf[Unit])
+//  }
+
+//  "The test images in the out/jvm/test/myTest/quadratic folder" can "be created" in {
+//    assert(quadratic().isInstanceOf[Unit])
 //  }
 
 //  "The test image in the out/jvm/test/myTest/ folder" can "be created" in {
@@ -84,6 +85,21 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
     "6-uniform/(▲⁶; [4x ⬣³]; ▲².⬣²)"             -> Tiling.sixUniformFourOneOne(8, 8)
   )
 
+  def q: Map[String, Int => Mono] = {
+    val methods: List[Int => Mono] = List(
+      Mono.triangularHex,
+      Mono.squareNet,
+      Mono.hexagonalHexoid,
+      Mono.triSquareSquaroid,
+      Mono.triSquareHexagonalHexoid,
+      Mono.triHexagonalHexoid,
+      Mono.triDodecagonalHexoid,
+      Mono.squareHexDodecagonalHexoid,
+      Mono.squareOctogonalSquaroid
+    )
+    (Full.regularPatterns ++ Full.semiRegularPatterns.drop(2)).map(_.toString).zip(methods).toMap
+  }
+
   def algos(): Unit = {
     val wd = os.pwd / "out"
     os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "regular")
@@ -101,8 +117,8 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
   }
 
   def docs(): Unit = {
-    val small = Tiling.fromVertex(Vertex.s("(5*2.10)"))
-    val big   = Tiling.expandPattern(Full.s("(3.4.6.4)"), 100).safeGet
+    val small = Full.s("(5*2.10)").toTiling
+    val big   = Mono.triSquareHexagonalHexoid(side = 3)
     saveFilePretty(draw(big, labelStyle = LabelStyle.ALL, polys = true), "docs/" + "(▲.■.⬣.■)")
     saveFilePretty(draw(small, labelStyle = LabelStyle.ALL, polys = false, perim = false), "docs/" + "(⬟².10)_label")
     saveFilePretty(draw(small, labelStyle = LabelStyle.NONE, polys = true, perim = false), "docs/" + "(⬟².10)_filled")
@@ -113,15 +129,10 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
                         markStyle = MarkStyle.GONALITY,
                         perim = false),
                    "docs/" + "(▲⁶;(⬣³)²;(▲².⬣²)²)")
-  }
-
-  def growth(): Unit = {
-    val wd = os.pwd / "out"
-    os.makeDir.all(wd / "jvm" / "test" / "myAlgos" / "growth")
     (Full.regularPatterns ++ Full.semiRegularPatterns).foreach(f => {
       val time = measure {
-        saveFilePretty(draw(Tiling.expandPattern(f, 20).safeGet, labelStyle = LabelStyle.NONE),
-                       "out/jvm/test/myAlgos/growth/" + f.toString)
+        saveFilePretty(draw(Mono.expandPattern(f, 30).safeGet, labelStyle = LabelStyle.NONE, polys = true, perim = false),
+          "docs/growth/" + f.toString)
       }
       println(s"$f time: $time")
     })
@@ -132,7 +143,7 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
     os.makeDir.all(wd / "jvm" / "test" / "myTest" / "scan")
     val size    = 100
     val pattern = Full.s("(3.3.4.3.4)")
-    val scan    = Tiling.scanPattern(pattern, size)
+    val scan    = Mono.scanPattern(pattern, size)
     scan.indices.foreach(i => {
       val time = measure {
         scan(i) match {
@@ -150,11 +161,21 @@ class outputTest extends FlatSpec with GraphUtils with SVG with Loggable {
     })
   }
 
+  def quadratic(): Unit = {
+    val wd = os.pwd / "out"
+    os.makeDir.all(wd / "jvm" / "test" / "myTest" / "quadratic")
+    q.foreach({
+      case (name, method) =>
+        saveFilePretty(draw(method(3), labelStyle = LabelStyle.NONE), "out/jvm/test/myTest/quadratic/" + name)
+    })
+  }
+
   def test(): Unit = {
     val wd = os.pwd / "out"
     os.makeDir.all(wd / "jvm" / "test" / "myTest")
     val t = Tiling.threeUniformOneOneOne8(6, 6)
-    saveFilePretty(draw(t, labelStyle = LabelStyle.ALL, polys = true), "out/jvm/test/myTest/" + "test1")
+    saveFilePretty(draw(t, labelStyle = LabelStyle.ALL, markStyle = MarkStyle.GONALITY_WITH_PERIMETER),
+                   "out/jvm/test/myTest/" + "test1")
   }
 
 }

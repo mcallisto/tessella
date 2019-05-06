@@ -23,13 +23,13 @@ class intersectionCheckTest extends FlatSpec with Checkers with CoordGenerators 
   }
 
   "Two segments shaping a └" must "intersect and be joined" in {
-    new Segment2D((2.0, 0.0), (0.0, 0.0)).isJoining(new Segment2D((0.0, 0.0), (0.0, 2.0)))
+    Segment2D.fromCoords2D((2.0, 0.0), (0.0, 0.0)).isJoining(Segment2D.fromCoords2D((0.0, 0.0), (0.0, 2.0)))
   }
 
   val twoJoinedSegments: Gen[(Segment2D, Segment2D)] = for {
     s <- genSegment2D
     p <- genPoint2D suchThat (!_.equals(s.s))
-  } yield (s, Segment2D.fromPoint2Ds(s.s, p))
+  } yield (s, new Segment2D(s.s, p))
 
   "Two segments sharing an endpoint" must "be joined" in {
     check(forAll(twoJoinedSegments) { case (s1, s2) => s1.isJoining(s2) })
@@ -43,12 +43,14 @@ class intersectionCheckTest extends FlatSpec with Checkers with CoordGenerators 
     x <- arbitrary[Double]
   } yield
     (
-      new Segment2D((Double.MinValue, Double.MaxValue), (Double.MaxValue, Double.MaxValue)),
-      new Segment2D((x, Double.MinValue), (x, Double.MaxValue))
+      Segment2D.fromCoords2D((Double.MinValue, Double.MaxValue), (Double.MaxValue, Double.MaxValue)),
+      Segment2D.fromCoords2D((x, Double.MinValue), (x, Double.MaxValue))
     )
 
   "Two segments shaping a ┬" must "intersect but not be joined" in {
-    new Segment2D((-1.0, 0.0), (1.0, 0.0)).isNotJoiningButIntersecting(new Segment2D((0.0, 0.0), (0.0, -2.0)))
+    Segment2D
+      .fromCoords2D((-1.0, 0.0), (1.0, 0.0))
+      .isNotJoiningButIntersecting(Segment2D.fromCoords2D((0.0, 0.0), (0.0, -2.0)))
     check(forAll(tSegments) { case (s1, s2) => s1.isNotJoiningButIntersecting(s2) })
   }
 
@@ -56,8 +58,8 @@ class intersectionCheckTest extends FlatSpec with Checkers with CoordGenerators 
     p <- genPoint2D
   } yield
     (
-      new Segment2D((Double.MinValue, p.y), (Double.MaxValue, p.y)),
-      new Segment2D((p.x, Double.MinValue), (p.x, Double.MaxValue))
+      Segment2D.fromCoords2D((Double.MinValue, p.y), (Double.MaxValue, p.y)),
+      Segment2D.fromCoords2D((p.x, Double.MinValue), (p.x, Double.MaxValue))
     )
 
   "Two segments shaping a ┼" must "intersect but not be joined" in {
@@ -68,8 +70,8 @@ class intersectionCheckTest extends FlatSpec with Checkers with CoordGenerators 
     s <- genSegment2D
   } yield
     (
-      new Segment2D((Double.MinValue, s.s.y), (Double.MaxValue, s.e.y)),
-      new Segment2D((s.s.x, Double.MinValue), (s.e.x, Double.MaxValue))
+      Segment2D.fromCoords2D((Double.MinValue, s.s.y), (Double.MaxValue, s.e.y)),
+      Segment2D.fromCoords2D((s.s.x, Double.MinValue), (s.e.x, Double.MaxValue))
     )
 
   "Two segments shaping a ╳" must "intersect but not be joined" in {

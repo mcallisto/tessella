@@ -24,7 +24,20 @@ trait CoordGenerators extends MathUtils {
   def genSegment2D: Gen[Segment2D] =
     for {
       p0 <- genPoint2D
-      p1 <- genPoint2D suchThat (!_.equals(p0))
-    } yield Segment2D.fromPoint2Ds(p0, p1)
+      p1 <- genPoint2D suchThat (_ != p0)
+    } yield new Segment2D(p0, p1)
+
+  def genBillionPoint2D: Gen[Point2D] =
+    for {
+      x <- Gen.choose(-oneBillion, oneBillion)
+      y <- Gen.choose(-oneBillion, oneBillion)
+    } yield new Point2D(x, y)
+
+  def genOrderedDiagonal: Gen[Segment2D] =
+    for {
+      p0 <- genBillionPoint2D
+      x <- Gen.choose(p0.x + stdPrecision, oneBillion * 2)
+      y <- Gen.choose(p0.y + stdPrecision, oneBillion * 2)
+    } yield new Segment2D(p0, new Point2D(x, y))
 
 }

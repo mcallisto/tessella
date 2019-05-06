@@ -16,15 +16,15 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
   // ---------------- subtracting single node ----------------
 
   "Subtracting a 6-degree node" must "be valid" in {
-    assert((Tiling.fromVertex(Full.s("(3*6)")) -= 1).edges.toString === "EdgeSet(5-6, 2-3, 6-7, 3-4, 7-2, 4-5)")
+    assert((Full.s("(3*6)").toTiling -= 1).edges.toString === "EdgeSet(5-6, 2-3, 6-7, 3-4, 7-2, 4-5)")
   }
 
   "Subtracting the only node not on the perimeter" can "be valid" in {
     assert(
-      (Tiling.fromVertex(Full.s("(3*3.4*2)")) -= 1).edges.toString === "EdgeSet(5-6, 2-3, 6-7, 3-4, 7-8, 4-5, 8-2)")
+      (Full.s("(3*3.4*2)").toTiling -= 1).edges.toString === "EdgeSet(5-6, 2-3, 6-7, 3-4, 7-8, 4-5, 8-2)")
   }
 
-  def octagonFull: Tiling = Tiling.fromVertex(Full.s("(4.8*2)"))
+  def octagonFull: Tiling = Full.s("(4.8*2)").toTiling
 
   it can "also be NOT valid" in {
     assertThrows[IllegalArgumentException](octagonFull -= 1)
@@ -42,14 +42,14 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
     "Subtraction refused: " +
       "nodes = Set(2), edges = Set()"
 
-  def fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
+  def fourSquares: Tiling = Full.s("(4*4)").toTiling
 
   "Subtracting a perimeter node adjacent only to > 2-degree nodes" can "be valid" in {
     assert((fourSquares -= 9).edges.toString === "EdgeSet(1-2, 5-6, 2-3, 6=1, 6-7, 3-4, 7-8, 4=1, 4-5, 8-1)")
   }
 
   it can "be NOT valid" in {
-    assertThrows[IllegalArgumentException](Tiling.fromVertex(Vertex.s("(4*3)")) -= 5)
+    assertThrows[IllegalArgumentException](Vertex.s("(4*3)").toTiling -= 5)
   }
 
   // ---------------- subtracting single edge ----------------
@@ -63,7 +63,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
       "nodes = Set(), edges = Set(1~2)"
 
   "Subtracting an non perimeter edge whose endpoints are on the perimeter" can "be valid" in {
-    assert((Tiling.fromVertex(Vertex.s("(3*2)")) -= Side(1, 3)) === Square.toTiling)
+    assert((Vertex.s("(3*2)").toTiling -= Side(1, 3)) === Square.toTiling)
   }
 
   it can "also be NOT valid" in {
@@ -80,7 +80,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
   "Subtracting a perimeter edge with > 2-degree nodes" must "be valid" in {
     assert(
-      (Tiling.fromVertex(Full.s("(3*3.4*2)")) -= Side(3, 4)).edges.toString === "EdgeSet(1=2, 5=1, 5-6, 2-3, 6-7, 3-1, 7=1, 7-8, 4-1, 4-5, 8-2)")
+      (Full.s("(3*3.4*2)").toTiling -= Side(3, 4)).edges.toString === "EdgeSet(1=2, 5=1, 5-6, 2-3, 6-7, 3-1, 7=1, 7-8, 4-1, 4-5, 8-2)")
   }
 
   // ---------------- subtracting multiple edges / nodes ----------------
@@ -143,7 +143,7 @@ class preSubtractTest extends FlatSpec with AddUtils with Loggable {
 
     val c = t.clone()
     Try(f(t)) match {
-      case _ => s(t) !== s(c)
+      case _ => (s(t) !== s(c)) && { t.setPerimeter; s(t) === s(c) }
     }
   }
 

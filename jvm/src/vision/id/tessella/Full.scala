@@ -5,17 +5,19 @@ import scala.util.Try
 /**
   * set of circularly ordered adjacent regular p-gons completing a vertex
   */
-class Full(ps: List[RegPgon]) extends Vertex(ps) with Symmetry {
+class Full(pgons: List[RegPgon]) extends Vertex(pgons) with Symmetry {
 
   require(isFull, "must create a full angle")
 
-  override def toString: String = new Vertex(minor.ps).toString
+  override def toString: String = new Vertex(minor.pgons).toString
 
-  override def allVersions: IndexedSeq[Full] = this.ps.rotaReflections.distinct.map(new Full(_))
+  override def allVersions: IndexedSeq[Full] = this.pgons.rotaReflections.distinct.map(new Full(_))
 
   override def minor: Full = allVersions.min
 
-  def isEquivalentTo(that: Full): Boolean = this.ps.isRotationOrReflectionOf(that.ps)
+  def isRegular: Boolean = pgons.hasOnlySameElement()
+
+  def isEquivalentTo(that: Full): Boolean = this.pgons.isRotationOrReflectionOf(that.pgons)
 
   /**
     * find every distinct p-gon that could be the next addition to vertex in order to become full
@@ -25,15 +27,15 @@ class Full(ps: List[RegPgon]) extends Vertex(ps) with Symmetry {
     * @return
     */
   def findNexts(vertex: Vertex, reversed: Boolean = false): List[Int] = {
-    val number = vertex.pgonsNumber
-    if (this.pgonsNumber <= number) List()
+    val number = vertex.pgons.size
+    if (this.pgons.size <= number) List()
     else {
-      val previous = vertex.ps match {
+      val previous = vertex.pgons match {
         case rev if reversed => rev.reverse
         case std => std
       }
       allVersions
-        .filter(_.ps.take(number) == previous) // only those whose beginning matches
+        .filter(_.pgons.take(number) == previous) // only those whose beginning matches
         .map(_.edgesNumbers(number)) // take next p-gon fitting
         .distinct.toList
     }
@@ -49,7 +51,7 @@ object Full extends TryUtils {
   /**
     * create full vertex with p-gons of given edges
     *
-    * @param fromEdgesNumbers numbers of edges
+    * @param edgesNumbers numbers of edges
     * @return
     */
   def fromEdgesNumbers(edgesNumbers: List[Int]): Try[Full] =
@@ -57,7 +59,7 @@ object Full extends TryUtils {
 
   def p(edgesNumbers: List[Int]): Full = fromEdgesNumbers(edgesNumbers).safeGet
 
-  def s(s: String): Full = new Full(Vertex.fromString(s).safeGet.ps)
+  def s(s: String): Full = new Full(Vertex.fromString(s).safeGet.pgons)
 
   /**
     * able to form edge-to-edge 1-uniform, monohedral tilings by regular polygons

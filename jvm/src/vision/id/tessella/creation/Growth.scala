@@ -1,82 +1,99 @@
 package vision.id.tessella.creation
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 import vision.id.tessella._
-import vision.id.tessella.Tessella.Tiling
+import vision.id.tessella.Others.Mono
 
 /**
   * slow methods to create tessellations with "organic" growth
   */
 trait Growth extends AddUtils {
 
-  private def regPgonTiling(edgesNumber: Int): Try[Tiling] = RegPgon.ofEdges(edgesNumber).map(_.toTiling)
-
-  /**
-    * grow tessellation from vertex
+  /** always search for smaller pgons first, except special case
     *
-    * @param v vertex
+    * @todo this has to be reviewed considering uniformity
+    * @param pattern full vertex
     * @return
     */
-  def fromVertex(v: Vertex): Tiling = v.edgesNumbers match {
-    case edgesNumber :: numbers =>
-      val t: Tiling = regPgonTiling(edgesNumber).safeGet
-      numbers.foldLeft(edgesNumber)({
-        case (count, number) =>
-          t.addToEdgePgon(Side(1, count), number).safeGet
-          count + number - 2
-      })
-      t
-    case _ => throw new Error
-  }
-
-  /**
-    * all tessellations grown from start to given vertex adding one p-gon at a time
-    *
-    * @param v vertex
-    * @return
-    */
-  def scanVertex(v: Vertex): List[Tiling] = v.edgesNumbers match {
-    case edgesNumber :: numbers =>
-      val t: Tiling = regPgonTiling(edgesNumber).safeGet
-      val (ts, _) = numbers
-        .foldLeft(List(t), edgesNumber)({
-          case ((tilings, count), number) =>
-            val c = tilings.safeHead.clone()
-            c.addToEdgePgon(Side(1, count), number).safeGet
-            (c +: tilings, count + number - 2)
-        })
-      ts.reverse
-    case _ => throw new Error
+  private def orderedPgons(pattern: Full): List[RegPgon] = {
+    val pgons = pattern.distinct.pgons
+    if (pattern == Full.s("(3*4.6)")) pgons.reverse else pgons
   }
 
   /**
     * grow tessell of given size by respecting only 1 pattern
     *
-    * @param pattern  full vertex
-    * @param size     new size in p-gons
-    * @param infinite if true, it should return Failure early if an unsuitable angle for growth is spotted
+    * @param pattern full vertex
+    * @param size    new size in p-gons
     * @return
     */
-  def expandPattern(pattern: Full, size: Int = 100, infinite: Boolean = false): Try[Tiling] =
-    pattern.pgonsNumber match {
-      case less if size <= less => Try(fromVertex(Vertex(pattern.ps.take(size))))
+  def expandPattern(pattern: Full, size: Int = 100): Try[Mono] = Try {
+    pattern.pgons.size match {
+      case less if size <= less => Mono.fromTiling(Vertex(pattern.pgons.take(size)).toTiling)
       case n =>
-        val t = fromVertex(pattern)
-        t.expPatterns(List(pattern), size - n, infinite).map(_ => t)
+        val m = Mono.fromTiling(pattern.toTiling)
+        if (pattern.isRegular)
+          (n until size).foreach(_ => m.addToEdge(m.perimeterMinEdge, pattern.pgons.safeHead))
+        else {
+          val ps = orderedPgons(pattern)
+
+          @tailrec
+          def loop(edges: List[Side[Int]], count: Int): Unit =
+            if (count == size) ()
+            else
+              edges match {
+                case Nil => throw new IllegalArgumentException
+                case e :: es =>
+                  if (ps.exists(p => m.addToEdge(e, p).isSuccess))
+                    loop(m.perimeterEdgesByMin, count + 1)
+                  else
+                    loop(es, count)
+              }
+
+          loop(m.perimeterEdgesByMin, n)
+        }
+        m
     }
+  }
 
   /**
     * all tessellations from 1 to given size grown by respecting only 1 pattern
     *
-    * @param pattern vertex
+    * @param pattern full vertex
     * @param size    new size in p-gons
     * @return
     */
-  def scanPattern(pattern: Full, size: Int = 100): List[Try[Tiling]] = pattern.pgonsNumber match {
-    case less if size <= less => scanVertex(Vertex(pattern.ps.take(size))).map(Try(_))
+  def scanPattern(pattern: Full, size: Int = 100): List[Try[Mono]] = pattern.pgons.size match {
+    case less if size <= less => Vertex(pattern.pgons.take(size)).toScan.map(t => Try(Mono.fromTiling(t)))
     case n =>
-      scanVertex(Vertex(pattern.ps.take(n - 1))).map(Try(_)) ++
-        fromVertex(pattern).scanPatterns(List(pattern), size - n)
+      val start = Vertex(pattern.pgons).toScan.map(t => Try(Mono.fromTiling(t)))
+      val m     = Mono.fromTiling(Vertex(pattern.pgons).toTiling)
+      if (pattern.isRegular)
+        (n until size)
+          .foldLeft(start.reverse)((l, _) => {
+            m.addToEdge(m.perimeterMinEdge, pattern.pgons.safeHead).map(_ => m.clone) +: l
+          })
+          .reverse
+      else {
+        val ps = orderedPgons(pattern)
+
+        @tailrec
+        def loop(edges: List[Side[Int]], count: Int, acc: List[Try[Mono]]): List[Try[Mono]] =
+          if (count == size) acc
+          else
+            edges match {
+              case Nil => Try(throw new IllegalArgumentException) +: acc
+              case e :: es =>
+                if (ps.exists(p => m.addToEdge(e, p).isSuccess))
+                  loop(m.perimeterEdgesByMin, count + 1, Try(m.clone) +: acc)
+                else
+                  loop(es, count, acc)
+            }
+
+        loop(m.perimeterEdgesByMin, n, start.reverse).reverse
+      }
   }
+
 }

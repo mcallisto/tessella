@@ -7,5 +7,5 @@ object LabelStyle extends Enumeration {
 
 object MarkStyle extends Enumeration {
   type MarkStyle = Value
-  val GONALITY, NONE = Value
+  val GONALITY, GONALITY_WITH_PERIMETER, UNIFORMITY, NONE = Value
 }

@@ -5,6 +5,7 @@
 **Tessella** is a Scala library that helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
 
 > ![(▲.■.⬣.■)](docs/(▲.■.⬣.■).svg)
+>
 > _Finite set of the (▲.■.⬣.■) Archimedean (1-uniform) tiling_
 
 ## Tessellation as graph
@@ -15,11 +16,15 @@ Each tessellation is internally described as an [undirected graph](https://en.wi
 *   each **edge** of the graph is a _**side**_ of a polygon
 
 The graph describing the tessellation is a `Tiling` object and can be created through algorithms.
-Many of them, exploiting linear symmetries, are already available from the `creation` subpackage.
+Many of them, exploiting linear symmetries or growth strategies, are already available from the `creation` subpackage.
 
 An undirected graph is not necessarily a valid `Tiling`, see [graph validation](docs/graph-validation.md).
 
 Graphs are seamless Scala collections thanks to the excellent [Graph for Scala](https://scala-graph.org/) library by Peter Empen.
+
+### Stronger constraints
+
+A `Mono` object is a monogonal `Tiling`, with all vertices having the same gonality, see [Archimedean tilings](docs/archimedean.md).
 
 ## How to
 

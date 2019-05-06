@@ -63,39 +63,40 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     PreCheckResult(PostCheck)
   }
 
-  private def attachedToPerimeter(end1: Int, end2: Int): Boolean = {
+  protected def attachedToPerimeter(end1: Int, end2: Int): Boolean = {
     val periNodes = self.asInstanceOf[Tiling].perimeterOrderedNodes
     periNodes.contains(end1) && periNodes.contains(end2)
   }
 
-  private def selfPathEdges(end1: Int, end2: Int, onPerimeter: Boolean = true): Traversable[Side[Int]] =
+  protected def selfPathEdges(end1: Int, end2: Int, onPerimeter: Boolean = true): Traversable[Side[Int]] =
     self.asInstanceOf[Tiling].getShortestPerimeterPath(end1, end2, onPerimeter)
 
-  private def endPointsOrderedIndexes(end1: Int, end2: Int): (Int, Int) = {
+  protected def endPointsOrderedIndexes(end1: Int, end2: Int): (Int, Int) = {
     val periNodes = self.asInstanceOf[Tiling].perimeterOrderedNodes
     val i1        = periNodes.indexOf(end1)
     val i2        = periNodes.indexOf(end2)
     if (i1 < i2) (i1, i2) else (i2, i1)
   }
 
-  private def angleCircularPathsBetween(first: Int, second: Int): List[List[Double]] = {
-    val angles     = self.asInstanceOf[Tiling].toPerimeterSimplePolygon.safeGet.pps.map(_.phi)
-    val (a1, temp) = angles.splitAt(first + 1)
-    val (b, a2)    = temp.splitAt(second - (first + 1))
-    List(a1.init ++ a2.tail, b)
-  }
+  protected def findPathFitting(paths: List[List[Double]], edgesSize: Int): Option[List[Double]] =
+    paths.find(path =>
+      path.hasOnlySameElement(_ ~= _) && (RegularPgon.edgesNumberFrom(path.safeHead) match {
+        case Success(edgesNumber) => edgesNumber - (path.size + 1) - edgesSize == 0
+        case Failure(_)           => false
+      }))
 
   private def isPolygonPath(end1: Int, end2: Int, edgesSize: Int): Boolean = {
     val (first, second) = endPointsOrderedIndexes(end1, end2)
+    val angles          = self.asInstanceOf[Tiling].perimeterAngles
+    val paths           = angles.circularPathsIndexesExcluded(first, second)
+    if (paths.exists(_.isEmpty)) {
+      val a = RegularPgon.angleFrom(edgesSize + 1)
 
-    angleCircularPathsBetween(first, second).exists({
-      case angle :: angles =>
-        angles.forall(_ ~= angle) && (RegularPgon.edgesNumberFrom(angle - (TAU / 2)) match {
-          case Success(edgesNumber) => edgesNumber - (angles.size + 2) - edgesSize == 0
-          case Failure(_)           => false
-        })
-      case Nil => false
-    })
+      def checkRoomForAngle(angle: Double): Boolean = mod(angle, TAU) >> a
+
+      checkRoomForAngle(angles(first)) && checkRoomForAngle(angles(second))
+    } else
+      findPathFitting(paths, edgesSize).isDefined
   }
 
   private def isSquareDiagonal(end1: Int, end2: Int): Boolean = {
@@ -109,12 +110,12 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
 
   // ------------- addition -------------
 
-  private val positiveNodesAlreadyChecked = true
+  protected val positiveNodesAlreadyChecked = true
 
   private def goToPostAdd(newPerimeterEdges: Seq[Side[Int]], oldPerimeterEdges: List[Side[Int]]): Result = {
     // new edges changed to perimeter true
     newPerimeterEdges.foreach(_.isPerimeter = Some(true))
-    Result(PostCheck, action = positiveNodesAlreadyChecked, gapChecked = true, oldPerimeterEdges)
+    Result(PostCheck, positiveNodesAlreadyChecked, gapChecked = true, oldPerimeterEdges)
   }
 
   /** Adding one node can never result into a valid tessellation. */
@@ -134,7 +135,7 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
   override def preAdd(edge: E[N]): Result = {
     lazyInfo("Starting pre-add single edge " + edge.toString)
 
-    val (end1, end2) = (edge._n(0).asInstanceOf[Int], edge._n(1).asInstanceOf[Int])
+    val (end1, end2) = edge.toList.map(_.asInstanceOf[Int]).onlyTwoElements((_, _))
 
     if (!attachedToPerimeter(end1, end2)) {
       lazyDebug("> endpoints of single edge " + end1 + "~" + end2 + " must be both on perimeter")
@@ -142,7 +143,7 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     } else if (isPolygonPath(end1, end2, 1))
       goToPostAdd(Seq(edge.asInstanceOf[Side[Int]]), selfPathEdges(end1, end2).toList)
     else if (isSquareDiagonal(end1, end2))
-      Result(PostCheck, action = positiveNodesAlreadyChecked)
+      Result(PostCheck, positiveNodesAlreadyChecked)
     else
       Result(Abort)
   }
@@ -176,19 +177,11 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
         pathEndPoints(edges.toSet) match {
           // if the new edges form a path with two endpoints
           case Success((end1, end2)) =>
-            if (!attachedToPerimeter(end1, end2)) {
-              lazyDebug("> endpoints of edges path must be both on perimeter " + edges.toString)
+            if (attachedToPerimeter(end1, end2) && isPolygonPath(end1, end2, edges.size))
+              goToPostAdd(edges, selfPathEdges(end1, end2).toList)
+            else
               Result(Abort)
-            } else {
-              // find old perimeter edges to be passed to postCheck
-              val oldEdges = selfPathEdges(end1, end2)
-              lazyTrace(oldEdges.toString)
-
-              if (oldEdges.size == 1 || isPolygonPath(end1, end2, edges.size))
-                goToPostAdd(edges, oldEdges.toList)
-              else Result(Abort)
-            }
-          case _ => Result(PostCheck, action = positiveNodesAlreadyChecked)
+          case _ => Result(PostCheck, positiveNodesAlreadyChecked)
         }
       }
     }
@@ -256,9 +249,10 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
       newGraph.asInstanceOf[Tiling].toPerimeterSimplePolygon.isSuccess
     }
 
-    positiveCheck && newGraph.hasRegularNodes && isConnected && hasPerimeter && polygonOk && hasNoGaps(newGraph,
+    val isValid = positiveCheck && newGraph.hasRegularNodes && isConnected && hasPerimeter && polygonOk && hasNoGaps(newGraph,
                                                                                                        preCheck)
-
+    if (!isValid) setEdges(newGraph, preCheck, isPerimeter = Some(true))
+    isValid
   }
 
   override def onAdditionRefused(refusedNodes: Traversable[N],
@@ -331,7 +325,7 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
     lazyInfo("Starting pre-subtract edge " + edge.toString)
     lazyDebug("simple " + simple)
 
-    val (end1, end2) = (edge._n(0).toOuter.asInstanceOf[Int], edge._n(1).toOuter.asInstanceOf[Int])
+    val (end1, end2) = edge.toList.map(_.toOuter.asInstanceOf[Int]).onlyTwoElements((_, _))
 
     if (!attachedToPerimeter(end1, end2)) {
       lazyDebug("> endpoints of single edge " + end1 + "~" + end2 + " must be both on perimeter")
@@ -344,9 +338,8 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
           Result(Abort)
         } else
           checkNewPerimeter(end1, end2)
-      } else {
+      } else
         Result(PostCheck, gapChecked = true)
-      }
     }
   }
 
@@ -374,9 +367,9 @@ class ByRegularPgons[N, E[X] <: EdgeLikeIn[X]](override val self: Graph[N, E])
               lazyDebug("> perimeter nodes form a path adjacent to perimeter node of degree 2")
               Result(Abort)
             }
-          case _ => Result(PostCheck, action = perimeterToBeRecalculated)
+          case _ => Result(PostCheck, perimeterToBeRecalculated)
         }
-      case _ => Result(PostCheck, action = perimeterToBeRecalculated)
+      case _ => Result(PostCheck, perimeterToBeRecalculated)
     }
   }
 

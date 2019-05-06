@@ -2,9 +2,8 @@ package vision.id.tessella
 
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
-
 import vision.id.tessella.Tessella.Tiling
-import vision.id.tessella.Polar.UnitRegularPgon
+import vision.id.tessella.Polar.{RegularPgon, UnitRegularPgon}
 
 sealed abstract class RegPgon(val edgesNumber: Int, val symbol: Option[Char]) extends Ordered[RegPgon] {
 
@@ -65,6 +64,8 @@ object RegPgon extends TryUtils with ListUtils {
     case Some(pgon) => Success(pgon)
     case None       => Failure(throw new IllegalArgumentException("non-tiling edges number: " + edgesNumber))
   }
+
+  def fromAlpha(alpha: Double): Try[RegPgon] = RegularPgon.edgesNumberFrom(alpha).flatMap(ofEdges)
 
   def fromString(s: String): Try[RegPgon] = s.toList match {
     case h :: Nil if symbolToPgon.contains(h) => Success(symbolToPgon(h))

@@ -38,7 +38,7 @@ class archimedeanTest extends FlatSpec with MathUtils with SVG with Checkers {
   } yield List(first, second)
 
   "A full vertex" must "be composed by at least 3 regular p-gons" in {
-    check(forAll(twoBigInteriors)(l => !(TAU <~= l.sum)))
+    check(forAll(twoBigInteriors)(TAU >> _.sum))
   }
 
   val sevenSmallInteriors: Gen[List[Double]] = for {
@@ -52,11 +52,11 @@ class archimedeanTest extends FlatSpec with MathUtils with SVG with Checkers {
   } yield List(first, second, third, fourth, fifth, sixth, seventh)
 
   it must "be composed by no more than 6 regular p-gons" in {
-    check(forAll(sevenSmallInteriors)(l => !(l.sum <~= TAU)))
+    check(forAll(sevenSmallInteriors)(TAU << _.sum))
   }
 
   it must "be composed by no more than 3 different regular p-gons" in {
-    assert((List(3, 4, 5, 6).map(interiorAngle).sum <~= TAU) === false)
+    assert(List(3, 4, 5, 6).map(interiorAngle).sum >> TAU)
   }
 
 }

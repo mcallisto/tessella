@@ -4,7 +4,8 @@ import scalax.collection.GraphEdge._
 import scalax.collection.constrained.mutable._
 import scalax.collection.constrained.Config
 
-import vision.id.tessella.creation.{Growth, Net, Reticulate, Uni4Hex, Uni5Hex}
+import vision.id.tessella.Others.Mono
+import vision.id.tessella.creation.{Net, Reticulate, Uni4Hex, Uni5Hex}
 
 object Tessella {
 
@@ -14,7 +15,6 @@ object Tessella {
 
   object Tiling
       extends CompanionAlias[Side](ByRegularPgons withStringPrefix "Tiling")
-      with Growth
       with Net
       with Reticulate
       with Uni4Hex
@@ -24,6 +24,9 @@ object Tessella {
 
     def fromG(graph: scalax.collection.Graph[Int, UnDiEdge]): Tiling =
       from(graph.nodes.map(_.toOuter), graph.edges.map(edge => Side.fromEdge(edge.toOuter))).asInstanceOf[Tiling]
+
+    def fromMono(mono: Mono): Tiling = fromSides(mono.edges.toOuter)
+
   }
 
 }

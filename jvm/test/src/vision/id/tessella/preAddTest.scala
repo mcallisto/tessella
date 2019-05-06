@@ -25,7 +25,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   // ---------------- adding single edge ----------------
 
-  def fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
+  def fourSquares: Tiling = Full.s("(4*4)").toTiling
 
   "Adding a single edge not linking two perimeter nodes" must "NOT be valid" in {
     assertThrows[IllegalArgumentException](fourSquares + Side(1, 3))
@@ -37,7 +37,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   "Adding a single edge linking two perimeter nodes" can "divide an existing p-gon in a valid way" in {
     assert(
-      (Tiling.fromVertex(Vertex.s("(4*3)")) += Side(1, 3)).edges.toString === "EdgeSet(1-2, 1=3, 5-6, 2-3, 6=1, 6-7, 3-4, 7-8, 4=1, 4-5, 8-1)")
+      (Vertex.s("(4*3)").toTiling += Side(1, 3)).edges.toString === "EdgeSet(1-2, 1=3, 5-6, 2-3, 6=1, 6-7, 3-4, 7-8, 4=1, 4-5, 8-1)")
   }
 
   it can "also divide an existing p-gon in NON valid way" in {
@@ -64,7 +64,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (oneTriangle ++= Set(Side(3, -4), Side(-4, 1))) should have message
     "Addition refused: " +
-      "nodes = Set(), edges = Set(3~-4, -4~1)"
+      "nodes = Set(-4), edges = Set(3~-4, -4~1)"
 
   "Adding edges not forming a single path" can "be valid" in {
     assert(
@@ -82,7 +82,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares ++= Set(Side(1, 10), Side(10, 3))) should have message
     "Addition refused: " +
-      "nodes = Set(), edges = Set(1~10, 10~3)"
+      "nodes = Set(10), edges = Set(1~10, 10~3)"
 
   "Adding edges forming a single path linking two perimeter nodes 'from the inside'" must "NOT be valid" in {
     assertThrows[IllegalArgumentException](fourSquares ++= Set(Side(2, 10), Side(10, 11), Side(11, 4)))
@@ -90,7 +90,7 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
   the[IllegalArgumentException] thrownBy (fourSquares ++= Set(Side(2, 10), Side(10, 11), Side(11, 4))) should have message
     "Addition refused: " +
-      "nodes = Set(), edges = Set(2~10, 10~11, 11~4)"
+      "nodes = Set(10, 11), edges = Set(2~10, 10~11, 11~4)"
 
   "Adding edges forming a single path linking two perimeter adjacent nodes" can "be valid" in {
     assert((oneTriangle ++= Set(Side(3, 4), Side(4, 1))).edges.toString === "EdgeSet(1-2, 2-3, 3=1, 3-4, 4-1)")
@@ -128,14 +128,14 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
 
     val c = t.clone()
     Try(f(t)) match {
-      case _ => s(t) !== s(c)
+      case _ => (s(t) !== s(c)) && { t.setPerimeter; s(t) === s(c) }
     }
   }
 
   "Success of '+=' add" must "modify the mutable Tiling" in {
     val f: Tiling => Tiling = _ += Side(1, 3)
-    assert(isModificationSuccessful(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
-    assert(isModified(Tiling.fromVertex(Vertex.s("(4*3)")), f) === true)
+    assert(isModificationSuccessful(Vertex.s("(4*3)").toTiling, f) === true)
+    assert(isModified(Vertex.s("(4*3)").toTiling, f) === true)
   }
 
   "Failure of '+=' add" must "NOT modify the mutable Tiling" in {
@@ -156,6 +156,22 @@ class preAddTest extends FlatSpec with AddUtils with Loggable {
     assert(isModificationSuccessful(fourSquares, f) === false)
     assert(isModified(fourSquares, f) === false)
     assert(isPerimeterModified(fourSquares, f) === false)
+  }
+
+  // ---------------- rough case ----------------
+  
+  "Failure of '++=' add at preCheck" must "NOT modify the mutable Tiling" in {
+    val f: Tiling => Tiling = _ ++= Set(Side(6, 17), Side(17, 18), Side(18, 7))
+    assert(isModificationSuccessful(uShape, f) === false)
+    assert(isModified(uShape, f) === false)
+    assert(isPerimeterModified(uShape, f) === false)
+  }
+
+  "Failure of '++=' add at postAdd" must "NOT modify the mutable Tiling, apart from perimeter flags" in {
+    val f: Tiling => Tiling = _ ++= Set(Side(2, 17), Side(17, 18), Side(18, 6))
+    assert(isModificationSuccessful(uShape, f) === false)
+    assert(isModified(uShape, f) === false)
+    assert(isPerimeterModified(uShape, f) === false)
   }
 
 }

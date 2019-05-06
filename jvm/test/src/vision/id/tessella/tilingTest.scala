@@ -124,19 +124,4 @@ class tilingTest extends FlatSpec with TilingUtils with Loggable {
       case5.perimeterOrderedEdges === List(1 ~ 2, 2 ~ 3, 3 ~ 4, 4 ~ 8, 8 ~ 12, 11 ~ 12, 10 ~ 11, 9 ~ 10, 5 ~ 9, 1 ~ 5))
   }
 
-  val three: Tiling = Tiling.threeUniformOneOneOne8(6, 6)
-
-  "A tessellation" can "have its pgon counted by type" in {
-    assert(
-      three.pgonsMap === Map(
-        4 -> 18,
-        3 -> 38,
-        6 -> 12
-      ))
-  }
-
-  it must "have a gonality" in {
-    assert(three.gonality === 3)
-  }
-
 }

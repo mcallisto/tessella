@@ -13,7 +13,7 @@ class perimeterTest extends FlatSpec with TilingUtils with Loggable {
 
   setLogLevel("WARN")
 
-    val hive: Tiling = Tiling.hexagonNet(2, 2)
+  val hive: Tiling = Tiling.hexagonNet(2, 2)
 
   "A 'hive' tessellation" must "have a perimeter length of 14 units" in {
     assert(hive.toPerimeterSimplePolygon match {
@@ -25,7 +25,7 @@ class perimeterTest extends FlatSpec with TilingUtils with Loggable {
   it must "have a perimeter represented by a simple polygon" in {
     assert(hive.toPerimeterSimplePolygon match {
       case Success(polygon) =>
-        polygon.toPolyline2D().cs.map(new Point2D(_).toString) === List(
+        polygon.toPolyline2D().points.map(_.toString) === List(
           "{0.0:0.0}",
           "{0.5:0.8660254}",
           "{0.0:1.73205081}",
@@ -65,7 +65,7 @@ class perimeterTest extends FlatSpec with TilingUtils with Loggable {
     assert(periLx.perimeterOrderedEdges === List(2 ~ 1, 5 ~ 2, 3 ~ 5, 1 ~ 3))
   }
 
-  val fourSquares: Tiling = Tiling.fromVertex(Full.s("(4*4)"))
+  val fourSquares: Tiling = Full.s("(4*4)").toTiling
 
   "Several difficult perimeter cases" can "be identified" in {
     val case1: Tiling = Square.toTiling ++ Set(
@@ -126,8 +126,20 @@ class perimeterTest extends FlatSpec with TilingUtils with Loggable {
     val case5: Tiling = Tiling.triangleNet(6, 2)
     assert(case5.perimeterOrderedNodes === List(1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 1))
 
-    val case6: Tiling = Tiling.fromVertex(Vertex.s("(3*3.4*2)"))
+    val case6: Tiling = Full.s("(3*3.4*2)").toTiling
     assert(case6.perimeterOrderedNodes === List(2, 3, 4, 5, 6, 7, 8, 2))
   }
 
+  "Perimeter edges" can "be sorted by min node and min total" in {
+    assert(
+      fourSquares.perimeterEdgesByMin === List(Side(2, 3),
+                                               Side(2, 9),
+                                               Side(3, 4),
+                                               Side(4, 5),
+                                               Side(5, 6),
+                                               Side(6, 7),
+                                               Side(7, 8),
+                                               Side(8, 9)))
+    assert(fourSquares.perimeterMinEdge === Side(2, 3))
+  }
 }

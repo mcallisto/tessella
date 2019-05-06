@@ -9,7 +9,12 @@ class vertexTest extends FlatSpec with MathUtils with TryUtils {
   val fourThree: Vertex = Vertex(List(Square, Triangle))
 
   "A vertex" can "be printed as a string" in {
-    assert(fourThree.toString() === "(▲.■)")
+    assert(fourThree.toString === "(▲.■)")
+  }
+
+  it can "be empty" in {
+    val empty = new Vertex(Nil)
+    assert(empty.toString === "()")
   }
 
   it can "be created from a list of sides of reg p-gons" in {
@@ -109,6 +114,47 @@ class vertexTest extends FlatSpec with MathUtils with TryUtils {
         Vertex.s("(6.4.3)"),
         Vertex.s("(6.4.3.4)")
       ))
+  }
+
+
+  "Vertex (4)" must "be contained in vertex (3.4.6)" in {
+    assert(Vertex.s("(4)").isContainedIn(Vertex.s("(3.4.6)")))
+  }
+
+  "Vertex (3.4)" must "be contained in vertex (4.4.3)" in {
+    assert(Vertex.s("(3.4)").isContainedIn(Vertex.s("(4.4.3)")))
+  }
+
+  "Vertex (4.3)" must "be contained in vertex (4.4.3)" in {
+    assert(fourThree.isContainedIn(Vertex.s("(4.4.3)")))
+  }
+
+  it must "be contained in vertex (6.4.3.4)" in {
+    assert(fourThree.isContainedIn(Vertex.s("(6.4.3.4)")))
+  }
+
+  it can "be merged with vertex (6.4)" in {
+    assert(fourThree.merge(Vertex.s("(6.4)")) === List(Vertex.s("(3.4.6)")))
+  }
+
+  it can "be merged with vertex (4.4)" in {
+    assert(fourThree.merge(Vertex.s("(4.4)")) === List(Vertex.s("(3.4.4)")))
+  }
+
+  it can "be merged with vertex (4.6.4)" in {
+    assert(fourThree.merge(Vertex.s("(4.6.4)")) === List(Vertex.s("(3.4.6.4)")))
+  }
+
+  it can "be merged with vertex (3.6.4)" in {
+    assert(fourThree.merge(Vertex.s("(3.6.4)")) === List(Vertex.s("(3.4.4.6)"), Vertex.s("(3.4.6.3)")))
+  }
+
+  it can "NOT be merged with vertex (4.4.8)" in {
+    assert(fourThree.merge(Vertex.s("(4.4.8)")).isEmpty)
+  }
+
+  "Vertex (4.4)" can "be merged with vertex (4.4)" in {
+    assert(Vertex.s("(4.4)").merge(Vertex.s("(4.4)")) === List(Vertex.s("(4.4)")))
   }
 
 }

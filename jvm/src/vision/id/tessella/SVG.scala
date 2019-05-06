@@ -8,7 +8,7 @@ import vision.id.tessella.Cartesian2D._
 import vision.id.tessella.LabelStyle.LabelStyle
 import vision.id.tessella.MarkStyle.MarkStyle
 
-trait SVG extends TilingUtils {
+trait SVG extends ConstraintUtils {
 
   val multiple: Double = 25.0
 
@@ -94,7 +94,7 @@ trait SVG extends TilingUtils {
     val tm   = t.toNodesMap
     val p    = t.toPerimeterPolygon(tm)
     val diff = getDiff(p)
-    val grid = getGrid(t.toSegments2D(tm), diff)
+    val grid = getGrid(t.toGrid(tm), diff)
     val perimeter: NodeBuffer =
       if (perim) new NodeBuffer() &+ getPerimeter(p, diff)
       else new NodeBuffer()
@@ -106,16 +106,21 @@ trait SVG extends TilingUtils {
       case LabelStyle.ALL            => new NodeBuffer() &+ getLabels(t.toLabels2D(tm), diff)
       case _                         => new NodeBuffer()
     }
+
+    def gonality(withPeri: Boolean = false): Any = new NodeBuffer() &+ getGonalMarks(t.toGonals(tm, withPeri), diff)
+
     val marks: Any = markStyle match {
-      case MarkStyle.GONALITY => new NodeBuffer() &+ getGonalMarks(t.toGonals(tm), diff)
-      case _                  => new NodeBuffer()
+      case MarkStyle.GONALITY                => gonality()
+      case MarkStyle.GONALITY_WITH_PERIMETER => gonality(withPeri = true)
+      case MarkStyle.UNIFORMITY              => getUniformMarks(t.toUniforms(tm), diff)
+      case _                                 => new NodeBuffer()
     }
     new NodeBuffer() &+ grid &+ polygons &+ perimeter &+ marks &+ labels
   }
 
-  def getGrid(g: List[Segment2D], diff: Point2D): Elem =
-    group(prepare[Segment2D](
-            g,
+  def getGrid(g: Grid, diff: Point2D): Elem =
+    group(prepare[OrderedUnitSegment2D](
+            g.toList,
             _.sum(diff).scale(multiple).toSVG(style = "")
           ),
           "stroke:black")
@@ -124,7 +129,7 @@ trait SVG extends TilingUtils {
     p.sum(diff).scale(multiple).toSVG("fill:none;stroke:blue;stroke-width:2")
 
   private def getPolygons(ps: List[Polygon], diff: Point2D): Elem = {
-    val grouped = ps.groupBy(_.cs.size)
+    val grouped = ps.groupBy(_.points.size)
     group(
       prepare(
         grouped.keys.toList.map(
@@ -155,10 +160,33 @@ trait SVG extends TilingUtils {
           i =>
             group(prepare[Point2D](
                     l(i),
-                    p => new Circle(p.c, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
+                    point => new Circle(point, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
                   ),
                   "fill:" + marksColor(i % 6))),
         (e: Elem) => e
+      ),
+      ""
+    )
+
+  def getUniformMarks(l: List[List[List[Point2D]]], diff: Point2D): Elem =
+    group(
+      prepare(
+        l.indices.toList.map(
+          i ⇒
+            group(
+              prepare(
+                l(i).indices.toList.map(
+                  j ⇒
+                    group(prepare[Point2D](
+                            l(i)(j),
+                            point ⇒ new Circle(point, multiple * 0.1).sum(diff).scale(multiple).toSVG(style = "")
+                          ),
+                          "stroke: blue; stroke-width:" + (j * 2))),
+                (e: Elem) ⇒ e
+              ),
+              "fill:" + marksColor(i % 6)
+          )),
+        (e: Elem) ⇒ e
       ),
       ""
     )

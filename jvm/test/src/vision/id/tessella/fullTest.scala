@@ -37,4 +37,10 @@ class fullTest extends FlatSpec with MathUtils with ListUtils {
       ))
   }
 
+  "Full vertex (3.4.3.4.3)" must "be contained (3*2.4.3.4)" in {
+    assert(Vertex.s("(3*2.4.3.4)").isContainedIn(Full.s("(3*2.4.3.4)")))
+    assert(Vertex.s("(3.4.3.4.3)").isContainedIn(Full.s("(3*2.4.3.4)")))
+    assert(Full.s("(3.4.3.4.3)").isContainedIn(Full.s("(3*2.4.3.4)")))
+  }
+
 }

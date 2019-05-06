@@ -76,10 +76,7 @@ trait Neighbors extends Symmetry with ListUtils {
           case more =>
             more
               .combinations(2)
-              .maxBy({
-                case f :: s :: _ => f.shortestWithBlocksTo(s, Set(node)).safeGet().nodes.size
-                case _           => throw new Error
-              })
+              .maxBy(_.onlyTwoElements(_.shortestWithBlocksTo(_, Set(node)).safeGet().nodes.size))
         }) minBy (_.toOuter) //; logger.debug("\nStarting neighbor node chosen: " + start)
         val (nodes, paths): nodesPaths = findPathPeri(
           neighb.filterNot(_ == start),

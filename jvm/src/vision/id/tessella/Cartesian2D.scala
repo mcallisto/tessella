@@ -1,9 +1,11 @@
 package vision.id.tessella
 
 import java.lang.Math.{atan2, hypot}
-import scala.util.{Failure, Success, Try}
 
+import scala.collection.SortedSet
+import scala.util.{Failure, Success, Try}
 import scala.xml._
+
 import com.typesafe.scalalogging.Logger
 
 import vision.id.tessella.Tau.TAU
@@ -25,87 +27,21 @@ object Cartesian2D {
       * @param f  operation
       * @return
       */
-    def op(c1: Coords2D, c2: Coords2D, f: (Double, Double) => Double): Coords2D = (f(c1._1, c2._1), f(c1._2, c2._2))
-
-    def equal(c1: Coords2D, c2: Coords2D): Boolean = (c1._1 ~= c2._1) && (c1._2 ~= c2._2)
-
-    def comparison(c1: Coords2D, c2: Coords2D): Int =
-      if (c1._1 ~= c2._1) {
-        if (c1._2 ~= c2._2) 0
-        else c1._2.compare(c2._2)
-      } else c1._1.compare(c2._1)
-  }
-
-  class Points2D(val cs: List[Coords2D]) extends CoordsOps {
-
-    /**
-      * map to coords function combining points
-      *
-      * @param c coords
-      * @param f operation
-      * @return
-      */
-    private def map2(c: Coords2D, f: (Coords2D, Coords2D) => Coords2D): List[Coords2D] = cs.map(f(_, c))
-
-    /**
-      * map to coords function combining xs and ys
-      *
-      * @param c coords
-      * @param f operation
-      * @return
-      */
-    def mapOp(c: Coords2D, f: (Double, Double) => Double): List[Coords2D] = map2(c, op(_, _, f))
-
-    def sum(c: Coords2D): Points2D = new Points2D(mapOp(c, _ + _))
-
-    def diff(c: Coords2D): Points2D = new Points2D(mapOp(c, _ - _))
-
-    def mult(c: Coords2D): Points2D = new Points2D(mapOp(c, _ * _))
-
-    def min(c: Coords2D): Points2D = new Points2D(mapOp(c, Math.min))
-
-    def max(c: Coords2D): Points2D = new Points2D(mapOp(c, Math.max))
-
-    def sum(p: Point2D): Points2D = sum(p.c)
-
-    def sum(lalpha: PointPolar): Points2D = sum(lalpha.toPoint2D)
-
-    def diff(p: Point2D): Points2D = diff(p.c)
-
-    def min(p: Point2D): Points2D = min(p.c)
-
-    def max(p: Point2D): Points2D = max(p.c)
-
-    def move(x: Double, y: Double): Points2D = sum(x, y)
-
-    def move(xy: Double): Points2D = move(xy, xy)
-
-    def scale(x: Double, y: Double): Points2D = mult(x, y)
-
-    def scale(xy: Double): Points2D = scale(xy, xy)
-
-    def equalCoords(that: Points2D): Boolean =
-      this.cs.lengthCompare(that.cs.size) == 0 && cs.indices.forall(i => equal(this.cs(i), that.cs(i)))
-
-    /**
-      * get the lowest and higher points
-      * delimiting the rectangular area covered by the points
-      *
-      * @return
-      */
-    def getMinMax: (Point2D, Point2D) = cs match {
-      case Nil => (Point2D.origin, Point2D.origin)
-      case _ =>
-        val (cmin, cmax) = cs.foldLeft((orig, orig))({
-          case ((min, max), c) => (op(min, c, Math.min), op(max, c, Math.max))
-        })
-        (new Point2D(cmin), new Point2D(cmax))
+    def op(c1: Coords2D, c2: Coords2D, f: (Double, Double) => Double): Coords2D = (c1, c2) match {
+      case ((x1, y1), (x2, y2)) => (f(x1, x2), f(y1, y2))
     }
 
-    def toPoint2D(i: Int = 0): Point2D = new Point2D(cs(i))
+    def equal(c1: Coords2D, c2: Coords2D): Boolean = (c1, c2) match {
+      case ((x1, y1), (x2, y2)) => (x1 ~= x2) && (y1 ~= y2)
+    }
 
-    def toSegment2D(i: Int = 0): Segment2D = new Segment2D(cs(i), cs(i + 1))
-
+    def comparison(c1: Coords2D, c2: Coords2D): Int = (c1, c2) match {
+      case ((x1, y1), (x2, y2)) =>
+        if (x1 ~= x2) {
+          if (y1 ~= y2) 0
+          else y1.compare(y2)
+        } else x1.compare(x2)
+    }
   }
 
   class Point2D(val c: Coords2D) extends CoordsOps with Ordered[Point2D] {
@@ -152,7 +88,7 @@ object Cartesian2D {
 
     def max(that: Point2D): Point2D = max(that.c)
 
-    def sum(lalpha: PointPolar): Point2D = sum(lalpha.toPoint2D)
+    def sum(polar: PointPolar): Point2D = sum(polar.toPoint2D)
 
     def move(x: Double, y: Double): Point2D = sum((x, y))
 
@@ -249,34 +185,32 @@ object Cartesian2D {
 
   }
 
-  class Label2D(c: Coords2D, s: String) extends Point2D(c) with SVG {
+  class Label2D(val point: Point2D, s: String) extends CoordsOps with SVG {
 
     //override def toString: String = "(" + s + ")" + super.toString
 
     def toSVG(style: String = "fill:red"): Elem =
-      addStyle(<text x={x.roundAt().toString} y={y.roundAt().toString}>{s}</text>, style)
+      addStyle(<text x={point.x.roundAt().toString} y={point.y.roundAt().toString}>{s}</text>, style)
 
-    override def sum(c1: Coords2D): Label2D = new Label2D(op(c, c1, _ + _), s)
+    def sum(coords: Coords2D): Label2D = new Label2D(new Point2D(op(point.c, coords, _ + _)), s)
 
-    override def mult(c1: Coords2D): Label2D = new Label2D(op(c, c1, _ * _), s)
+    def mult(coords: Coords2D): Label2D = new Label2D(new Point2D(op(point.c, coords, _ * _)), s)
 
-    override def sum(p: Point2D): Label2D = sum(p.c)
+    def sum(that: Point2D): Label2D = sum(that.c)
 
-    override def move(x: Double, y: Double): Label2D = sum(x, y)
+    def move(x: Double, y: Double): Label2D = sum(x, y)
 
-    override def scale(x: Double, y: Double): Label2D = mult(x, y)
+    def scale(x: Double, y: Double): Label2D = mult(x, y)
 
-    override def scale(xy: Double): Label2D = scale(xy, xy)
+    def scale(xy: Double): Label2D = scale(xy, xy)
 
   }
 
-  class Segment2D(cc: (Coords2D, Coords2D)) extends CoordsOps with SVG {
+  class Segment2D(points: (Point2D, Point2D)) extends SVG with CoordsOps {
 
-    val logger = Logger("SEGMENT2D")
+    val (s, e): (Point2D, Point2D) = points
 
-    val (s, e): (Point2D, Point2D) = (new Point2D(cc._1), new Point2D(cc._2))
-
-    require(s != e, "endpoints must be different")
+    require(s != e, "endpoints must be different: " + s + " and " + e)
 
     override def hashCode: Int = 41 * (41 * (41 * (41 + s.x.hashCode()) + s.y.hashCode) + e.x.hashCode) + e.y.hashCode
 
@@ -301,15 +235,16 @@ object Cartesian2D {
                      x2={e.x.roundAt().toString} y2={e.y.roundAt().toString}/>,
                style)
 
-    private def map2(c: Coords2D, f: (Coords2D, Coords2D) => Coords2D): (Coords2D, Coords2D) = (f(s.c, c), f(e.c, c))
+    private def map2(coords: Coords2D, f: (Coords2D, Coords2D) => Coords2D): (Point2D, Point2D) =
+      (new Point2D(f(s.c, coords)), new Point2D(f(e.c, coords)))
 
-    def mapOp(c: Coords2D, f: (Double, Double) => Double): (Coords2D, Coords2D) = map2(c, op(_, _, f))
+    def mapOp(coords: Coords2D, f: (Double, Double) => Double): (Point2D, Point2D) = map2(coords, op(_, _, f))
 
-    def sum(c: Coords2D): Segment2D = new Segment2D(mapOp(c, _ + _))
+    def sum(coords: Coords2D): Segment2D = new Segment2D(mapOp(coords, _ + _))
 
-    def mult(c: Coords2D): Segment2D = new Segment2D(mapOp(c, _ * _))
+    def mult(coords: Coords2D): Segment2D = new Segment2D(mapOp(coords, _ * _))
 
-    def sum(p: Point2D): Segment2D = sum(p.c)
+    def sum(point: Point2D): Segment2D = sum(point.c)
 
     def move(x: Double, y: Double): Segment2D = sum(x, y)
 
@@ -379,20 +314,12 @@ object Cartesian2D {
     }
 
     /**
-      * diagonal from bottom left to top right of the rectangular area occupied by the two segments
-      *
-      * @param that segment
-      * @return
-      */
-    def rect(that: Segment2D): Segment2D = Segment2D.fromPoint2Ds(this.min.min(that.min.c), this.max.max(that.max.c))
-
-    /**
       * check if the given point is endpoint of the segment
       *
-      * @param p point
+      * @param point point
       * @return
       */
-    def isJoining(p: Point2D): Boolean = s == p || e == p
+    def isJoining(point: Point2D): Boolean = s == point || e == point
 
     /**
       * check if the given segment shares an endpoint with the segment
@@ -407,10 +334,34 @@ object Cartesian2D {
     /**
       * test if a point is Left|On|Right of an infinite line
       *
-      * @param p point
+      * @param point point
       * @return > 0 for p left of the line passing by segment, == 0 on the line, < 0 right of the line
       */
-    def isLeft(p: Point2D): Double = (e.x - s.x) * (p.y - s.y) - (p.x - s.x) * (e.y - s.y)
+    def isLeft(point: Point2D): Double = (e.x - s.x) * (point.y - s.y) - (point.x - s.x) * (e.y - s.y)
+
+    /**
+      * winding number
+      * see C++ code http://geomalgorithms.com/a03-_inclusion.html
+      *
+      * @param point to be checked for inclusion
+      * @return
+      */
+    def windingNumber(point: Point2D): Int =
+      s.y match {
+        case startEqualLower if startEqualLower <= point.y =>
+          if (e.y > point.y && isLeft(point) > 0)
+            1 // an upward crossing and p left of edge
+          else
+            0
+        case _ =>
+          if (e.y <= point.y && isLeft(point) < 0)
+            -1 // a downward crossing and p right of edge
+          else
+            0
+      }
+
+    def includesInBox(point: Point2D): Boolean =
+      (point.x isInRange(s.x, e.x)) && (point.y isInRange(s.y, e.y))
 
     /**
       * flip horizontally along the vertical line with given x
@@ -418,7 +369,7 @@ object Cartesian2D {
       * @param coordx vertical line coord
       * @return
       */
-    def flipH(coordx: Double): Segment2D = Segment2D.fromPoint2Ds(s.flipH(coordx), e.flipH(coordx))
+    def flipH(coordx: Double): Segment2D = new Segment2D(s.flipH(coordx), e.flipH(coordx))
 
     /**
       * rotate around centre of given angle
@@ -428,20 +379,75 @@ object Cartesian2D {
       * @return
       */
     def rotate(angle: Double, centre: Point2D = Point2D.origin): Segment2D =
-      Segment2D.fromPoint2Ds(s.rotate(angle, centre), e.rotate(angle, centre))
+      new Segment2D(s.rotate(angle, centre), e.rotate(angle, centre))
 
   }
 
   object Segment2D {
 
-    def fromPoint2Ds(sp: Point2D, ep: Point2D): Segment2D = new Segment2D(sp.c, ep.c)
+    def fromCoords2D(c1: Coords2D, c2: Coords2D): Segment2D = new Segment2D(new Point2D(c1), new Point2D(c2))
 
   }
 
-  class Polyline2D(cs: List[Coords2D]) extends Points2D(cs) {
+  /**
+    * ordered unit segment, first endpoint is required to be lower than second endpoint
+    *
+    * @param points endpoints
+    */
+  case class OrderedUnitSegment2D(points: (Point2D, Point2D))
+      extends Segment2D(points)
+      with Ordered[OrderedUnitSegment2D] {
 
-    def toPointsAttr: String =
-      cs.map({ case (x, y) => x.roundAt().toString + "," + y.roundAt().toString }).mkString(" ")
+    require(s < e, "endpoints must be ordered")
+    require(length ~= 1.0, "length is not ~= 1.0")
+
+    /**
+      * @param that other segment
+      * @return 0 if the same; negative if this < that; positive if this > that
+      */
+    def compare(that: OrderedUnitSegment2D): Int =
+      if (this.s == that.s) {
+        if (this.e == that.e) 0
+        else this.e.compare(that.e)
+      } else this.s.compare(that.s)
+
+    override def sum(coords: Coords2D): OrderedUnitSegment2D = OrderedUnitSegment2D(mapOp(coords, _ + _))
+
+    override def sum(point: Point2D): OrderedUnitSegment2D = sum(point.c)
+
+    override def flipH(coordx: Double): OrderedUnitSegment2D =
+      OrderedUnitSegment2D.fromPoint2Ds(s.flipH(coordx), e.flipH(coordx))
+
+    override def rotate(angle: Double, centre: Point2D = Point2D.origin): OrderedUnitSegment2D =
+      OrderedUnitSegment2D.fromPoint2Ds(s.rotate(angle, centre), e.rotate(angle, centre))
+
+    /**
+      * @param that other ordered segment
+      * @return
+      */
+    def isIntersecting(that: OrderedUnitSegment2D): Boolean =
+      if ((that.s.x - this.s.x) >> 1.0 || Math.abs(that.s.y - this.s.y) >> 2.0) false
+      else super.isIntersecting(that)
+
+    override def includesInBox(point: Point2D): Boolean =
+      (point.x isInSortedRange(s.x, e.x)) && (point.y isInRange(s.y, e.y))
+
+  }
+
+  object OrderedUnitSegment2D {
+
+    def fromSegment2D(segment: Segment2D): OrderedUnitSegment2D =
+      OrderedUnitSegment2D.fromPoint2Ds(segment.s, segment.e)
+
+    def fromPoint2Ds(point1: Point2D, point2: Point2D): OrderedUnitSegment2D =
+      List(point1, point2).sorted.onlyTwoElements(OrderedUnitSegment2D(_, _))
+
+  }
+
+  class Polyline2D(val points: List[Point2D]) extends MathUtils with CoordsOps {
+
+    def toPointsSVGAttribute: String =
+      points.map(point => point.x.roundAt().toString + "," + point.y.roundAt().toString).mkString(" ")
 
     /**
       *
@@ -449,11 +455,57 @@ object Cartesian2D {
       * @return
       */
     def toSVG(style: String = "fill:none;stroke:black;stroke-width:3"): Elem =
-      <polyline style={style} points={toPointsAttr}/>
+      <polyline style={style} points={toPointsSVGAttribute}/>
+
+    /**
+      * map to coords function combining points
+      *
+      * @param coords coordinates
+      * @param f      operation
+      * @return
+      */
+    private def map2(coords: Coords2D, f: (Coords2D, Coords2D) => Coords2D): List[Point2D] =
+      points.map(point => new Point2D(f(point.c, coords)))
+
+    /**
+      * map to coords function combining xs and ys
+      *
+      * @param coords coordinates
+      * @param f      operation
+      * @return
+      */
+    def mapOp(coords: Coords2D, f: (Double, Double) => Double): List[Point2D] = map2(coords, op(_, _, f))
+
+    def sum(coords: Coords2D): Polygon = new Polygon(mapOp(coords, _ + _))
+
+    def mult(coords: Coords2D): Polygon = new Polygon(mapOp(coords, _ * _))
+
+    def sum(point: Point2D): Polygon = sum(point.c)
+
+    def move(x: Double, y: Double): Polygon = sum(x, y)
+
+    def scale(x: Double, y: Double): Polygon = mult(x, y)
+
+    def scale(xy: Double): Polygon = scale(xy, xy)
+
+    /**
+      * get the lowest and higher points
+      * delimiting the rectangular area covered by the points
+      *
+      * @return
+      */
+    def getMinMax: (Point2D, Point2D) = points.map(_.c) match {
+      case Nil => (Point2D.origin, Point2D.origin)
+      case coords =>
+        val (cmin, cmax) = coords.foldLeft((orig, orig))({
+          case ((min, max), c) => (op(min, c, Math.min), op(max, c, Math.max))
+        })
+        (new Point2D(cmin), new Point2D(cmax))
+    }
 
   }
 
-  class Polygon(cs: List[Coords2D]) extends Polyline2D(cs) with ListUtils {
+  class Polygon(points: List[Point2D]) extends Polyline2D(points) with ListUtils with TryUtils with Grid {
 
     /**
       *
@@ -461,72 +513,53 @@ object Cartesian2D {
       * @return
       */
     override def toSVG(style: String = "fill:none;stroke:green;stroke-width:3"): Elem =
-      <polygon style={style} points={toPointsAttr}/>
+      <polygon style={style} points={toPointsSVGAttribute}/>
 
-    override def sum(c: Coords2D): Polygon = new Polygon(mapOp(c, _ + _))
+    private def slide: List[List[Point2D]] = points.circularSliding(2).toList
 
-    override def mult(c: Coords2D): Polygon = new Polygon(mapOp(c, _ * _))
+    lazy val toSegments2D: List[Segment2D] =
+      slide.map(_.onlyTwoElements(new Segment2D(_, _)))
 
-    override def sum(p: Point2D): Polygon = sum(p.c)
+    lazy val minX: Double = points.map(_.x).min
 
-    override def move(x: Double, y: Double): Polygon = sum(x, y)
+    lazy val maxX: Double = points.map(_.x).max
 
-    override def scale(x: Double, y: Double): Polygon = mult(x, y)
+    // fails if not an unit pgon
+    def toGrid: Try[Grid] =
+      sequence(slide.map(_.onlyTwoElements((f, s) => Try(OrderedUnitSegment2D.fromPoint2Ds(f, s)))))
+        .map(SortedSet(_: _*))
 
-    override def scale(xy: Double): Polygon = scale(xy, xy)
+    def includes(point: Point2D): Boolean =
+      toSegments2D.foldLeft(0)(_ + _.windingNumber(point)) != 0
 
-    def toSegments2D: List[Segment2D] = cs.circularSliding(2).toList.map(l => new Segment2D(l.safeHead, l(1)))
-
-    def includes(p: Point2D): Boolean = Polygon.segmentsIncludes(toSegments2D, p)
+    def includesEndpointsOf(segment: Segment2D): Boolean =
+      includes(segment.s) && includes(segment.e)
 
     /**
       * @note valid for simple polygons only
-      * @param s segment to be checked for inclusion
+      * @param segment segment to be checked for inclusion
       * @return
       */
-    def includes(s: Segment2D): Boolean = Polygon.segmentsIncludes(toSegments2D, s)
+    def includes(segment: Segment2D): Boolean =
+      includesEndpointsOf(segment) && toSegments2D.forall(!segment.isIntersecting(_))
+
+    def includesUnit(segment: OrderedUnitSegment2D): Boolean =
+      (segment.s.x >~= minX) && (segment.e.x <~= maxX) && includes(new Segment2D(segment.s, segment.e))
 
     /**
       * @see https://gis.stackexchange.com/questions/22739/finding-center-of-geometry-of-object/22744#22744
       */
     def barycenter: Point2D = {
-      val s      = cs.size
-      val (x, y) = cs.foldLeft((0.0, 0.0))({ case ((sumx, sumy), (x, y)) => (sumx + x, sumy + y) })
+      val s      = points.size
+      val (x, y) = points.map(_.c).foldLeft((0.0, 0.0))({ case ((sumX, sumY), (xx, yy)) => (sumX + xx, sumY + yy) })
       new Point2D(x / s, y / s)
     }
+
   }
 
   object Polygon extends MathUtils {
 
     val logger = Logger("POLYGON")
-
-    /**
-      * check if point is included in polygon represented by segments
-      * see C++ code http://geomalgorithms.com/a03-_inclusion.html
-      *
-      * @param p point to be checked for inclusion
-      * @return
-      */
-    def segmentsIncludes(segments: List[Segment2D], p: Point2D): Boolean =
-      segments.foldLeft(0)(
-        (wn, segm) =>
-          wn + (
-            if (segm.s.y <= p.y) {
-              // an upward crossing and p left of edge
-              if (segm.e.y > p.y && segm.isLeft(p) > 0) 1 // have a valid up intersect
-              else 0
-            } else {
-              // a downward crossing and p right of edge
-              if (segm.e.y <= p.y && segm.isLeft(p) < 0) -1 // have a valid down intersect
-              else 0
-            }
-        )) != 0
-
-    private def segmentsIncludesEndpoints(segments: List[Segment2D], s: Segment2D): Boolean =
-      segmentsIncludes(segments, s.s) && segmentsIncludes(segments, s.e)
-
-    def segmentsIncludes(segments: List[Segment2D], s: Segment2D): Boolean =
-      segmentsIncludesEndpoints(segments, s) && segments.forall(!s.isIntersecting(_))
 
     def createRegularFrom(side: Segment2D, adjacent: Segment2D): Try[Polygon] = {
       require(side.s == adjacent.s)
@@ -553,9 +586,10 @@ object Cartesian2D {
       val traslation = side.e
       RegularPgon.edgesNumberFrom(a).map(RegularPgon.ofEdges(_, l).toPolygon(rotation).sum(traslation))
     }
+
   }
 
-  class Circle(c: Coords2D, r: Double) extends Point2D(c) with SVG {
+  class Circle(val point: Point2D, r: Double) extends CoordsOps with SVG {
 
     /**
       *
@@ -563,19 +597,20 @@ object Cartesian2D {
       * @return
       */
     def toSVG(style: String = "stroke:green"): Elem =
-      addStyle(<circle cx={x.roundAt().toString} cy={y.roundAt().toString} r={r.roundAt().toString} />, style)
+      addStyle(<circle cx={point.x.roundAt().toString} cy={point.y.roundAt().toString} r={r.roundAt().toString} />,
+               style)
 
-    override def sum(c1: Coords2D): Circle = new Circle(op(c, c1, _ + _), r)
+    def sum(coords: Coords2D): Circle = new Circle(new Point2D(op(point.c, coords, _ + _)), r)
 
-    override def mult(c1: Coords2D): Circle = new Circle(op(c, c1, _ * _), r)
+    def mult(coords: Coords2D): Circle = new Circle(new Point2D(op(point.c, coords, _ * _)), r)
 
-    override def sum(p: Point2D): Circle = sum(p.c)
+    def sum(that: Point2D): Circle = sum(that.c)
 
-    override def move(x: Double, y: Double): Circle = sum(x, y)
+    def move(x: Double, y: Double): Circle = sum(x, y)
 
-    override def scale(x: Double, y: Double): Circle = mult(x, y)
+    def scale(x: Double, y: Double): Circle = mult(x, y)
 
-    override def scale(xy: Double): Circle = scale(xy, xy)
+    def scale(xy: Double): Circle = scale(xy, xy)
 
   }
 

@@ -91,17 +91,17 @@ class polarCheckTest extends FlatSpec with Checkers with CoordGenerators {
 
   "A unit polyline and its reflection" must "grow keeping the same distance from origin" in {
     val polylines: Gen[UnitPolyline] = for {
-      lphis <- Gen.containerOf[List, PointPolar](unitPolars)
-    } yield new UnitPolyline(lphis)
+      points <- Gen.containerOf[List, PointPolar](unitPolars)
+    } yield new UnitPolyline(points)
 
     check(forAll(polylines) { polyline =>
       polyline
         .toPolyline2D()
-        .cs
-        .zip(polyline.reflect.toPolyline2D().cs)
+        .points
+        .zip(polyline.reflect.toPolyline2D().points)
         .forall({
-          case (c1, c2) =>
-            new Point2D(c1).distanceFrom(Point2D.origin) ~= new Point2D(c2).distanceFrom(Point2D.origin)
+          case (point1, point2) =>
+            point1.distanceFrom(Point2D.origin) ~= point2.distanceFrom(Point2D.origin)
         })
     })
   }

@@ -5,16 +5,17 @@ import scala.util.Try
 import vision.id.tessella.Tau.TAU
 import vision.id.tessella.Cartesian2D.Point2D
 import vision.id.tessella.Polar.{PointPolar, UnitRegularPgon}
+import vision.id.tessella.Tessella.Tiling
 
 /**
   * set of ordered adjacent regular p-gons completing a vertex
   */
-case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUtils {
+case class Vertex(pgons: List[RegPgon]) extends AddUtils {
 
   /**
     * being the 3 p-gon the smallest, and not more than 6 of it fitting
     */
-  require(ps.lengthCompare(6) <= 0, "impossible to have more than 6 reg p-gons sharing a vertex")
+  require(pgons.lengthCompare(6) <= 0, "impossible to have more than 6 reg p-gons sharing a vertex")
 
   /**
     * verify there are no more p-gons than the available space
@@ -28,7 +29,7 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
     * @return
     */
   override def toString: String = {
-    val endNotGroupable: List[String] = minor.ps.map(_.toString) :+ "?"
+    val endNotGroupable: List[String] = minor.pgons.map(_.toString) :+ "?"
     val (descriptions, _): (List[String], List[String]) = endNotGroupable
       .foldLeft((List(): List[String], List(): List[String]))({
         case ((descs, groupable), d) =>
@@ -43,25 +44,18 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
   }
 
   /**
-    * number of pgons in vertex
-    *
-    * @return
-    */
-  def pgonsNumber: Int = ps.size
-
-  /**
     * number of edges of each p-gon
     *
     * @return
     */
-  def edgesNumbers: List[Int] = ps.map(_.edgesNumber)
+  def edgesNumbers: List[Int] = pgons.map(_.edgesNumber)
 
   /**
     * interior angle
     *
     * @return radians
     */
-  def alpha: Double = ps.foldLeft(0.0)(_ + _.alpha)
+  def alpha: Double = pgons.map(_.alpha).sum
 
   /**
     * exterior angle
@@ -73,31 +67,89 @@ case class Vertex(ps: List[RegPgon]) extends Symmetry with ListUtils with MathUt
   /**
     * @return
     */
-  def allVersions: IndexedSeq[Vertex] = ps.reflections.distinct.map(Vertex(_))
+  def allVersions: IndexedSeq[Vertex] = pgons.reflections.distinct.map(Vertex(_))
 
   def minor: Vertex = allVersions.min
 
-  def isEquivalentTo(that: Vertex): Boolean = this.ps.isReflectionOf(that.ps)
+  def isEquivalentTo(that: Vertex): Boolean = this.pgons.isReflectionOf(that.pgons)
 
   def isFull: Boolean = alpha ~= TAU
 
   def toPoint2Ds(angle: Double = 0.0): List[Point2D] = {
-    val angles = ps.scanLeft(angle)(_ + _.alpha)
+    val angles = pgons.scanLeft(angle)(_ + _.alpha)
     (if (isFull) angles.init else angles).map(angle => new PointPolar(1.0, angle).toPoint2D)
   }
 
-  def distinct: Vertex = Vertex(ps.distinct)
+  def distinct: Vertex = Vertex(pgons.distinct)
 
-  def isReflectionOf(that: Vertex): Boolean = this.ps.isReflectionOf(that.ps)
+  def isReflectionOf(that: Vertex): Boolean = this.pgons.isReflectionOf(that.pgons)
+
+  def append(pgon: RegPgon): Try[Vertex] = Try(new Vertex(pgons :+ pgon))
+
+  def prepend(pgon: RegPgon): Try[Vertex] = Try(new Vertex(pgon +: pgons))
 
   def isContainedIn(full: Full): Boolean =
-    full.ps.rotaReflections.distinct.map(_.take(this.pgonsNumber)).distinct.contains(this.ps)
+    full.pgons.rotaReflections.distinct.map(_.take(this.pgons.size)).distinct.contains(this.pgons)
+
+  def isContainedIn(that: Vertex): Boolean =
+    if (that.isFull) this.isContainedIn(new Full(that.pgons))
+    else that.pgons.reflections.distinct.flatMap(_.sliding(this.pgons.size)).distinct.contains(this.pgons)
+
+  def merge(that: Vertex): List[Vertex] =
+    this match {
+      case equal if equal == that                                     => List(that)
+      case smaller if smaller.isContainedIn(that)                     => List(that)
+      case bigger if that.isContainedIn(bigger)                       => List(this)
+      case full if full.isFull || that.isFull                         => Nil
+      case single if single.pgons.size == 1 || that.pgons.size == 1 => Nil
+      case _ =>
+        val overlaps: IndexedSeq[List[RegPgon]] = for {
+          index <- 1 until Math.min(this.pgons.size, that.pgons.size)
+          at    <- that.pgons.reflections
+          is    <- this.pgons.reflections
+          if at.take(index) == is.takeRight(index)
+        } yield is ++ at.drop(index)
+        val vertices = overlaps.map(p => Try(new Vertex(p))).filter(_.isSuccess).map(_.safeGet)
+        vertices.map(v => if (v.isFull) new Full(v.pgons) else v).map(_.minor).distinct.toList.sorted
+    }
+
+  private def regPgonTiling(edgesNumber: Int): Try[Tiling] = RegPgon.ofEdges(edgesNumber).map(_.toTiling)
+
+  /** grow tessellation from vertex
+    */
+  def toTiling: Tiling = pgons match {
+    case pgon :: ps =>
+      val t: Tiling = pgon.toTiling
+      ps.foldLeft(pgon.edgesNumber)({
+        case (count, p) =>
+          t.addToEdge(Side(1, count), p).safeGet
+          count + p.edgesNumber - 2
+      })
+      t
+    case Nil => Tiling.fromSides(Set())
+  }
+
+  /** all tessellations grown from start to given vertex adding one p-gon at a time
+    */
+  def toScan: List[Tiling] = pgons match {
+    case pgon :: ps =>
+      val t: Tiling = pgon.toTiling
+      val (ts, _) = ps
+        .foldLeft(List(t), pgon.edgesNumber)({
+          case ((tilings, count), p) =>
+            val c = tilings.safeHead.clone()
+            c.addToEdge(Side(1, count), p).safeGet
+            (c +: tilings, count + p.edgesNumber - 2)
+        })
+      ts.reverse
+    case Nil => Nil
+  }
 
 }
 
 object Vertex extends Symmetry with DistinctUtils[List[UnitRegularPgon]] with MathUtils with TryUtils {
 
-  implicit def orderingByRegPgon[A <: Vertex]: Ordering[A] = (a: A, b: A) => RegPgon.listCompare(a.ps, b.ps)
+  implicit def orderingByRegPgon[A <: Vertex]: Ordering[A] = (a: A, b: A) => RegPgon.listCompare(a.pgons, b.pgons)
 
   private def fromTryRegPgon(tr: Try[List[RegPgon]]): Try[Vertex] = tr.flatMap(ps => Try(Vertex(ps)))
 

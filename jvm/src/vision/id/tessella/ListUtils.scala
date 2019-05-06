@@ -43,6 +43,21 @@ trait ListUtils extends OptionUtils with Symmetry {
       case i                    => Some((l(i - 1), l(i + 1)))
     }
 
+    def circularPathsIndexesExcluded(first: Int, second: Int): List[List[T]] = {
+      val (a1, temp) = l.splitAt(first + 1)
+      val (b, a2)    = temp.splitAt(second - (first + 1))
+      List(a1.init ++ a2.tail, b)
+    }
+
+    def hasOnlySameElement(f: (T, T) => Boolean = _ == _): Boolean = l match {
+      case elem :: elems => elems.forall(f(_, elem))
+      case Nil           => false
+    }
+
+    def onlyTwoElements[U](f: (T, T) => U): U = l match {
+      case first :: second :: Nil => f(first, second)
+      case _                      => throw new Error
+    }
   }
 
   final implicit class Util2[T](ll: List[List[T]]) {
