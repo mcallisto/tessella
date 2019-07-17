@@ -38,14 +38,13 @@ trait Versioned extends ScalaModule with PublishModule with Packageable {
 trait Testable extends ScalaModule with Packageable {
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
-    MavenRepository("http://bits.netbeans.org/nexus/content/groups/netbeans/"),
     MavenRepository("https://raw.github.com/gephi/gephi/mvn-thirdparty-repo/")
   )
 
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
-    ivy"org.scalatest::scalatest:3.0.5",
+    ivy"org.scalatest::scalatest:3.0.8",
     ivy"org.scalacheck::scalacheck:1.14.0",
-    ivy"vision.id::graphgephi:0.1.1"
+    ivy"vision.id::graphgephi:0.1.2"
   )
 
   def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
@@ -62,7 +61,7 @@ object jvm extends Versioned { outer =>
     ivy"org.scala-graph::graph-core:1.12.5",
     ivy"org.scala-graph::graph-constrained:1.12.7",
     ivy"org.scala-lang.modules::scala-xml:1.1.1",
-    ivy"com.lihaoyi::os-lib:0.2.6",
+    ivy"com.lihaoyi::os-lib:0.2.8",
     ivy"com.storm-enroute::scalameter:0.8.2",
     ivy"ch.qos.logback:logback-classic:1.2.3",
     ivy"com.typesafe.scala-logging::scala-logging:3.9.2"
