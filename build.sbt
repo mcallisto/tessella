@@ -22,6 +22,13 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 )
 
+dependencyOverrides ++= Seq(
+  "org.netbeans.modules" % "org-netbeans-core"              % "RELEASE90" % Test,
+  "org.netbeans.modules" % "org-netbeans-core-startup-base" % "RELEASE90" % Test,
+  "org.netbeans.modules" % "org-netbeans-modules-masterfs"  % "RELEASE90" % Test,
+  "org.netbeans.api"     % "org-openide-util-lookup"        % "RELEASE90" % Test,
+)
+
 testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
 
 parallelExecution in Test := false

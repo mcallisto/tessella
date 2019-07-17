@@ -44,7 +44,11 @@ trait Testable extends ScalaModule with Packageable {
   override def ivyDeps: T[Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"org.scalatest::scalatest:3.0.8",
     ivy"org.scalacheck::scalacheck:1.14.0",
-    ivy"vision.id::graphgephi:0.1.2"
+    ivy"vision.id::graphgephi:0.1.2",
+    ivy"org.netbeans.modules:org-netbeans-core:RELEASE90",
+    ivy"org.netbeans.modules:org-netbeans-core-startup-base:RELEASE90",
+    ivy"org.netbeans.modules:org-netbeans-modules-masterfs:RELEASE90",
+    ivy"org.netbeans.api:org-openide-util-lookup:RELEASE90"
   )
 
   def testFrameworks: T[Seq[String]] = Seq("org.scalatest.tools.Framework")
