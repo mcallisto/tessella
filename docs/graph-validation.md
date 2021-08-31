@@ -8,7 +8,7 @@ A `Tiling` instance that represents a valid tessellation is a graph with the fol
 >
 > _Invalid since node 4 has degree 1_
 
-* all nodes connected to at most 6 other nodes (degree <= 6) - otherwise, a node would have 6 adjacent polygons (impossible since the polygon with the smaller exterior angle, the regular triangle, fills the full angle with 6 units)
+* all nodes connected to at most 6 other nodes (degree <= 6) - otherwise, a node would have > 6 adjacent polygons (impossible since the polygon with the smaller exterior angle, the regular triangle, fills the full angle with 6 units)
 
 > ![7-degree node](constraints/7-degree.svg)
 > ![7-degree node as standard graph](constraints/7-degree.png)
