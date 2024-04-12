@@ -1,6 +1,6 @@
-[![Build Status][travis-badge]][travis-link] [![Maven Central][maven-badge]][maven-link] [![Codacy Badge][codacy-badge]][codacy-link] [![Codecov badge][codecov-badge]][codecov-link]
+⚠️⛔ This project is now deprecated, please use the new and improved [Tessella](https://github.com/scala-tessella/tessella)
 
-# Tilings by regular polygons
+# ~~Tilings by regular polygons~~
 
 **Tessella** is a Scala library that helps working with finite unit-regular-polygon tessellations of a flat surface, a classical theme in the wider field of [tessellations](https://en.wikipedia.org/wiki/Tessellation) (or _tilings_). See a [mathematical definition of tiling](docs/tiling-definition.md) for a more accurate notion of the chosen constraints.
 
